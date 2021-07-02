@@ -59,7 +59,7 @@ of interesting atmospheric process studies.
 The path and file naming convention follow in the second section. The 
 third section contains descriptions of the file formats available in the 
 GNSS RO repository in the AWS Open Data Registry. A [detailed PDF 
-document](http://github.com/gnss-ro/aws-opendata/Data-Description-v1.0.pdf) 
+document](https://github.com/gnss-ro/aws-opendata/blob/master/Data-Description-v1.0.pdf) 
 describes the rationale for the formats together with insights into 
 their utility in addition to their actual contents. The following are all 
 useful to a beginner at GNSS RO: 
