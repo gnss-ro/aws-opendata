@@ -59,7 +59,7 @@ of interesting atmospheric process studies.
 The path and file naming convention follow in the second section. The 
 third section contains descriptions of the file formats available in the 
 GNSS RO repository in the AWS Open Data Registry. A [detailed PDF 
-document](https://github.com/gnss-ro/aws-opendata/blob/master/Data-Description-v1.0.pdf) 
+document](http://github.com/gnss-ro/aws-opendata/Data-Description.pdf) 
 describes the rationale for the formats together with insights into 
 their utility in addition to their actual contents. The following are all 
 useful to a beginner at GNSS RO: 
@@ -69,6 +69,7 @@ useful to a beginner at GNSS RO:
 * [Vertical coordinates in GNSS RO](http://doi.org/10.1002/2016JD025902); 
 * [Physical optics processing algorithms](http://doi.org/10.1029/2003RS002916); 
 * [Statistical optimization to smooth RO in the upper stratosphere](http://doi.org/10.1029/2000RS002370); 
+* [A description of super-refraction](http://doi.org/10.1029/2002RS002728); 
 * [Retrieving tropospheric water vapor in GNSS RO](http://doi.org/10.1175/JTECH-D-13-00233.1); and
 * [Ionospheric calibration and the removal of ionospheric residual](http://doi.org/10.5194/amt-8-3385-2015). 
 
@@ -79,7 +80,7 @@ The AWS Open Data Registry now makes available all GNSS RO obtained and
 processed by three independent RO processing centers: the COSMIC DAAC of the 
 University Corporation for Atmospheric Research, the Jet Propulsion 
 Laboratory of the California Institute of Technology, and the Radio Occultation 
-Meteorology Satellite Application Facility (ROM SAF) of EUMETSAT. One other independent 
+Meteorology Satellite Application Facility (ROM SAF). One other independent 
 processing center is considering participation: the Wegener Center of the 
 University of Graz. The data are available at three levels: calibrated 
 satellites data (level 1b), retrievals of bending angle and refractivity 
@@ -155,11 +156,10 @@ the Earth's surface. In most cases, that constant is taken as
 the World Meteorological Organization standard of 
 9.80665 J kg<sup>-1</sup> m<sup>-1</sup>. Some atmospheric models 
 and processing algorithms for other atmospheric datasets have 
-implemented different values for this constant. Their documentation 
-must be searched for the value it incorporated in processing or 
-execution and then used in the conversion to geopotential height when 
-the data of this archive is compared to the atmospheric model output 
-or atmospheric dataset, whether it be satellite or in-situ. 
+implemented different values for this constant. You must search their 
+documentation for the relevant value of the constant and apply to the 
+conversion of geopotential to geopotential height should you 
+wish to inter-compare those data (or model output) with RO retrievals. 
 
 ## Level 2b: Full atmospheric retrievals, fullRetrieval
 
@@ -201,9 +201,9 @@ The various mnemonics in this path are defined in the following table:
 | version | A string defining the processing version | (Defined by the contributing center, no underscores) |
 | occid | The occultation ID as registered in the AWS Open Data GNSS RO data repository | See definition below |
 
-The occultation identifier **occid** is defined as **ttt-leo-yyyymmddhhnn** in which 
-**ttt** is the three-digit RINEX standard identifier of the transmitting GNSS 
-satellite and  **leo** is the name of the low-Earth orbiting receiving satellite. 
+The occultation identifier **occid** is defined as **leo-ttt-yyyymmddhhnn** in which 
+satellite **leo** is the name of the low-Earth orbiting receiving satellite and  
+**ttt** is the three-digit RINEX standard identifier of the transmitting GNSS. 
 The remaining symbols denote the time of the occultation. Note that an occultation 
 sounding is uniquely identified by the transmitter, receiver, and time of the occultation, 
 and the precision of the time needs to be no better than a few minutes. 
@@ -248,21 +248,22 @@ centers.
 | :---------------- | :----: |
 | UCAR COSMIC Project Office | ucar | 
 | Jet Propulsion Laboratory, Caltech | jpl | 
-| EUMETSAT Radio Occultation Meteorology Satellite Application Facility | eum | 
+| Radio Occultation Meteorology Satellite Application Facility | romsaf | 
 
 #  Data use licenses, acknowledgments
 
 The format definitions are the outcome of consultations of an international team 
-of GNSS RO retreival scientists and experts. They were drawn largely from the 
-International Radio Occultation Working Group (IROWG), from public and private 
-concerns, from universities, government laboratories, and satellite agencies. 
+of GNSS RO retreival scientists and experts. They were drawn largely from 
+RO retrieval scientists of the International Radio Occultation Working Group 
+(IROWG), from public and private concerns, from universities, and government 
+laboratories. 
 
 The data use licenses for the various contributing centers are 
 * The COSMIC Project Office at UCAR, a [creative commons license](https://www.ucar.edu/terms-of-use/data), 
 * The NASA Jet Propulsion Laboratory, California Institute of Technology, a 
-[creative commons license](https://creativecommmons.org/licenses/by/4.0/legalcode), and 
-* The ROM SAF of EUMETSAT, the [EUMETSAT data use license](https://www.eumetsat.int/eumetsat-data-licensing). 
-
+[creative commons license](https://creativecommmons.org/licenses/by/4.0/legalcode), 
+* The ROM SAF of EUMETSAT, the [EUMETSAT data use license](https://www.eumetsat.int/eumetsat-data-licensing), and 
+* Atmospheric and Environmental Research, a [creative commons license](https://creativecommons.org/licenses/by-nc-nd/4.0/). 
 The repository of GNSS RO data in the AWS Open Data Registry was assembled and 
 continues to be maintained by scientists and software engineers at Atmospheric 
 and Environmental Research, Inc. Funding for this effort was provided by the NASA 
@@ -270,5 +271,5 @@ Advancing Collaborative Connections for Earth System Science (ACCESS) Program 20
 grant 80NSSC21M0052. 
 
 
-*Last update: 28 June 2021*
+*Last update: 26 August 2021*
 
