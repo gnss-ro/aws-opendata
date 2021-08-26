@@ -264,6 +264,7 @@ The data use licenses for the various contributing centers are
 [creative commons license](https://creativecommmons.org/licenses/by/4.0/legalcode), 
 * The ROM SAF of EUMETSAT, the [EUMETSAT data use license](https://www.eumetsat.int/eumetsat-data-licensing), and 
 * Atmospheric and Environmental Research, a [creative commons license](https://creativecommons.org/licenses/by-nc-nd/4.0/). 
+
 The repository of GNSS RO data in the AWS Open Data Registry was assembled and 
 continues to be maintained by scientists and software engineers at Atmospheric 
 and Environmental Research, Inc. Funding for this effort was provided by the NASA 
