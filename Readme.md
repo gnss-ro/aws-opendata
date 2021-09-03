@@ -59,7 +59,7 @@ of interesting atmospheric process studies.
 The path and file naming convention follow in the second section. The 
 third section contains descriptions of the file formats available in the 
 GNSS RO repository in the AWS Open Data Registry. A [detailed PDF 
-document](https://github.com/gnss-ro/aws-opendata/blob/master/Data-Description-v1.0.pdf) 
+document](http://github.com/gnss-ro/aws-opendata/Data-Description.pdf) 
 describes the rationale for the formats together with insights into 
 their utility in addition to their actual contents. The following are all 
 useful to a beginner at GNSS RO: 
@@ -67,8 +67,9 @@ useful to a beginner at GNSS RO:
 * [A complete error analysis of GNSS RO](http://doi.org/10.1029/97JD01569); 
 * [A description of a typical GNSS RO retrieval system](http://doi.org/10.1016/S1364-6826(01)00114-6); 
 * [Vertical coordinates in GNSS RO](http://doi.org/10.1002/2016JD025902); 
-* [Physical optics processing algorithms](http://doi.org/10.1029/2003RS002916); 
+* [Physical optics processing algorithms](http://doi.org/10.5194/amt-14-853-2021); 
 * [Statistical optimization to smooth RO in the upper stratosphere](http://doi.org/10.1029/2000RS002370); 
+* [A description of super-refraction](http://doi.org/10.1029/2002RS002728); 
 * [Retrieving tropospheric water vapor in GNSS RO](http://doi.org/10.1175/JTECH-D-13-00233.1); and
 * [Ionospheric calibration and the removal of ionospheric residual](http://doi.org/10.5194/amt-8-3385-2015). 
 
@@ -124,19 +125,29 @@ the mission and the satellite carrying the receiver, the name of a
 reference GNSS satellite used to calibrate the receiver clock if 
 calibration was performed by single- or double-differencing, the name of 
 the ground station used to calibrate the GNSS transmitter clocks if the 
-calibration was performed by double-differencing. 
+calibration was performed by double-differencing. Note that the 
+**excessPhase** and the positions of the LEO (**positionLEO**) are given 
+as a functions of **time** in the files, the **time** corresponding to 
+the time of reception of the signal by the LEO satellite; however, the 
+positions of the transmitter **positionGNSS** are specified at the 
+times the received signals were *transmitted* by the GNSS satellite. 
+The GNSS positions were computed by interpolating the GNSS positions 
+backward in time from the receive **time** by an amount corresponding 
+by the light travel time between the transmitter and the receiver. This 
+is done because it is the positions of the transmitter at transmit time 
+that directly enters into the RO retrieval process. 
 
-## Level 2a: Bending angle and dry atmosphere retrievals, dryRetrieval
+## Level 2a: Bending angle, refractivity, and dry atmosphere retrievals, refractivityRetrieval
 
 Retrievals of profiles of bending angle, microwave refractivity, and 
-"dry" temperature and pressure are provided in **dryRetrieval** files. 
+"dry" temperature and pressure are provided in **refractivityRetrieval** files. 
 A dry atmospheric retrieval is a retrieval of temperature pressure 
 that is obtained when the contribution water vapor to microwave 
 refractivity is considered non-existent. This is a good approximation 
 in the upper troposphere and stratosphere, but not so in the lower 
 troposphere where water vapor contributes approximately 10% of the 
-refractivity. Dry retrievals are generated because RO provides no 
-information in its own right that permits the disambiguition of 
+refractivity. Dry retrievals are generated because RO does not provide 
+enough information by itself to distinguish between the 
 contributions of water vapor and the "dry" atmospheric constituents 
 (nitrogen, oxygen, carbon dioxide) to microwave refractivity. 
 
@@ -161,16 +172,16 @@ execution and then used in the conversion to geopotential height when
 the data of this archive is compared to the atmospheric model output 
 or atmospheric dataset, whether it be satellite or in-situ. 
 
-## Level 2b: Full atmospheric retrievals, fullRetrieval
+## Level 2b: Full atmospheric retrievals, atmosphericRetrieval
 
 Retrievals of profiles of temperature, pressure, and water vapor 
-are provided in **fullRetrieval** files. In each case, auxiliary 
+are provided in **atmosphericRetrieval** files. In each case, auxiliary 
 information on temperature and/or water vapor has been used to 
 disentangle the contributions of water vapor and the dry atmosphere 
 to microwave refractivity. The auxiliary data usually comes from the 
 forecasts or analyses of a numerical weather prediction model or 
 atmospheric reanalysis. These profiles are usually of much coarser 
-vertical resolution than the **dryRetrieval** files because the 
+vertical resolution than the **refractivityRetrieval** files because the 
 atmospheric model data used as an auxiliary input is much coarser 
 in vertical resolution than RO is capable of. 
 
@@ -192,7 +203,7 @@ The various mnemonics in this path are defined in the following table:
 | :------: | :---------- | :------- |
 | center | The RO retrieval center that contributed the data | ucar, jpl, eum |
 | mission | The RO mission | (See the next table) | 
-| filetype | The file type | calibratedPhase, dryRetrieval, fullRetrieval |
+| filetype | The file type | calibratedPhase, refractivityRetrieval, atmosphericRetrieval |
 | yyyy | The year of the RO sounding | 1995, 1996, ... 2020, etc. |
 | mm | The month of the RO sounding | 01, 02, ..., 12 |
 | dd | The day of the month of the RO sounding | 01, 02, ..., 31 |
