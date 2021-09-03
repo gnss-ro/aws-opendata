@@ -67,7 +67,7 @@ useful to a beginner at GNSS RO:
 * [A complete error analysis of GNSS RO](http://doi.org/10.1029/97JD01569); 
 * [A description of a typical GNSS RO retrieval system](http://doi.org/10.1016/S1364-6826(01)00114-6); 
 * [Vertical coordinates in GNSS RO](http://doi.org/10.1002/2016JD025902); 
-* [Physical optics processing algorithms](http://doi.org/10.1029/2003RS002916); 
+* [Physical optics processing algorithms](http://doi.org/10.5194/amt-14-853-2021); 
 * [Statistical optimization to smooth RO in the upper stratosphere](http://doi.org/10.1029/2000RS002370); 
 * [A description of super-refraction](http://doi.org/10.1029/2002RS002728); 
 * [Retrieving tropospheric water vapor in GNSS RO](http://doi.org/10.1175/JTECH-D-13-00233.1); and
@@ -80,7 +80,7 @@ The AWS Open Data Registry now makes available all GNSS RO obtained and
 processed by three independent RO processing centers: the COSMIC DAAC of the 
 University Corporation for Atmospheric Research, the Jet Propulsion 
 Laboratory of the California Institute of Technology, and the Radio Occultation 
-Meteorology Satellite Application Facility (ROM SAF). One other independent 
+Meteorology Satellite Application Facility (ROM SAF) of EUMETSAT. One other independent 
 processing center is considering participation: the Wegener Center of the 
 University of Graz. The data are available at three levels: calibrated 
 satellites data (level 1b), retrievals of bending angle and refractivity 
@@ -125,19 +125,29 @@ the mission and the satellite carrying the receiver, the name of a
 reference GNSS satellite used to calibrate the receiver clock if 
 calibration was performed by single- or double-differencing, the name of 
 the ground station used to calibrate the GNSS transmitter clocks if the 
-calibration was performed by double-differencing. 
+calibration was performed by double-differencing. Note that the 
+**excessPhase** and the positions of the LEO (**positionLEO**) are given 
+as a functions of **time** in the files, the **time** corresponding to 
+the time of reception of the signal by the LEO satellite; however, the 
+positions of the transmitter **positionGNSS** are specified at the 
+times the received signals were *transmitted* by the GNSS satellite. 
+The GNSS positions were computed by interpolating the GNSS positions 
+backward in time from the receive **time** by an amount corresponding 
+by the light travel time between the transmitter and the receiver. This 
+is done because it is the positions of the transmitter at transmit time 
+that directly enters into the RO retrieval process. 
 
-## Level 2a: Bending angle and dry atmosphere retrievals, dryRetrieval
+## Level 2a: Bending angle, refractivity, and dry atmosphere retrievals, refractivityRetrieval
 
 Retrievals of profiles of bending angle, microwave refractivity, and 
-"dry" temperature and pressure are provided in **dryRetrieval** files. 
+"dry" temperature and pressure are provided in **refractivityRetrieval** files. 
 A dry atmospheric retrieval is a retrieval of temperature pressure 
 that is obtained when the contribution water vapor to microwave 
 refractivity is considered non-existent. This is a good approximation 
 in the upper troposphere and stratosphere, but not so in the lower 
 troposphere where water vapor contributes approximately 10% of the 
-refractivity. Dry retrievals are generated because RO provides no 
-information in its own right that permits the disambiguition of 
+refractivity. Dry retrievals are generated because RO does not provide 
+enough information by itself to distinguish between the 
 contributions of water vapor and the "dry" atmospheric constituents 
 (nitrogen, oxygen, carbon dioxide) to microwave refractivity. 
 
@@ -156,21 +166,22 @@ the Earth's surface. In most cases, that constant is taken as
 the World Meteorological Organization standard of 
 9.80665 J kg<sup>-1</sup> m<sup>-1</sup>. Some atmospheric models 
 and processing algorithms for other atmospheric datasets have 
-implemented different values for this constant. You must search their 
-documentation for the relevant value of the constant and apply to the 
-conversion of geopotential to geopotential height should you 
-wish to inter-compare those data (or model output) with RO retrievals. 
+implemented different values for this constant. Their documentation 
+must be searched for the value it incorporated in processing or 
+execution and then used in the conversion to geopotential height when 
+the data of this archive is compared to the atmospheric model output 
+or atmospheric dataset, whether it be satellite or in-situ. 
 
-## Level 2b: Full atmospheric retrievals, fullRetrieval
+## Level 2b: Full atmospheric retrievals, atmosphericRetrieval
 
 Retrievals of profiles of temperature, pressure, and water vapor 
-are provided in **fullRetrieval** files. In each case, auxiliary 
+are provided in **atmosphericRetrieval** files. In each case, auxiliary 
 information on temperature and/or water vapor has been used to 
 disentangle the contributions of water vapor and the dry atmosphere 
 to microwave refractivity. The auxiliary data usually comes from the 
 forecasts or analyses of a numerical weather prediction model or 
 atmospheric reanalysis. These profiles are usually of much coarser 
-vertical resolution than the **dryRetrieval** files because the 
+vertical resolution than the **refractivityRetrieval** files because the 
 atmospheric model data used as an auxiliary input is much coarser 
 in vertical resolution than RO is capable of. 
 
@@ -192,7 +203,7 @@ The various mnemonics in this path are defined in the following table:
 | :------: | :---------- | :------- |
 | center | The RO retrieval center that contributed the data | ucar, jpl, eum |
 | mission | The RO mission | (See the next table) | 
-| filetype | The file type | calibratedPhase, dryRetrieval, fullRetrieval |
+| filetype | The file type | calibratedPhase, refractivityRetrieval, atmosphericRetrieval |
 | yyyy | The year of the RO sounding | 1995, 1996, ... 2020, etc. |
 | mm | The month of the RO sounding | 01, 02, ..., 12 |
 | dd | The day of the month of the RO sounding | 01, 02, ..., 31 |
@@ -201,9 +212,9 @@ The various mnemonics in this path are defined in the following table:
 | version | A string defining the processing version | (Defined by the contributing center, no underscores) |
 | occid | The occultation ID as registered in the AWS Open Data GNSS RO data repository | See definition below |
 
-The occultation identifier **occid** is defined as **leo-ttt-yyyymmddhhnn** in which 
-satellite **leo** is the name of the low-Earth orbiting receiving satellite and  
-**ttt** is the three-digit RINEX standard identifier of the transmitting GNSS. 
+The occultation identifier **occid** is defined as **ttt-leo-yyyymmddhhnn** in which 
+**ttt** is the three-digit RINEX standard identifier of the transmitting GNSS 
+satellite and  **leo** is the name of the low-Earth orbiting receiving satellite. 
 The remaining symbols denote the time of the occultation. Note that an occultation 
 sounding is uniquely identified by the transmitter, receiver, and time of the occultation, 
 and the precision of the time needs to be no better than a few minutes. 
@@ -248,22 +259,20 @@ centers.
 | :---------------- | :----: |
 | UCAR COSMIC Project Office | ucar | 
 | Jet Propulsion Laboratory, Caltech | jpl | 
-| Radio Occultation Meteorology Satellite Application Facility | romsaf | 
+| EUMETSAT Radio Occultation Meteorology Satellite Application Facility | eum | 
 
 #  Data use licenses, acknowledgments
 
 The format definitions are the outcome of consultations of an international team 
-of GNSS RO retreival scientists and experts. They were drawn largely from 
-RO retrieval scientists of the International Radio Occultation Working Group 
-(IROWG), from public and private concerns, from universities, and government 
-laboratories. 
+of GNSS RO retreival scientists and experts. They were drawn largely from the 
+International Radio Occultation Working Group (IROWG), from public and private 
+concerns, from universities, government laboratories, and satellite agencies. 
 
 The data use licenses for the various contributing centers are 
 * The COSMIC Project Office at UCAR, a [creative commons license](https://www.ucar.edu/terms-of-use/data), 
 * The NASA Jet Propulsion Laboratory, California Institute of Technology, a 
-[creative commons license](https://creativecommmons.org/licenses/by/4.0/legalcode), 
-* The ROM SAF of EUMETSAT, the [EUMETSAT data use license](https://www.eumetsat.int/eumetsat-data-licensing), and 
-* Atmospheric and Environmental Research, a [creative commons license](https://creativecommons.org/licenses/by-nc-nd/4.0/). 
+[creative commons license](https://creativecommmons.org/licenses/by/4.0/legalcode), and 
+* The ROM SAF of EUMETSAT, the [EUMETSAT data use license](https://www.eumetsat.int/eumetsat-data-licensing). 
 
 The repository of GNSS RO data in the AWS Open Data Registry was assembled and 
 continues to be maintained by scientists and software engineers at Atmospheric 
@@ -272,5 +281,5 @@ Advancing Collaborative Connections for Earth System Science (ACCESS) Program 20
 grant 80NSSC21M0052. 
 
 
-*Last update: 26 August 2021*
+*Last update: 28 June 2021*
 
