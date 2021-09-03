@@ -201,7 +201,7 @@ The various mnemonics in this path are defined in the following table:
 
 | Mnemonic | Description | Examples |
 | :------: | :---------- | :------- |
-| center | The RO retrieval center that contributed the data | ucar, jpl, eum |
+| center | The RO retrieval center that contributed the data | ucar, jpl, romsaf |
 | mission | The RO mission | (See the next table) | 
 | filetype | The file type | calibratedPhase, refractivityRetrieval, atmosphericRetrieval |
 | yyyy | The year of the RO sounding | 1995, 1996, ... 2020, etc. |
@@ -259,7 +259,7 @@ centers.
 | :---------------- | :----: |
 | UCAR COSMIC Project Office | ucar | 
 | Jet Propulsion Laboratory, Caltech | jpl | 
-| EUMETSAT Radio Occultation Meteorology Satellite Application Facility | eum | 
+| EUMETSAT Radio Occultation Meteorology Satellite Application Facility | romsaf | 
 
 #  Data use licenses, acknowledgments
 
