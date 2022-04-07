@@ -201,6 +201,7 @@ The various mnemonics in this path are defined in the following table:
 
 | Mnemonic | Description | Examples |
 | :------: | :---------- | :------- |
+| version | The AWS archive version number | v1.0, v2.0 |
 | center | The RO retrieval center that contributed the data | ucar, jpl, romsaf |
 | mission | The RO mission | (See the next table) | 
 | filetype | The file type | calibratedPhase, refractivityRetrieval, atmosphericRetrieval |
