@@ -196,7 +196,7 @@ account for the influence of super-refraction in the retrieval.
 #  Paths and file naming
 
 The path and file naming convention for all of the RO data is 
-contributed/**center**/**mission**/**filetype**/**yyyy**/**mm**/**dd**/**filetype**\_**mission**\_**center**\_**version**\_**occid**.nc. 
+contributed/**version**/**center**/**mission**/**filetype**/**yyyy**/**mm**/**dd**/**filetype**\_**mission**\_**center**\_**version**\_**occid**.nc. 
 The various mnemonics in this path are defined in the following table: 
 
 | Mnemonic | Description | Examples |
