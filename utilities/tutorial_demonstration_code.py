@@ -25,6 +25,7 @@ distribution_solartime_figure: This function generates two plots, one
     matplotlib.
 
 The prerequisite nonstandard python modules that must be installed are 
+  * netCDF4
   * numpy
   * matplotlib
   * cartopy
@@ -74,6 +75,7 @@ import json
 
 #  Import installed modules. 
 
+from netCDF4 import Dataset
 import numpy as np
 import cartopy
 import matplotlib.pyplot as plt
@@ -241,8 +243,11 @@ def occultation_count_by_mission( first_year, last_year ):
 
                         #  Query the database and count the soundings. 
 
-                        ret = table.query( KeyConditionExpression = Key('leo-ttt').eq(partitionkey) 
-                                & Key('date-time').between( sortkey1, sortkey2 ) )
+                        ret = table.query( 
+                                KeyConditionExpression = 
+                                    Key('leo-ttt').eq(partitionkey) & 
+                                    Key('date-time').between( sortkey1, sortkey2 ) 
+                                )
                         rec['noccs'][mission] += ret['Count'] 
 
             LOGGER.info( "Record: " + json.dumps( rec ) )
@@ -416,8 +421,11 @@ def distribution_solartime_figure( year, month, day, epsfile ):
 
                 #  Query the database. 
 
-                ret = table.query( KeyConditionExpression = Key('leo-ttt').eq(partitionkey) 
-                        & Key('date-time').between( sortkey1, sortkey2 ) )
+                ret = table.query( 
+                        KeyConditionExpression = 
+                            Key('leo-ttt').eq(partitionkey) & 
+                            Key('date-time').between( sortkey1, sortkey2 ) 
+                        )
 
                 if ret['Count'] != 0: 
                     for item in ret['Items']: 
@@ -489,6 +497,122 @@ def distribution_solartime_figure( year, month, day, epsfile ):
 
     return
 
+
+
+def center_intercomparison_figure( year, month, day, mission, epsfile ): 
+    """Compare bending angle, refractivity, dry temperature, pressure, 
+    temperature, and water vapor for all profiles processed by UCAR and 
+    ROM SAF for a particular mission, year, month, and day. The figure 
+    is saved to encapsulated postscript file epsfile."""
+
+    #  AWS access. Be sure to establish authentication for profile aws_profile 
+    #  for successful use. 
+
+    session = boto3.Session( profile_name=aws_profile, region_name=aws_region )
+
+    #  DynamoDB table object. 
+
+    resource = session.resource( "dynamodb" )
+    table = resource.Table( dynamodb_table )
+
+    #  AWS Open Data Repository of RO data. 
+
+    resource = session.resource( "s3" )
+    s3 = resource.Bucket( "gnss-ro-data" )
+
+    #  Scan for RO soundings processed by UCAR and ROM SAF for mission, 
+    #  year, month, day. 
+
+    #  Define sort key range. 
+
+    dtime1 = datetime( year, month, day )
+    dtime2 = dtime1 + timedelta( minutes=1439 )
+
+    sortkey1 = "{:4d}-{:02d}-{:02d}-{:02d}-{:02d}".format( 
+            dtime1.year, dtime1.month, dtime1.day, dtime1.hour, dtime1.minute )
+    sortkey2 = "{:4d}-{:02d}-{:02d}-{:02d}-{:02d}".format( 
+            dtime2.year, dtime2.month, dtime2.day, dtime2.hour, dtime2.minute )
+
+            #  Initialize new year-month record. 
+
+    #  Initialize the list of RO sounding database entries. 
+
+    commonsoundings = []
+
+    #  Loop over partition keys. The first element of the partition key is a 
+    #  satellite identifier, which are given in the valid_missions definitions. 
+
+    for satellite in valid_missions[mission]: 
+        for transmitter in transmitters: 
+
+            partitionkey = f"{satellite}-{transmitter}"
+
+            #  Query the database and count the soundings. 
+
+            ret = table.query( 
+                    KeyConditionExpression = 
+                        Key('leo-ttt').eq(partitionkey) & 
+                        Key('date-time').between( sortkey1, sortkey2 ), 
+                    FilterExpression = 
+                        Attr('ucar_refractivityRetrieval').ne("") & 
+                        Attr('ucar_atmosphericRetrieval').ne("") & 
+                        Attr('romsaf_refractivityRetrieval').ne("") & 
+                        Attr('romsaf_atmosphericRetrieval').ne("") 
+                    )
+
+            if ret['Count'] > 0: 
+                commonsoundings += ret['Items']
+
+    #  Analysis of refractivityRetrieval files. Download the refractivityRetrieval 
+    #  files common to UCAR and ROM SAF and compare bending angle, refractivity, 
+    #  dry temperature. 
+
+    #  Independent coordinate for bending angle, in meters. 
+    common_impactHeights = np.arange( 0.0, 60.0001e3, 0.1 ) 
+
+    #  Independent coordinate for refractivity, dry temperature, in meters. 
+    common_geopotentialHeights = np.arange( 0.0, 60.0001e3, 0.1 )
+
+    #  Initialize difference statistics. 
+    diffs_bendingAngle = [ [] for i in range(len(common_impactHeights)) ]
+    diffs_refractivity = [ [] for i in range(len(common_geopotentialHeights)) ]
+    diffs_dryTemperature = [ [] for i in range(len(common_geopotentialHeights)) ]
+
+    #  Loop over refractivityRetrieval files. 
+
+    for sounding in commonsoundings: 
+        for center in [ "ucar", "romsaf" ]: 
+
+            if center == "ucar": 
+                remote_path = sounding['ucar_refractivityRetrieval']
+            elif center == "romsaf": 
+                remote_path = sounding['romsaf_refractivityRetrieval']
+
+            input_file = os.path.split( remote_path )[1]
+            s3.download_file( remote_path, input_file )
+
+            #  Open NetCDF file. 
+
+            data = Dataset( input_file, 'r' )
+
+            #  L1 bending angle and impact parameter. 
+
+            input_bendingAngle = data.variables['rawBendingAngle'][:,0]
+            input_impactParameter = data.variables['impactParameter'][:]
+
+            #  Find radius of curvature in order to compute impact height. 
+
+            refLatitude = data.variables['refLatitude'].getValue()
+            refLongitude = data.variables['refLongitude'].getValue()
+            equatorialRadius = data.variables['equatorialRadius'].getValue()
+            polarRadius = data.variables['polarRadius'].getValue()
+            centerOfCurvature = data.variables['centerOfCurvature'][:]
+
+        lat = np.deg2rad( refLatitude )
+        geocentricLatitude = np.rad2deg( 
+                np.arctan2( polarRadius**2 * np.sin(lat), equatorialRadius**2 * np.cos(lat) ) 
+                )
+        surfacePoint = np.array( [ 
 
 #  Main program. 
 
