@@ -1,8 +1,70 @@
-"""Code examples for consulting the DynamoDB database for GNSS radio occultation 
-data in the AWS Open Data Registry. 
+"""Tutorial Demonstration Code
 
+Code examples for consulting the DynamoDB database for GNSS radio occultation 
+data in the AWS Open Data Registry. The code examples illustrate how to 
+manipulate the DynamoDB database, plot results of database inquiries, and basic 
+inter-comparison of bending angle, refractivity, temperature and pressure for 
+occultations as processed by two different retrieval centers.
+
+The instructive/tutorial methods are...
+
+occultation_count_by_mission: This function queries the DynamoDB database 
+    of RO data in the gnss-ro-data Open Data Registry archive in order to 
+    count the number of occultation for every month in a specified range of 
+    years and do so by RO mission. The results are saved in an output JSON 
+    file for later plotting by...
+
+occultation_count_figure: This function generates a stackplot of mean 
+    daily counts of RO soundings by mission on monthly intervals. The plot 
+    is saved as an encapsulated postscript file. 
+
+distribution_solartime_figure: This function generates two plots, one 
+    showing the distribution of RO soundings for a given day in longitude-
+    latitude space, and the second showing the distribution of the same 
+    sounding in the space of solar time-latitude. It uses cartopy and 
+    matplotlib.
+
+The prerequisite nonstandard python modules that must be installed are 
+  * numpy
+  * matplotlib
+  * cartopy
+  * boto3
+
+Before any of this code is implemented, it is first necessary to manifest 
+the DynamoDB database using the utilities in ???. The user only need 
+modify a few parameters in the "IMPORTANT: Configuration" section below 
+in order for the code to function. 
+
+
+Version: 1.0
 Author: Stephen Leroy (sleroy@aer.com)
-Date: April 28, 2022"""
+Date: May 6, 2022
+
+"""
+
+##################################################
+#  IMPORTANT: Configuration
+##################################################
+
+#  Define the name of the AWS profile to be used for authentication 
+#  purposes. The authentication will be needed to access the DynamoDB 
+#  database table. 
+
+aws_profile = "aernasaprod"
+
+#  Define the AWS region where the gnss-ro-data Open Data Registry 
+#  S3 bucket is hosted *and* where the DynamoDB database is manifested. 
+
+aws_region = "us-east-1"
+
+#  Define the name of the DynamoDB data base table. 
+
+dynamodb_table = "gnss-ro-data-staging"
+
+##################################################
+#  Configuration complete. 
+##################################################
+
 
 #  Import python standard modules. 
 
@@ -19,11 +81,9 @@ from matplotlib.ticker import MultipleLocator
 import boto3
 from boto3.dynamodb.conditions import Key, Attr
 
-#  Local resources. 
-
-aws_profile = "aernasaprod"
-aws_region = "us-east-1"
-dynamodb_table = "gnss-ro-data-staging"
+#  The RO missions in the data archive with pointers to the names 
+#  of the satellites in each RO mission. This dictionary is a summary 
+#  of Table 5 in the Data-Description.pdf document. 
 
 valid_missions = {
     'gpsmet': [ "gpsmet", "gpsmetas" ],
@@ -54,14 +114,17 @@ plt.rcParams.update( {
   'ytick.minor.width': axeslinewidth, 
   'axes.linewidth': axeslinewidth } )
 
-#  Define GNSS constellations. 
+#  GNSS constellations used as RO transmitters for this analysis. This must 
+#  include "R" in addition to "G" when cosmic2 data or data from the 
+#  commercial RO data providers become available. 
 
+# valid_constellations = [ "G", "R" ]
 valid_constellations = [ "G" ]
 
-#  Files containing count data and mission colors. 
+#  Intermediate files: RO data count by mission and mission color table. 
 
-alldata_json_file = "count_occultations.json"
-colors_json_file = "mission_colors.json"
+alldata_json_file = "occultation_count_by_mission.json"
+colors_json_file = "color_table_by_mission.json"
 
 #  Define month labeling strings. 
 
@@ -74,10 +137,12 @@ LOGGER = logging.getLogger( __name__ )
 
 
 ################################################################################
-#  Utilities. 
+#  Useful utilities. 
 ################################################################################
 
 def latlabels( lats ): 
+    """Create a list of tick labels for latitutes based on a list/array of 
+    tick values."""
 
     ylabels = []
     for lat in lats: 
@@ -92,8 +157,7 @@ def latlabels( lats ):
     return ylabels
 
 def get_transmitters(): 
-
-    #  Define list of all possible transmitters. 
+    """Return a list of possible transmitter names as 3-character PRNs"""
 
     transmitters = []
     for constellation in valid_constellations: 
@@ -116,7 +180,7 @@ def get_transmitters():
 #  Methods. 
 ################################################################################
 
-def count_occultations( first_year, last_year ): 
+def occultation_count_by_mission( first_year, last_year ): 
     """Count occultations by mission and by month, then output to 
     alldata_json_file."""
 
@@ -151,8 +215,10 @@ def count_occultations( first_year, last_year ):
             dtime2 = dtime1 + timedelta( days=31 )
             dtime2 = datetime( dtime2.year, dtime2.month, 1 ) - timedelta( minutes=1 )
 
-            sortkey1 = "{:4d}-{:02d}-{:02d}-{:02d}-{:02d}".format( dtime1.year, dtime1.month, dtime1.day, dtime1.hour, dtime1.minute )
-            sortkey2 = "{:4d}-{:02d}-{:02d}-{:02d}-{:02d}".format( dtime2.year, dtime2.month, dtime2.day, dtime2.hour, dtime2.minute )
+            sortkey1 = "{:4d}-{:02d}-{:02d}-{:02d}-{:02d}".format( 
+                    dtime1.year, dtime1.month, dtime1.day, dtime1.hour, dtime1.minute )
+            sortkey2 = "{:4d}-{:02d}-{:02d}-{:02d}-{:02d}".format( 
+                    dtime2.year, dtime2.month, dtime2.day, dtime2.hour, dtime2.minute )
 
             #  Initialize new year-month record. 
 
@@ -192,7 +258,8 @@ def count_occultations( first_year, last_year ):
     return alldata
 
 
-def plot_counts( epsfile ): 
+
+def occultation_count_figure( epsfile ): 
     """Plot of timeseries stackplot of the counts of occultations per day by 
     mission with monthly resolution. Save encapsulated postscript file to 
     epsfile."""
@@ -291,10 +358,11 @@ def plot_counts( epsfile ):
     return
 
 
+
 def distribution_solartime_figure( year, month, day, epsfile ): 
-    """Create a figure showing the distribution of occultations, by mission, as is 
-    typical for one day of soundings for a particular year-month. epsfile is the 
-    output encapsulated postscript file."""
+    """Create a figure showing the distribution of occultations, by mission, for 
+    one day of soundings as specified by year, month, day. The figure is saved 
+    as encapsulated output to epsfile."""
 
     #  Set up session and dynamodb table. 
 
@@ -325,8 +393,10 @@ def distribution_solartime_figure( year, month, day, epsfile ):
     dtime1 = datetime( year, month, day )
     dtime2 = dtime1 + timedelta( minutes=1439 )
 
-    sortkey1 = "{:4d}-{:02d}-{:02d}-{:02d}-{:02d}".format( dtime1.year, dtime1.month, dtime1.day, dtime1.hour, dtime1.minute )
-    sortkey2 = "{:4d}-{:02d}-{:02d}-{:02d}-{:02d}".format( dtime2.year, dtime2.month, dtime2.day, dtime2.hour, dtime2.minute )
+    sortkey1 = "{:4d}-{:02d}-{:02d}-{:02d}-{:02d}".format( 
+            dtime1.year, dtime1.month, dtime1.day, dtime1.hour, dtime1.minute )
+    sortkey2 = "{:4d}-{:02d}-{:02d}-{:02d}-{:02d}".format( 
+            dtime2.year, dtime2.month, dtime2.day, dtime2.hour, dtime2.minute )
 
     #  Loop over missions. 
 
@@ -420,15 +490,15 @@ def distribution_solartime_figure( year, month, day, epsfile ):
     return
 
 
+#  Main program. 
+
 if __name__ == "__main__": 
-    import pdb
-    pdb.set_trace()
-    # alldata = count_occultations( 1995, 2020 )
-    # plot_counts()
-    # distribution_solartime_figure( 1997, 1, 10, epsfile="distribution_1997-01-10.eps" )
-    # distribution_solartime_figure( 2003, 1, 2, epsfile="distribution_2003-01-02.eps" )
+    alldata = occultation_count_by_mission( 1995, 2020 )
+    occultation_count_figure()
+    distribution_solartime_figure( 1997, 1, 10, epsfile="distribution_1997-01-10.eps" )
+    distribution_solartime_figure( 2003, 1, 2, epsfile="distribution_2003-01-02.eps" )
     distribution_solartime_figure( 2009, 1, 4, epsfile="distribution_2009-01-04.eps" )
-    # distribution_solartime_figure( 2020, 1, 3, epsfile="distribution_2020-01-03.eps" )
+    distribution_solartime_figure( 2020, 1, 3, epsfile="distribution_2020-01-03.eps" )
 
     pass
 
