@@ -3,10 +3,17 @@
 Code examples for consulting the DynamoDB database for GNSS radio occultation 
 data in the AWS Open Data Registry and performing some basic data analysis, 
 which, in this case, is a processing center inter-comparison of retrieved 
-RO variables bending angle, refractivity, temperature and pressure for 
+RO variables bending angle, log-refractivity, temperature and pressure for 
 occultations as processed by two different retrieval centers.
 
-The instructive/tutorial methods are...
+See the __main__ code at the bottom of this module to see how to execute 
+the two main functions defined below...
+
+  * compute_center_intercomparison, which computes the inter-center 
+    differences on common level grids, and 
+
+  * center_intercomparison_figure, which plots the results as box-and-
+    whisker plots. 
 
 The prerequisite nonstandard python modules that must be installed are 
   * netCDF4
@@ -24,7 +31,7 @@ in order for the code to function.
 
 Version: 1.0
 Author: Stephen Leroy (sleroy@aer.com)
-Date: May 16, 2022
+Date: May 17, 2022
 
 """
 
@@ -243,7 +250,7 @@ def radius_of_curvature( ae, ap, lond, latd, coc ):
 ################################################################################
 
 def compute_center_intercomparison( year, month, day, mission, jsonfile ): 
-    """Compute the center inter-comparison for bending angle, refractivity, 
+    """Compute the center inter-comparison for bending angle, log-refractivity, 
     dry temperature, temperature, and specific humidity for all profiles 
     processed by UCAR and ROM SAF for a particular mission, year, month, 
     and day. The output of the computation is stored as JSON in jsonfile."""
@@ -316,19 +323,19 @@ def compute_center_intercomparison( year, month, day, mission, jsonfile ):
 
     common_impactHeight = np.arange( 0.0, 60.0001e3, 100 ) 
 
-    #  Independent coordinate for refractivity, dry temperature, temperature, 
+    #  Independent coordinate for log-refractivity, dry temperature, temperature, 
     #  and specific humidity, in meters. 
 
     common_geopotentialHeight = np.arange( 0.0, 60.0001e3, 200 )
 
     #  Analysis of refractivityRetrieval files. Download the refractivityRetrieval 
-    #  files common to UCAR and ROM SAF and compare bending angle, refractivity, 
+    #  files common to UCAR and ROM SAF and compare bending angle, log-refractivity, 
     #  dry temperature. 
 
     #  Initialize difference statistics. 
 
     diffs_bendingAngle = [ [] for i in range(len(common_impactHeight)) ]
-    diffs_refractivity = [ [] for i in range(len(common_geopotentialHeight)) ]
+    diffs_logrefractivity = [ [] for i in range(len(common_geopotentialHeight)) ]
     diffs_dryTemperature = [ [] for i in range(len(common_geopotentialHeight)) ]
 
     #  Loop over refractivityRetrieval files. 
@@ -341,7 +348,7 @@ def compute_center_intercomparison( year, month, day, mission, jsonfile ):
             LOGGER.info( f"  sounding {isounding+1:d}" )
 
         diff_bendingAngle = np.ma.array( np.zeros( len(common_impactHeight) ), mask=False )
-        diff_refractivity = np.ma.array( np.zeros( len(common_geopotentialHeight) ), mask=False )
+        diff_logrefractivity = np.ma.array( np.zeros( len(common_geopotentialHeight) ), mask=False )
         diff_dryTemperature = np.ma.array( np.zeros( len(common_geopotentialHeight) ), mask=False )
 
         for center in [ "ucar", "romsaf" ]: 
@@ -384,20 +391,20 @@ def compute_center_intercomparison( year, month, day, mission, jsonfile ):
             bendingAngle = masked_interpolate( input_impactHeight, input_bendingAngle, 
                     common_impactHeight )
 
-            #  Interpolate refractivity onto the common geopotential heights. 
+            #  Interpolate log-refractivity onto the common geopotential heights. 
 
             input_geopotentialHeight = data.variables['geopotential'][:] / gravity
-            input_refractivity = data.variables['refractivity'][:]
+            input_logrefractivity = np.log( data.variables['refractivity'][:] )
 
-            #  Interpolate refractivity onto the common geopotential heights. 
+            #  Interpolate log-refractivity onto the common geopotential heights. 
 
-            refractivity = masked_interpolate( input_geopotentialHeight, input_refractivity, 
+            logrefractivity = masked_interpolate( input_geopotentialHeight, input_logrefractivity, 
                     common_geopotentialHeight )
 
             #  Generate dry temperature. 
 
             input_dryPressure = data.variables['dryPressure'][:]
-            input_dryTemperature = input_dryPressure / input_refractivity * k1
+            input_dryTemperature = input_dryPressure / np.exp( input_logrefractivity ) * k1
 
             #  Interpolate dry temperature onto the common geopotential heights. 
 
@@ -413,27 +420,27 @@ def compute_center_intercomparison( year, month, day, mission, jsonfile ):
 
             if center == "ucar": 
                 diff_bendingAngle += bendingAngle
-                diff_refractivity += refractivity
+                diff_logrefractivity += logrefractivity
                 diff_dryTemperature += dryTemperature
             elif center == "romsaf": 
                 diff_bendingAngle -= bendingAngle
-                diff_refractivity -= refractivity
+                diff_logrefractivity -= logrefractivity
                 diff_dryTemperature -= dryTemperature
 
         #  Record the differences between UCAR and ROM SAF for bending angle, 
-        #  refractivity, and dry temperature. 
+        #  log-refractivity, and dry temperature. 
 
         for i in np.argwhere( np.logical_not( diff_bendingAngle.mask ) ).squeeze(): 
             diffs_bendingAngle[i].append( diff_bendingAngle[i] )
 
-        for i in np.argwhere( np.logical_not( diff_refractivity.mask ) ).squeeze(): 
-            diffs_refractivity[i].append( diff_refractivity[i] )
+        for i in np.argwhere( np.logical_not( diff_logrefractivity.mask ) ).squeeze(): 
+            diffs_logrefractivity[i].append( diff_logrefractivity[i] )
 
         for i in np.argwhere( np.logical_not( diff_dryTemperature.mask ) ).squeeze(): 
             diffs_dryTemperature[i].append( diff_dryTemperature[i] )
 
     #  Analysis of atmosphericRetrieval files. Download the atmosphericRetrieval 
-    #  files common to UCAR and ROM SAF and compare bending angle, refractivity, 
+    #  files common to UCAR and ROM SAF and compare bending angle, log-refractivity, 
     #  dry temperature. 
 
     LOGGER.info( "Analyzing atmosphericRetrieval files" )
@@ -518,7 +525,7 @@ def compute_center_intercomparison( year, month, day, mission, jsonfile ):
             'common_impactHeight': list( common_impactHeight ), 
             'common_geopotentialHeight': list( common_geopotentialHeight ), 
             'diffs_bendingAngle': diffs_bendingAngle, 
-            'diffs_refractivity': diffs_refractivity, 
+            'diffs_logrefractivity': diffs_logrefractivity, 
             'diffs_dryTemperature': diffs_dryTemperature, 
             'diffs_temperature': diffs_temperature, 
             'diffs_specificHumidity': diffs_specificHumidity }
@@ -533,10 +540,10 @@ def compute_center_intercomparison( year, month, day, mission, jsonfile ):
 
 #  Plot results of processing center intercomparison. 
 
-def center_intercomparison_figure( jsonfile, pdffile ): 
+def center_intercomparison_figure( jsonfile, epsfile ): 
     """Generate a figure showing the processing center intercomparison statistics. 
     jsonfile is generated by compute_center_comparison. The output is written to 
-    PDF file pdffile."""
+    encapsulated postscript file epsfile."""
 
     #  Read JSON file. 
 
@@ -545,48 +552,182 @@ def center_intercomparison_figure( jsonfile, pdffile ):
 
     #  Set up figure. 
 
-    fig, axes = plt.subplots( nrows=3, ncols=2, figsize=(9,6.5) )
+    fig, axes = plt.subplots( nrows=2, ncols=2, figsize=(9,6.5) )
 
-    #  First axis: bending angle comparison. 
+    #  First axis: log-refractivity comparison. 
+
+    green_diamond = { 'markerfacecolor': "g", 'marker': "D", 'markersize': 2.0 }
+    kwargs = { 'vert': False, 'whis': (5,95), 'flierprops': green_diamond, 
+            'manage_ticks': False, 'widths': 1.3 } 
 
     ax = axes[0,0]
 
     ytickv = np.arange( 0.0, 60.01, 10 )
     ax.set_yticks( ytickv )
+    ax.set_ylim( ytickv.min(), ytickv.max() )
     ax.yaxis.set_minor_locator( MultipleLocator(2) )
-    ax.set_ylabel( "Impact Height [km]" )
+    ax.set_ylabel( "Geopotential Height [km]" )
 
-    xtickv = np.arange( -100, 100.01, 50 )
+    xtickv = np.arange( -10, 10.01, 5 )
     ax.set_xticks( xtickv )
-    ax.xaxis.set_minor_locator( MultipleLocator(10) )
-    ax.set_xlabel( "$\Delta$ Bending [$\mu$-rads]" )
+    ax.set_xlim( xtickv.min(), xtickv.max() )
+    ax.xaxis.set_minor_locator( MultipleLocator(1) )
+    ax.set_xlabel( "$\Delta$ Refractivity [\%]" )
+
+    #  Subset the data by level to every 5-km. 
+
+    resolution = 2.0e3
+    da = np.abs( data['common_geopotentialHeight'][1] - data['common_geopotentialHeight'][0] )
+    nskip = int( resolution / da )
+
+    subset_diffs_logrefractivity = []
+    subset_geopotentialHeights = []
+
+    for ia in range( 0, len( data['common_geopotentialHeight'] ), nskip ): 
+        subset_geopotentialHeights.append( data['common_geopotentialHeight'][ia] )
+        subset_diffs_logrefractivity.append( 
+                np.array( data['diffs_logrefractivity'][ia] ) * 100 )
+    subset_geopotentialHeights = np.array( subset_geopotentialHeights ) / 1000
 
     #  Box and whisker plot. 
 
-    da = np.abs( data['common_impactHeights'][1] - data['common_impactHeights'][0] )
-    nskip = int( 5.0e3 / da )
+    ax.boxplot( subset_diffs_logrefractivity, 
+            positions=subset_geopotentialHeights, **kwargs )
 
-    subset_diffs_bendingAngle = []
+    #  Second axis: dry temperature comparison. 
 
-    for ia in range( len( data['common_impactHeights'] ), nskip ): 
-        subset_impactHeights.append( data['common_impactHeights'][ia] )
-        subset_diffs_bendingAngle.append( data['diffs_bendingAngle'][ia] )
-    ax.boxplot( subset_diffs_bendingAngle, vert=False, whis=(5,95), 
-            positions=subset_impactHeights, sym='k+', manage_ticks=False )
+    ax = axes[0,1]
 
-    plt.show()
+    ytickv = np.arange( 0.0, 60.01, 10 )
+    ax.set_yticks( ytickv )
+    ax.set_ylim( ytickv.min(), ytickv.max() )
+    ax.yaxis.set_minor_locator( MultipleLocator(2) )
+    ax.set_ylabel( "Geopotential Height [km]" )
+
+    xtickv = np.arange( -20, 20.01, 10 )
+    ax.set_xticks( xtickv )
+    ax.set_xlim( xtickv.min(), xtickv.max() )
+    ax.xaxis.set_minor_locator( MultipleLocator(2) )
+    ax.set_xlabel( "$\Delta$ Dry Temperature [K]" )
+
+    #  Subset the data by level to every 5-km. 
+
+    resolution = 2.0e3
+    da = np.abs( data['common_geopotentialHeight'][1] - data['common_geopotentialHeight'][0] )
+    nskip = int( resolution / da )
+
+    subset_diffs_dryTemperature = []
+    subset_geopotentialHeights = []
+
+    for ia in range( 0, len( data['common_geopotentialHeight'] ), nskip ): 
+        subset_geopotentialHeights.append( data['common_geopotentialHeight'][ia] )
+        subset_diffs_dryTemperature.append( data['diffs_dryTemperature'][ia] )
+    subset_geopotentialHeights = np.array( subset_geopotentialHeights ) / 1000
+
+    #  Box and whisker plot. 
+
+    ax.boxplot( subset_diffs_dryTemperature, 
+            positions=subset_geopotentialHeights, **kwargs )
+
+    #  Third axis: temperature comparison. 
+
+    green_diamond = { 'markerfacecolor': "g", 'marker': "D", 'markersize': 1.2 }
+    kwargs = { 'vert': False, 'whis': (5,95), 'flierprops': green_diamond, 
+            'manage_ticks': False, 'widths': 0.75 } 
+
+    ax = axes[1,0]
+
+    ytickv = np.arange( 0.0, 20.01, 5 )
+    ax.set_yticks( ytickv )
+    ax.set_ylim( ytickv.min(), ytickv.max() )
+    ax.yaxis.set_minor_locator( MultipleLocator(1) )
+    ax.set_ylabel( "Geopotential Height [km]" )
+
+    xtickv = np.arange( -10, 10.01, 5 )
+    ax.set_xticks( xtickv )
+    ax.set_xlim( xtickv.min(), xtickv.max() )
+    ax.xaxis.set_minor_locator( MultipleLocator(1) )
+    ax.set_xlabel( "$\Delta$ Temperature [K]" )
+
+    #  Subset the data by level to every 5-km. 
+
+    resolution = 1.0e3
+    da = np.abs( data['common_geopotentialHeight'][1] - data['common_geopotentialHeight'][0] )
+    nskip = int( resolution / da )
+
+    subset_diffs_temperature = []
+    subset_geopotentialHeights = []
+
+    for ia in range( 0, len( data['common_geopotentialHeight'] ), nskip ): 
+        subset_geopotentialHeights.append( data['common_geopotentialHeight'][ia] )
+        subset_diffs_temperature.append( data['diffs_temperature'][ia] )
+    subset_geopotentialHeights = np.array( subset_geopotentialHeights ) / 1000
+
+    #  Box and whisker plot. 
+
+    ax.boxplot( subset_diffs_temperature, 
+            positions=subset_geopotentialHeights, **kwargs )
+
+    #  Fourth axis: specific humidity comparison. 
+
+    ax = axes[1,1]
+
+    ytickv = np.arange( 0.0, 20.01, 5 )
+    ax.set_yticks( ytickv )
+    ax.set_ylim( ytickv.min(), ytickv.max() )
+    ax.yaxis.set_minor_locator( MultipleLocator(1) )
+    ax.set_ylabel( "Geopotential Height [km]" )
+
+    xtickv = np.arange( -4, 4.01, 2 )
+    ax.set_xticks( xtickv )
+    ax.set_xlim( xtickv.min(), xtickv.max() )
+    ax.xaxis.set_minor_locator( MultipleLocator(0.5) )
+    ax.set_xlabel( "$\Delta$ Specific Humidity [g/kg]" )
+
+    #  Subset the data by level to every 5-km. 
+
+    resolution = 1.0e3
+    da = np.abs( data['common_geopotentialHeight'][1] - data['common_geopotentialHeight'][0] )
+    nskip = int( resolution / da )
+
+    subset_diffs_specificHumidity = []
+    subset_geopotentialHeights = []
+
+    for ia in range( 0, len( data['common_geopotentialHeight'] ), nskip ): 
+        subset_geopotentialHeights.append( 
+                data['common_geopotentialHeight'][ia] )
+        subset_diffs_specificHumidity.append( 
+                np.array( data['diffs_specificHumidity'][ia] ) * 1000 )
+    subset_geopotentialHeights = np.array( subset_geopotentialHeights ) / 1000
+
+    #  Box and whisker plot. 
+
+    ax.boxplot( subset_diffs_specificHumidity, 
+            positions=subset_geopotentialHeights, **kwargs )
+
+    #  Save to encapsulated postscript file. 
+
+    LOGGER.info( f"Saving to {epsfile}." )
+    fig.savefig( epsfile, format='eps' )
 
     return
+
+
 
 #  Main program. 
 
 if __name__ == "__main__": 
-    import pdb
-    pdb.set_trace()
+
+    #  Compute the differences between UCAR and ROM SAF RO soundings for 
+    #  4 January 2009. 
+
     jsonfile = "centerintercomparison_2009-01-04_cosmic1.json"
     compute_center_intercomparison( 2009, 1, 4, 'cosmic1', jsonfile )
-    pdffile = "centerintercomparison_2009-01-04_cosmic1.pdf"
-    center_intercomparison_figure( jsonfile, pdffile )
+
+    #  Plot the results of the inter-center comparison. 
+
+    epsfile = "centerintercomparison_2009-01-04_cosmic1.eps"
+    center_intercomparison_figure( jsonfile, epsfile )
 
     pass
 
