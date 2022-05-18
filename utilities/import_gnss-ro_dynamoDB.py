@@ -31,6 +31,11 @@ to get all 2020 files
 to get all metop files for 2015
 >>python3 import_gnss-ro_dynamoDB.py --dynamodb_table_name gnss-ro-import-table --mission metop --date_str "2015"
 
+to run the data_analysis_demonstration.py first run:
+>>python3 import_gnss-ro_dynamoDB.py --dynamodb_table_name gnss-ro-import-table --mission cosmic1 --date_str "2015-01"
+
+to import the full catalog table NOTE: this may take a very long time (not recommended)
+>>python3 import_gnss-ro_dynamoDB.py --full
 
 Version: 1.0
 Author: Amy McVey (amcvey@aer.com)
@@ -112,7 +117,10 @@ def search_json_subsets(local_file_list, obj_key_list, date_str):
         for item in df["Item"]:
             #if "2009-01-01" in item["date-time"]
             #if "cosmic1" in item["mission"]
-            if date_str in item["date-time"]['S']:
+            if date_str:
+                if date_str in item["date-time"]['S']:
+                    item_import_list.append(item)
+            else:
                 item_import_list.append(item)
 
     return item_import_list
@@ -164,7 +172,7 @@ def create_dynamo(new_dynamo_table_name):
         ],
         BillingMode='PAY_PER_REQUEST',
     )
-    time.sleep(5)
+    time.sleep(10)
 
 #  Main program.
 
@@ -174,6 +182,7 @@ if __name__ == "__main__":
     parser.add_argument("--dynamodb_table_name", dest="dynamodb_table_name", type=str, default="gnss-ro-import" )
     parser.add_argument("--mission", dest="mission", type=str, default=None ) #cosmic1
     parser.add_argument("--date_str", dest="date_str", type=str, default=None ) #"2009-01-01" or "2009"
+    parser.add_argument("--full", dest="full", action="store_true" )
 
     args = parser.parse_args()
 
@@ -198,6 +207,10 @@ if __name__ == "__main__":
         elif args.date_str and year in obj.key and not args.mission:
             local_file_list.append(os.path.basename(obj.key))
             obj_key_list.append(obj.key)
+        elif args.full:
+            local_file_list.append(os.path.basename(obj.key))
+            obj_key_list.append(obj.key)
+            year = "all"
 
     if len(local_file_list) == 0:
         print("no files fit the parameters provided, check your date string YYYY or YYYY-MM")
@@ -213,9 +226,18 @@ if __name__ == "__main__":
     else:
         print("table exists, continuing with import")
 
-
-    item_list = search_json_subsets(local_file_list, obj_key_list, args.date_str)
-    print("items to import",len(item_list))
-    import_array(item_list,args.dynamodb_table_name)
+    if args.full:
+        #import whole table
+        print(f"Looping through all subset json files for FULL database import\n")
+        for file in local_file_list:
+            item_list = search_json_subsets([file], obj_key_list, args.date_str)
+            min_to_finish = round(len(item_list)/23.5/60,1)
+            print(f"items to import from {file}: {len(item_list)} (This may take {min_to_finish} minutes.)")
+            import_array(item_list,args.dynamodb_table_name)
+    else:
+        item_list = search_json_subsets(local_file_list, obj_key_list, args.date_str)
+        min_to_finish = round(len(item_list)/23.5/60,1)
+        print(f"items to import: {len(item_list)} (This may take {min_to_finish} minutes.)")
+        import_array(item_list,args.dynamodb_table_name)
 
     pass
