@@ -103,7 +103,7 @@ plt.rcParams.update( {
   'font.family': "Times New Roman", 
   'font.size': 8, 
   'font.weight': "normal", 
-  'text.usetex': True, 
+  'text.usetex': False, 
   'xtick.major.width': axeslinewidth, 
   'xtick.minor.width': axeslinewidth, 
   'ytick.major.width': axeslinewidth, 
@@ -154,9 +154,9 @@ def latlabels( lats ):
     ylabels = []
     for lat in lats: 
         if lat < 0: 
-            ylabel = "{:}$^\circ$S".format( np.abs( lat ) )
+            ylabel = "{:}S".format( np.abs( lat ) )
         elif lat > 0: 
-            ylabel = "{:}$^\circ$N".format( np.abs( lat ) )
+            ylabel = "{:}N".format( np.abs( lat ) )
         else: 
             ylabel = "Eq"
         ylabels.append( ylabel )
@@ -572,7 +572,7 @@ def center_intercomparison_figure( jsonfile, epsfile ):
     ax.set_xticks( xtickv )
     ax.set_xlim( xtickv.min(), xtickv.max() )
     ax.xaxis.set_minor_locator( MultipleLocator(1) )
-    ax.set_xlabel( "$\Delta$ Refractivity [\%]" )
+    ax.set_xlabel( "Refractivity Diffs [%]" )
 
     #  Subset the data by level to every 5-km. 
 
@@ -608,7 +608,7 @@ def center_intercomparison_figure( jsonfile, epsfile ):
     ax.set_xticks( xtickv )
     ax.set_xlim( xtickv.min(), xtickv.max() )
     ax.xaxis.set_minor_locator( MultipleLocator(2) )
-    ax.set_xlabel( "$\Delta$ Dry Temperature [K]" )
+    ax.set_xlabel( "Dry Temperature Diffs [K]" )
 
     #  Subset the data by level to every 5-km. 
 
@@ -647,7 +647,7 @@ def center_intercomparison_figure( jsonfile, epsfile ):
     ax.set_xticks( xtickv )
     ax.set_xlim( xtickv.min(), xtickv.max() )
     ax.xaxis.set_minor_locator( MultipleLocator(1) )
-    ax.set_xlabel( "$\Delta$ Temperature [K]" )
+    ax.set_xlabel( "Temperature Diffs [K]" )
 
     #  Subset the data by level to every 5-km. 
 
@@ -682,7 +682,7 @@ def center_intercomparison_figure( jsonfile, epsfile ):
     ax.set_xticks( xtickv )
     ax.set_xlim( xtickv.min(), xtickv.max() )
     ax.xaxis.set_minor_locator( MultipleLocator(0.5) )
-    ax.set_xlabel( "$\Delta$ Specific Humidity [g/kg]" )
+    ax.set_xlabel( "Specific Humidity Diffs [g/kg]" )
 
     #  Subset the data by level to every 5-km. 
 
