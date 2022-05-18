@@ -108,7 +108,7 @@ plt.rcParams.update( {
   'font.family': "Times New Roman",
   'font.size': 8,
   'font.weight': "normal",
-  'text.usetex': True,
+  'text.usetex': False,
   'xtick.major.width': axeslinewidth,
   'xtick.minor.width': axeslinewidth,
   'ytick.major.width': axeslinewidth,
@@ -157,9 +157,9 @@ def latlabels( lats ):
     ylabels = []
     for lat in lats:
         if lat < 0:
-            ylabel = "{:}$^\circ$S".format( np.abs( lat ) )
+            ylabel = "{:}S".format( np.abs( lat ) )
         elif lat > 0:
-            ylabel = "{:}$^\circ$N".format( np.abs( lat ) )
+            ylabel = "{:}N".format( np.abs( lat ) )
         else:
             ylabel = "Eq"
         ylabels.append( ylabel )
