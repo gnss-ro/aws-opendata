@@ -59,12 +59,18 @@ python3 import_gnss-ro_dynamoDB.py --full
 but this operation can take a very long time, up to several days. We are currently designing a way to 
 make the full import operation more efficient. 
 
+In order for any of this to work, you must first get an account 
+with AWS and obtain up-to-date authentication tokens. Typically, these authentication 
+tokens will be referenced by a profile name, and that profile name should be set 
+in the configuration section of the header of the import_gnss-ro_dynamoDB.py script. 
+The variable that should be set is "aws_profile". 
+
 ### Database design and usage
 
 A DynamoDB database is premised on the usage of "partition" and "sort" keys. Together, they uniquely 
 define an RO sounding. In this case, the partition key is "leo-ttt" where "leo" is the low-Earth-orbiting 
 receiver name and "ttt" is the GNSS transmitter identifier. The sort key is "yyyy-mm-dd-hh-mm" (year, 
-month, day, hour minute) of the RO sounding. See the main 
+month, day, hour, minute) of the RO sounding. See the main 
 [Readme document](http://github.com/gnss-ro/aws-opendata/Readme.md). Any query of the database requires 
 a unique specification of the partition key and at least a partial definition of the sort key. Each 
 entry (for a unique radio occultation sounding) contains information on the time, longitude, latitude, 
