@@ -17,14 +17,14 @@ the AWS RO data formats *calibratedPhase*, *refractivityRetrieval*,
 *atmosphericRetrieval*, defines the path/file naming conventions for the RO 
 data in the AWS Open Data Registry, briefly describes the RO DynamoDB database, 
 and documents license information. 
-[Here](http://github.com/gnss-ro/aws-opendata/Data-Description.pdf) 
+[Here](http://github.com/gnss-ro/aws-opendata/blob/master/Data-Description.pdf) 
 is a more detailed document. 
 
 Directions on implementing the DynamoDB RO database in your own AWS computing 
-environment, see [utilities](http://github.com/gnss-ro/aws-opendata/utilities). 
+environment, see [utilities](http://github.com/gnss-ro/aws-opendata/tree/master/utilities). 
 
 Tutorial demonstrations can be found in 
-[tutorials](http://github.com/gnss-ro/aws-opendata/tutorials). 
+[tutorials](http://github.com/gnss-ro/aws-opendata/tree/master/tutorials). 
 
 ## Background
 
@@ -75,7 +75,7 @@ of interesting atmospheric process studies.
 The path and file naming convention follow in the second section. The 
 third section contains descriptions of the file formats available in the 
 GNSS RO repository in the AWS Open Data Registry. A [detailed PDF 
-document](http://github.com/gnss-ro/aws-opendata/Data-Description.pdf) 
+document](http://github.com/gnss-ro/aws-opendata/blob/master/Data-Description.pdf) 
 describes the rationale for the formats together with insights into 
 their utility in addition to their actual contents. The following are all 
 useful to a beginner at GNSS RO: 
@@ -285,7 +285,7 @@ dynamo\_export\_subsets that constitutes a complete catalogue of RO soundings
 manifested in the S3 bucket along with useful metadata on the soundings, including 
 reference longitude, latitude, time, whether it is a rising or setting RO 
 sounding, etc. A utility is provided in the 
-[utilities](http://github.com/gnss-ro/aws-opendata/utilities) folder that will 
+[utilities](http://github.com/gnss-ro/aws-opendata/tree/master/utilities) folder that will 
 convert the collection of files---split up according to mission and year---into a 
 DynamoDB database table. The same folder contains tutorial demonstration Python 
 code that contains examples of how to manipulate the DynamoDB database to do 
