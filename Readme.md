@@ -262,6 +262,19 @@ centers.
 | Jet Propulsion Laboratory, Caltech | jpl | 
 | EUMETSAT Radio Occultation Meteorology Satellite Application Facility | romsaf | 
 
+#  DynamoDB database
+
+A collection of JSON files is provided in the Open Data S3 bucket in the path 
+dynamo\_export\_subsets that constitutes a complete catalogue of RO soundings 
+manifested in the S3 bucket along with useful metadata on the soundings, including 
+reference longitude, latitude, time, whether it is a rising or setting RO 
+sounding, etc. A utility is provided in the 
+[utilities](http://github.com/gnss-ro/aws-opendata/utilities) folder that will 
+convert the collection of files---split up according to mission and year---into a 
+DynamoDB database table. The same folder contains tutorial demonstration Python 
+code that contains examples of how to manipulate the DynamoDB database to do 
+basic analysis of RO data using AWS services. 
+
 #  Data use licenses, acknowledgments
 
 The format definitions are the outcome of consultations of an international team 
@@ -282,5 +295,5 @@ Advancing Collaborative Connections for Earth System Science (ACCESS) Program 20
 grant 80NSSC21M0052. 
 
 
-*Last update: 3 September 2021*
+*Last update: 16 May 2022*
 
