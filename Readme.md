@@ -10,7 +10,23 @@ GNSS Radio Occultation Data in the AWS Cloud
 *Correspondence:* Stephen Leroy (sleroy@aer.com) or Amy McVey (amcvey@aer.com)
 
 
-# Introduction
+## Introduction
+
+This Readme presents a brief background to GNSS radio occultation, describes 
+the AWS RO data formats *calibratedPhase*, *refractivityRetrieval*, 
+*atmosphericRetrieval*, defines the path/file naming conventions for the RO 
+data in the AWS Open Data Registry, briefly describes the RO DynamoDB database, 
+and documents license information. 
+[Here](http://github.com/gnss-ro/aws-opendata/Data-Description.pdf) 
+is a more detailed document. 
+
+Directions on implementing the DynamoDB RO database in your own AWS computing 
+environment, see [utilities](http://github.com/gnss-ro/aws-opendata/utilities). 
+
+Tutorial demonstrations can be found in 
+[tutorials](http://github.com/gnss-ro/aws-opendata/tutorials). 
+
+## Background
 
 Radio occultation is the limb sounding of planetary atmospheres by measuring the 
 bending of a well-timed, temporally coherent radiation transmitted from a 
@@ -74,7 +90,7 @@ useful to a beginner at GNSS RO:
 * [Ionospheric calibration and the removal of ionospheric residual](http://doi.org/10.5194/amt-8-3385-2015). 
 
 
-# Data availability and formats
+## Data availability and formats
 
 The AWS Open Data Registry now makes available all GNSS RO obtained and 
 processed by three independent RO processing centers: the COSMIC DAAC of the 
@@ -106,7 +122,7 @@ identifiers](http://doi.org) that document the processing system used to
 generate the data in each file. 
 
 
-## Level 1b: Calibrated phase files, calibratedPhase
+### Level 1b: Calibrated phase files, calibratedPhase
 
 Calibrated GNSS RO data are provided as **calibratedPhase** files. The 
 format is NetCDF4, one occultation sounding per file. The contents of each 
@@ -137,7 +153,7 @@ by the light travel time between the transmitter and the receiver. This
 is done because it is the positions of the transmitter at transmit time 
 that directly enters into the RO retrieval process. 
 
-## Level 2a: Bending angle, refractivity, and dry atmosphere retrievals, refractivityRetrieval
+### Level 2a: Bending angle, refractivity, and dry atmosphere retrievals, refractivityRetrieval
 
 Retrievals of profiles of bending angle, microwave refractivity, and 
 "dry" temperature and pressure are provided in **refractivityRetrieval** files. 
@@ -172,7 +188,7 @@ execution and then used in the conversion to geopotential height when
 the data of this archive is compared to the atmospheric model output 
 or atmospheric dataset, whether it be satellite or in-situ. 
 
-## Level 2b: Full atmospheric retrievals, atmosphericRetrieval
+### Level 2b: Full atmospheric retrievals, atmosphericRetrieval
 
 Retrievals of profiles of temperature, pressure, and water vapor 
 are provided in **atmosphericRetrieval** files. In each case, auxiliary 
@@ -193,7 +209,7 @@ and indicate whether whether or not super-refraction is
 present in the sounding and if a special algorithm was used to 
 account for the influence of super-refraction in the retrieval. 
 
-#  Paths and file naming
+##  Paths and file naming
 
 The path and file naming convention for all of the RO data is 
 contributed/**version**/**center**/**mission**/**filetype**/**yyyy**/**mm**/**dd**/**filetype**\_**mission**\_**center**\_**version**\_**occid**.nc. 
@@ -262,7 +278,7 @@ centers.
 | Jet Propulsion Laboratory, Caltech | jpl | 
 | EUMETSAT Radio Occultation Meteorology Satellite Application Facility | romsaf | 
 
-#  DynamoDB database
+##  DynamoDB database
 
 A collection of JSON files is provided in the Open Data S3 bucket in the path 
 dynamo\_export\_subsets that constitutes a complete catalogue of RO soundings 
@@ -275,7 +291,7 @@ DynamoDB database table. The same folder contains tutorial demonstration Python
 code that contains examples of how to manipulate the DynamoDB database to do 
 basic analysis of RO data using AWS services. 
 
-#  Data use licenses, acknowledgments
+##  Data use licenses, acknowledgments
 
 The format definitions are the outcome of consultations of an international team 
 of GNSS RO retreival scientists and experts. They were drawn largely from the 
