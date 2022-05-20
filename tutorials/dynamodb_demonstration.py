@@ -24,7 +24,7 @@ distribution_solartime_figure: This function generates two plots, one
 
 The prerequisite nonstandard python modules that must be installed are
   * numpy
-  * scipy
+  * netCDF4
   * matplotlib
   * cartopy
   * boto3
