@@ -24,9 +24,9 @@ The prerequisite nonstandard python modules that must be installed are
   * boto3
 
 Before any of this code is implemented, it is first necessary to manifest
-the DynamoDB database using the utilities in ???. The user only need
-modify a few parameters in the "IMPORTANT: Configuration" section below
-in order for the code to function.
+the DynamoDB database using the utilities in import_gnss-ro_dynamoDB.py.
+The user only need modify a few parameters in the "IMPORTANT: Configuration"
+section below in order for the code to function.
 
 
 Version: 1.0
@@ -52,7 +52,7 @@ aws_region = "us-east-1"
 
 #  Define the name of the DynamoDB data base table.
 
-dynamodb_table = "gnss-ro-data-staging"
+dynamodb_table = "gnss-ro-import-table"
 
 ##################################################
 #  Configuration complete.
@@ -100,14 +100,14 @@ valid_missions = {
 
 axeslinewidth = 0.5
 plt.rcParams.update( {
-  'font.family': "Times New Roman", 
-  'font.size': 8, 
-  'font.weight': "normal", 
-  'text.usetex': False, 
-  'xtick.major.width': axeslinewidth, 
-  'xtick.minor.width': axeslinewidth, 
-  'ytick.major.width': axeslinewidth, 
-  'ytick.minor.width': axeslinewidth, 
+  'font.family': "Times New Roman",
+  'font.size': 8,
+  'font.weight': "normal",
+  'text.usetex': False,
+  'xtick.major.width': axeslinewidth,
+  'xtick.minor.width': axeslinewidth,
+  'ytick.major.width': axeslinewidth,
+  'ytick.minor.width': axeslinewidth,
   'axes.linewidth': axeslinewidth } )
 
 #  GNSS constellations used as RO transmitters for this analysis. This must
@@ -152,12 +152,12 @@ def latlabels( lats ):
     tick values."""
 
     ylabels = []
-    for lat in lats: 
-        if lat < 0: 
+    for lat in lats:
+        if lat < 0:
             ylabel = "{:}S".format( np.abs( lat ) )
-        elif lat > 0: 
+        elif lat > 0:
             ylabel = "{:}N".format( np.abs( lat ) )
-        else: 
+        else:
             ylabel = "Eq"
         ylabels.append( ylabel )
 

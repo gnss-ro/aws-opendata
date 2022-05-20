@@ -32,9 +32,9 @@ to get all metop files for 2015
 >>python3 import_gnss-ro_dynamoDB.py --dynamodb_table_name gnss-ro-import-table --mission metop --date_str "2015"
 
 to run the data_analysis_demonstration.py first run:
->>python3 import_gnss-ro_dynamoDB.py --dynamodb_table_name gnss-ro-import-table --mission cosmic1 --date_str "2015-01"
+>>python3 import_gnss-ro_dynamoDB.py --dynamodb_table_name gnss-ro-import-table --mission cosmic1 --date_str "2009-01-04"
 
-to import the full catalog table NOTE: this may take a very long time (not recommended)
+to import the full catalog table NOTE: this may take a very long time (not recommended, we are working on a faster way)
 >>python3 import_gnss-ro_dynamoDB.py --full
 
 Version: 1.0
