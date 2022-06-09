@@ -507,8 +507,8 @@ def distribution_solartime_figure( year, month, day, epsfile ):
 #  Main program.
 
 if __name__ == "__main__":
-    alldata = occultation_count_by_mission( 2009, 2009 ) #1995 - 2021
-    occultation_count_figure( 'occultation_count.eps' )
-    distribution_solartime_figure( 2009, 1, 1, epsfile="distribution_2009-01-01.eps" )
+    alldata = occultation_count_by_mission( 2006, 2018 ) #1995 - 2021
+#   occultation_count_figure( 'occultation_count.eps' )
+#   distribution_solartime_figure( 2009, 1, 1, epsfile="distribution_2009-01-01.eps" )
 
     pass
