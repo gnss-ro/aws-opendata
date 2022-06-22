@@ -14,6 +14,7 @@ Setting up AWS Credentials:
 The prerequisite nonstandard python modules that must be installed are
   * boto3
   * pandas
+  * json
 
 Computer Requirements:
     at least 8 GB of RAM
@@ -58,6 +59,8 @@ aws_profile = "aernasaprod"
 
 aws_region = "us-east-1"
 
+# AWS version example: v1.0
+aws_version = "v1.0"
 
 ##################################################
 #  Configuration complete.
@@ -77,9 +80,10 @@ import argparse
 
 import boto3
 import pandas as pd
+import json
 
 # Initiate Variables
-valid_missions = ['gpsmet', 'grace', 'sacc', 'champ', 'cosmic1', 'tsx', 'tdx', 'snofs', 'metop', 'kompsat5', 'paz', 'cosmic2']
+valid_missions = ['gpsmet', 'grace', 'sacc', 'champ', 'cosmic1', 'tsx', 'tdx', 'snofs', 'metop', 'kompsat5', 'paz', 'cosmic2', 'spire']
 local_file_list = []
 obj_key_list = []
 
@@ -89,9 +93,10 @@ session = boto3.Session(profile_name=aws_profile, region_name = aws_region)
 
 #  S3 object and resource
 s3_client = session.client('s3')
+open_data_bucket = "gnss-ro-data-staging"
 
 s3 = session.resource( "s3" )
-bucket = s3.Bucket( "gnss-ro-data" )
+bucket = s3.Bucket( open_data_bucket )
 
 #  DynamoDB table object.
 
@@ -109,19 +114,21 @@ def search_json_subsets(local_file_list, obj_key_list, date_str):
     item_import_list = []
     for i in range(0, len(local_file_list)):
         #download_s3 file
-        s3_client.download_file( "gnss-ro-data", obj_key_list[i], local_file_list[i])
+        if not os.path.isfile(local_file_list[i]):
+            s3_client.download_file( open_data_bucket, obj_key_list[i], local_file_list[i])
 
-        df = pd.read_json(local_file_list[i], lines=True)
-        #df.info(memory_usage=True)
+        with open(local_file_list[i],'r') as file:
+            lines = file.readlines()
 
-        for item in df["Item"]:
-            #if "2009-01-01" in item["date-time"]
-            #if "cosmic1" in item["mission"]
+        for i,line in enumerate(lines):
+            line = line.replace('"s"','"S"')
+            line = line.replace('"n"','"N"')
+            j = json.loads(line)
             if date_str:
-                if date_str in item["date-time"]['S']:
-                    item_import_list.append(item)
+                if date_str in j["date-time"]['S']:
+                    item_import_list.append(j)
             else:
-                item_import_list.append(item)
+                item_import_list.append(j)
 
     return item_import_list
 
@@ -197,7 +204,7 @@ if __name__ == "__main__":
         year = "None"
 
     #  Iterate over subset json files
-    for obj in bucket.objects.filter( Prefix=f"dynamo_export_subsets/" ):
+    for obj in bucket.objects.filter( Prefix=f"dynamo/{aws_version}/export_subsets/" ):
         if args.mission and args.mission in obj.key and args.date_str and year in obj.key:
             local_file_list.append(os.path.basename(obj.key))
             obj_key_list.append(obj.key)
