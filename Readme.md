@@ -20,8 +20,8 @@ data in the AWS Open Data Registry, briefly describes the RO DynamoDB database,
 and documents license information. There will be multiple versions of the data 
 description document: 
 
-- [Data description document](http://github.com/gnss-ro/aws-opendata/blob/master/Data-Description-v1.0) for version 1.0
-- [Data description document](http://github.com/gnss-ro/aws-opendata/blob/master/Data-Description-v1.1) for version 1.1
+- [Data description document](http://github.com/gnss-ro/aws-opendata/blob/master/Data-Description-v1.0) for version 1.0. 
+- [Data description document](http://github.com/gnss-ro/aws-opendata/blob/master/Data-Description-v1.1) for version 1.1. This update removes *refractivityRetrieval* and *atmosphericRetrieval* files for bad occultations, creates a "setting" variable in those same two file types that defines whether an occultation is rising or setting, and will manifest COSMIC-2, Spire, and GeoOptics radio occultation data. 
 
 Directions on implementing the DynamoDB RO database in your own AWS computing
 environment, see [utilities](http://github.com/gnss-ro/aws-opendata/tree/master/utilities).
@@ -256,6 +256,7 @@ table.
 | kompsat5 | kompsat5 | Korean Multi-Purpose Satellite 5 (KompSat 5) |
 | paz | paz | Radio Occultations and Heavy Precipitation with PAZ (ROHP-PAZ) |
 | cosmic2 | cosmic2e1, cosmic2e2, cosmic2e3, cosmic2e4, cosmic2e5, cosmic2e6 | Constellation Observing System for Meteorology, Ionosphere and Climate 2 (COSMIC-2) |
+| spire | spireS001, spireS002, ... spireS200 | Spire, Inc. |
 
 Multiple satellites are listed for each mission if the mission consisted of
 multiple satellites (such as COSMIC-1 and COSMIC-2) or the same program deployed
@@ -314,4 +315,4 @@ Advancing Collaborative Connections for Earth System Science (ACCESS) Program 20
 grant 80NSSC21M0052. 
 
 
-*Last update: 20 May 2022*
+*Last update: 22 June 2022*
