@@ -1,4 +1,4 @@
-GNSS RO in AWS Utilities
+GNSS RO in AWS Tutorials
 ============================================
 
 **AWS Location**: s3://gnss-ro-data
@@ -16,7 +16,7 @@ In this directory you can find tutorial software in Python that illustrates
 the use of GNSS RO data in the AWS Open Data Registry. Note that before any 
 of this code can be run, you must first create your own version of the 
 DynamoDB database of the RO data in this archive. For instructions on how 
-to do so, go to the [utilities](http://github.com/gnss-ro/aws-opendata/utilities) 
+to do so, go to the [utilities](http://github.com/gnss-ro/aws-opendata/tree/master/utilities) 
 and follow the instructions in the Readme document therein. 
 
 In order to access the RO data in the s3://gnss-ro-data Open Data 
@@ -49,7 +49,7 @@ are current.
 ### DynamoDB database tutorial
 
 The first python module is 
-[dynamodb_demonstration.py](http://github.com/gnss-ro/aws-opendata/tutorials/dynamodb_demonstration.py). 
+[dynamodb_demonstration.py](http://github.com/gnss-ro/aws-opendata/blob/master/tutorials/dynamodb_demonstration.py). 
 It contains three
 functions that illustrate how the DynamoDB database of GNSS RO data can be
 manipulated. The major functionality illustrated in the code is use of the
@@ -72,7 +72,7 @@ the correct values of "aws_profile", "aws_region", and "dynamodb_table".
 ### Data analysis tutorial
 
 The second python module is 
-[data_analysis_demonstration.py](http://github.com/gnss-ro/aws-opendata/tutorials/data_analysis_demonstration.py). 
+[data_analysis_demonstration.py](http://github.com/gnss-ro/aws-opendata/blob/master/tutorials/data_analysis_demonstration.py). 
 It contains
 two functions: *compute_center_intercomparison*, which computes the
 differences in bending angle, refractivity, dry temperature, temperature,

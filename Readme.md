@@ -18,14 +18,14 @@ the AWS RO data formats *calibratedPhase*, *refractivityRetrieval*,
 *atmosphericRetrieval*, defines the path/file naming conventions for the RO
 data in the AWS Open Data Registry, briefly describes the RO DynamoDB database,
 and documents license information.
-[Here](http://github.com/gnss-ro/aws-opendata/Data-Description.pdf)
+[Here](http://github.com/gnss-ro/aws-opendata/blob/master/Data-Description.pdf)
 is a more detailed document.
 
 Directions on implementing the DynamoDB RO database in your own AWS computing
-environment, see [utilities](http://github.com/gnss-ro/aws-opendata/utilities).
+environment, see [utilities](http://github.com/gnss-ro/aws-opendata/tree/master/utilities).
 
 Tutorial demonstrations can be found in
-[tutorials](http://github.com/gnss-ro/aws-opendata/tutorials).
+[tutorials](http://github.com/gnss-ro/aws-opendata/tree/master/tutorials).
 
 ## Background
 

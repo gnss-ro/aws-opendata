@@ -20,7 +20,7 @@ archive of Earth RO data.
 
 The specific packages required for each utility is listed in-line for each respective file. To 
 easily create an environment to run the included utilities please see the
-[Install_python_miniconda_linux.sh](http://github.com/gnss-ro/aws-opendata/utilities/Install_python_miniconda_linux.sh) 
+[Install_python_miniconda_linux.sh](http://github.com/gnss-ro/aws-opendata/blob/master/utilities/Install_python_miniconda_linux.sh) 
 bash script. This will install the latest python version via Miniconda and the necessary 
 python packages.
 
@@ -71,12 +71,12 @@ A DynamoDB database is premised on the usage of "partition" and "sort" keys. Tog
 define an RO sounding. In this case, the partition key is "leo-ttt" where "leo" is the low-Earth-orbiting 
 receiver name and "ttt" is the GNSS transmitter identifier. The sort key is "yyyy-mm-dd-hh-mm" (year, 
 month, day, hour, minute) of the RO sounding. See the main 
-[Readme document](http://github.com/gnss-ro/aws-opendata/Readme.md). Any query of the database requires 
+[Readme document](http://github.com/gnss-ro/aws-opendata/blob/master/Readme.md). Any query of the database requires 
 a unique specification of the partition key and at least a partial definition of the sort key. Each 
 entry (for a unique radio occultation sounding) contains information on the time, longitude, latitude, 
 solar time (local time) of the occultation, whether it is a rising or setting occultation, and pointers to the 
 various data files in the S3 bucket. 
 
 For an explicit demonstration of how to use the DynamoDB database, see the 
-[tutorial demonstrations](http://github.com/gnss-ro/aws-opendata/tutorials). 
+[tutorial demonstrations](http://github.com/gnss-ro/aws-opendata/tree/master/tutorials). 
 

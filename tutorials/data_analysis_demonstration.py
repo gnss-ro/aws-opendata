@@ -218,32 +218,6 @@ def masked_interpolate( x_in, y_in, x_out ):
 
     return y_out
 
-def radius_of_curvature( ae, ap, lond, latd, coc ):
-    """Compute the radius of curvature [m] given the equatorial radius (ae) and
-    polar radius (ap) of the Earth, the geodetic longitude (lond) and latitude
-    (latd) of the sounding, and the center of curvature (coc[3], meters) of the
-    sounding."""
-
-    #  Compute the geocentric longitude and latitude in radians.
-
-    lonc = np.deg2rad( lond )
-    latc = np.arctan2( ap**2 * np.sin( np.deg2rad( latd ) ),
-            ae**2 * np.cos( np.deg2rad( latd ) ) )
-
-    #  Radius of the Earth at this latitude.
-
-    re = 1.0 / np.sqrt( np.cos( latc )**2 / ae**2 + np.sin( latc )**2 / ap**2 )
-
-    #  Compute the ECEF position of the surface location.
-
-    s = re * np.array( [ np.cos(lond) * np.cos(latd), np.sin(lond) * np.cos(latd), np.sin(latd) ] )
-
-    #  Radius of curvature of the Earth.
-
-    Rcurv = np.linalg.norm( s - coc )
-
-    return Rcurv
-
 
 ################################################################################
 #  Methods.
@@ -370,21 +344,15 @@ def compute_center_intercomparison( year, month, day, mission, jsonfile ):
             input_bendingAngle = data.variables['bendingAngle'][:]
             input_impactParameter = data.variables['impactParameter'][:]
 
-            #  Find radius of curvature in order to compute impact height.
+            #  Get radius of curvature in order to compute impact height from 
+            #  impact parameter.
 
-            equatorialRadius = data.variables['equatorialRadius'].getValue()
-            polarRadius = data.variables['polarRadius'].getValue()
-            refLongitude = data.variables['refLongitude'].getValue()
-            refLatitude = data.variables['refLatitude'].getValue()
-            centerOfCurvature = data.variables['centerOfCurvature'][:]
-
-            Rcurv = radius_of_curvature( equatorialRadius, polarRadius,
-                    refLongitude, refLatitude, centerOfCurvature )
+            radiusOfCurvature = data.variables['radiusOfCurvature'].getValues()
 
             #  Compute impact height from impact parameter by subtracting the local
             #  radius of curvature for this RO sounding.
 
-            input_impactHeight = input_impactParameter - Rcurv
+            input_impactHeight = input_impactParameter - radiusOfCurvature
 
             #  Interpolate bending angle onto the common impact heights.
 
