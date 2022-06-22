@@ -17,9 +17,11 @@ This Readme presents a brief background to GNSS radio occultation, describes
 the AWS RO data formats *calibratedPhase*, *refractivityRetrieval*,
 *atmosphericRetrieval*, defines the path/file naming conventions for the RO
 data in the AWS Open Data Registry, briefly describes the RO DynamoDB database,
-and documents license information.
-[Here](http://github.com/gnss-ro/aws-opendata/blob/master/Data-Description.pdf)
-is a more detailed document.
+and documents license information. There will be multiple versions of the data 
+description document: 
+
+- [Data description document](http://github.com/gnss-ro/aws-opendata/blob/master/Data-Description-v1.0) for version 1.0
+- [Data description document](http://github.com/gnss-ro/aws-opendata/blob/master/Data-Description-v1.1) for version 1.1
 
 Directions on implementing the DynamoDB RO database in your own AWS computing
 environment, see [utilities](http://github.com/gnss-ro/aws-opendata/tree/master/utilities).
