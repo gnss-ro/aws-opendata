@@ -38,9 +38,9 @@ to run the data_analysis_demonstration.py first run:
 to import the full catalog table NOTE: this may take a very long time (not recommended, we are working on a faster way)
 >>python3 import_gnss-ro_dynamoDB.py --full
 
-Version: 1.0
+Version: 1.1
 Author: Amy McVey (amcvey@aer.com)
-Date: May 17, 2022
+Date: July 17, 2022
 Python Version: 3.8
 
 """
@@ -60,7 +60,7 @@ aws_profile = "aernasaprod"
 aws_region = "us-east-1"
 
 # AWS version example: v1.0
-aws_version = "v1.0"
+aws_version = "v1.1"
 
 ##################################################
 #  Configuration complete.
@@ -93,7 +93,7 @@ session = boto3.Session(profile_name=aws_profile, region_name = aws_region)
 
 #  S3 object and resource
 s3_client = session.client('s3')
-open_data_bucket = "gnss-ro-data-staging"
+open_data_bucket = "gnss-ro-data"
 
 s3 = session.resource( "s3" )
 bucket = s3.Bucket( open_data_bucket )
