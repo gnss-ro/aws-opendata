@@ -52,13 +52,10 @@ Date: May 16, 2022
 
 aws_profile = None
 
-#  Define the AWS region where the gnss-ro-data Open Data Registry
-#  S3 bucket is hosted *and* where the DynamoDB database is manifested.
+#  Define the AWS region where the DynamoDB database is manifested 
+#  and the name of the DynamoDB database table. 
 
 aws_region = "us-east-1"
-
-#  Define the name of the DynamoDB data base table.
-
 dynamodb_table = "gnss-ro-import-table"
 
 ##################################################

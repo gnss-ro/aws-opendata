@@ -46,13 +46,10 @@ Date: May 17, 2022
 
 aws_profile = None
 
-#  Define the AWS region where the gnss-ro-data Open Data Registry
-#  S3 bucket is hosted *and* where the DynamoDB database is manifested.
+#  Define the AWS region where the DynamoDB database is manifested 
+#  and the name of the DynamoDB database table. 
 
 aws_region = "us-east-1"
-
-#  Define the name of the DynamoDB data base table.
-
 dynamodb_table = "gnss-ro-import-table"
 
 ##################################################
@@ -126,6 +123,11 @@ colors_json_file = "color_table_by_mission.json"
 #  Define month labeling strings.
 
 monthstrings = "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split()
+
+#  Location of AWS Open Data Registry repository of RO data. Do not touch!
+
+aws_opendata_region = "us-east-1"
+aws_opendata_bucket = "gnss-ro-data"
 
 #  Logger.
 
@@ -245,8 +247,9 @@ def compute_center_intercomparison( year, month, day, mission, jsonfile ):
 
     #  AWS Open Data Repository of RO data.
 
-    resource = session.resource( "s3" )
-    s3 = resource.Bucket( "gnss-ro-data" )
+    opendata_session = boto3.Session( region_name=aws_opendata_region )
+    resource = opendata_session.resource( "s3" )
+    s3 = resource.Bucket( aws_opendata_bucket )
 
     #  Scan for RO soundings processed by UCAR and ROM SAF for mission,
     #  year, month, day.
