@@ -47,9 +47,10 @@ Date: May 16, 2022
 
 #  Define the name of the AWS profile to be used for authentication
 #  purposes. The authentication will be needed to access the DynamoDB
-#  database table.
+#  database table. If no authentication is required, then set 
+#  aws_profile to None. 
 
-aws_profile = "aernasaprod"
+aws_profile = None
 
 #  Define the AWS region where the gnss-ro-data Open Data Registry
 #  S3 bucket is hosted *and* where the DynamoDB database is manifested.
@@ -197,7 +198,11 @@ def occultation_count_by_mission( first_year, last_year ):
     #  AWS access. Be sure to establish authentication for profile aws_profile
     #  for successful use.
 
-    session = boto3.Session( profile_name=aws_profile, region_name=aws_region )
+    if aws_profile is None: 
+        session = boto3.Session( region_name=aws_region )
+    else:
+        session = boto3.Session( profile_name=aws_profile, region_name=aws_region )
+
     resource = session.resource( "dynamodb" )
     table = resource.Table( dynamodb_table )
 
@@ -372,7 +377,11 @@ def distribution_solartime_figure( year, month, day, epsfile ):
 
     #  Set up session and dynamodb table.
 
-    session = boto3.Session( profile_name=aws_profile, region_name=aws_region )
+    if aws_profile is None: 
+        session = boto3.Session( region_name=aws_region )
+    else:
+        session = boto3.Session( profile_name=aws_profile, region_name=aws_region )
+
     resource = session.resource( "dynamodb" )
     table = resource.Table( dynamodb_table )
 
