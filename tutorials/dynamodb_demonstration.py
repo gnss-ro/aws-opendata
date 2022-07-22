@@ -37,7 +37,7 @@ in order for the code to function.
 
 Version: 1.0
 Author: Stephen Leroy (sleroy@aer.com)
-Date: May 16, 2022
+Date: July 22, 2022
 
 """
 
@@ -96,7 +96,9 @@ valid_missions = {
     'metop': [ "metopa", "metopb", "metopc" ],
     'kompsat5': [ "kompsat5" ],
     'paz': [ "paz" ],
-    'cosmic2': [ "cosmic2e{:1d}".format(i) for i in range(1,7) ]
+    'cosmic2': [ "cosmic2e{:1d}".format(i) for i in range(1,7) ], 
+    'spire': [ "spireS{:03d}".format(i) for i in range(1,200) ], 
+    'geoopt': [ "geooptG{:02d}".format(i) for i in range(1,100) ] 
     }
 
 #  Matplotlib default settings.
@@ -513,7 +515,7 @@ def distribution_solartime_figure( year, month, day, epsfile ):
 #  Main program.
 
 if __name__ == "__main__":
-    alldata = occultation_count_by_mission( 2006, 2018 ) #1995 - 2021
+    alldata = occultation_count_by_mission( 2006, 2022 ) #1995 - 2021
 #   occultation_count_figure( 'occultation_count.eps' )
 #   distribution_solartime_figure( 2009, 1, 1, epsfile="distribution_2009-01-01.eps" )
 
