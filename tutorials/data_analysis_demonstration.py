@@ -74,6 +74,7 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator
 import boto3
 from boto3.dynamodb.conditions import Key, Attr
+from botocore.handlers import disable_signing
 
 #  The RO missions in the data archive with pointers to the names
 #  of the satellites in each RO mission. This dictionary is a summary
@@ -249,6 +250,7 @@ def compute_center_intercomparison( year, month, day, mission, jsonfile ):
 
     opendata_session = boto3.Session( region_name=aws_opendata_region )
     resource = opendata_session.resource( "s3" )
+    resource.meta.client.meta.events.register('choose-signer.s3.*', disable_signing)
     s3 = resource.Bucket( aws_opendata_bucket )
 
     #  Scan for RO soundings processed by UCAR and ROM SAF for mission,
