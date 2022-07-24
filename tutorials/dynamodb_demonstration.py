@@ -50,13 +50,13 @@ Date: July 22, 2022
 #  database table. If no authentication is required, then set 
 #  aws_profile to None. 
 
-aws_profile = None
+aws_profile = "aernasaprod"
 
 #  Define the AWS region where the DynamoDB database is manifested 
 #  and the name of the DynamoDB database table. 
 
 aws_region = "us-east-1"
-dynamodb_table = "gnss-ro-import-table"
+dynamodb_table = "gnss-ro-data-stagingv1_1"
 
 ##################################################
 #  Configuration complete.
@@ -97,8 +97,8 @@ valid_missions = {
     'kompsat5': [ "kompsat5" ],
     'paz': [ "paz" ],
     'cosmic2': [ "cosmic2e{:1d}".format(i) for i in range(1,7) ], 
-    'spire': [ "spireS{:03d}".format(i) for i in range(1,200) ], 
-    'geoopt': [ "geooptG{:02d}".format(i) for i in range(1,100) ] 
+    'spire': [ "spireS{:03d}".format(i) for i in range(99,151) ], 
+    'geoopt': [ "geooptG{:02d}".format(i) for i in range(1,8) ] 
     }
 
 #  Matplotlib default settings.
@@ -120,11 +120,10 @@ plt.rcParams.update( {
 #  commercial RO data providers become available.
 
 # valid_constellations = [ "G", "R" ]
-valid_constellations = [ "G" ]
+valid_constellations = [ "G", "R", "E" ]
 
-#  Intermediate files: RO data count by mission and mission color table.
+#  Intermediate files: mission color table.
 
-alldata_json_file = "occultation_count_by_mission.json"
 colors_json_file = "color_table_by_mission.json"
 
 #  Define month labeling strings.
@@ -190,9 +189,9 @@ def get_transmitters( constellations ):
 #  Methods.
 ################################################################################
 
-def occultation_count_by_mission( first_year, last_year ):
+def occultation_count_by_mission( first_year, last_year, output_json ):
     """Count occultations by mission and by month, then output to
-    alldata_json_file."""
+    output_json."""
 
     #  AWS access. Be sure to establish authentication for profile aws_profile
     #  for successful use.
@@ -261,23 +260,19 @@ def occultation_count_by_mission( first_year, last_year ):
 
             alldata.append( rec )
 
-    with open( alldata_json_file, 'w' ) as out:
-        LOGGER.info( f"Writing data counts to {alldata_json_file}." )
+    with open( output_json, 'w' ) as out:
+        LOGGER.info( f"Writing data counts to {output_json}." )
         json.dump( alldata, out, indent="  " )
 
     return alldata
 
 
 
-def occultation_count_figure( epsfile ):
+def occultation_count_figure( alldata, epsfile, yticks=np.arange(0,5001,1000), yminor=200 ): 
     """Plot of timeseries stackplot of the counts of occultations per day by
     mission with monthly resolution. Save encapsulated postscript file to
-    epsfile."""
-
-    #  Read data computed previously by count_occultations.
-
-    with open( alldata_json_file, 'r' ) as d:
-        alldata = json.load( d )
+    epsfile. yticks is a numpy array of the major y tick marks, and yminor 
+    is the interval for minor ticks on the y axis."""
 
     #  Find the start dates of counts for each mission.
 
@@ -322,6 +317,10 @@ def occultation_count_figure( epsfile ):
         imonth = rec['month'] - 1
         counts[:,i] /= ndays[imonth]
 
+    #  Maximum number of occultations per month. 
+
+    maxcount = counts.sum(axis=0).max()
+
     #  Now do the stack plot.
 
     fig = plt.figure( figsize=[6,3] )
@@ -337,10 +336,10 @@ def occultation_count_figure( epsfile ):
     #  y axis.
 
     ax.set_ylabel( 'Mean daily counts', fontsize="large" )
-    ax.set_ylim( 0, 5000 )
-    ax.set_yticks( np.arange( 0, 5001, 1000 ) )
+    ax.set_ylim( 0, yticks.max() )
+    ax.set_yticks( yticks )
     ax.set_yticklabels( ax.get_yticks().astype('i'), fontsize="large" )
-    ax.yaxis.set_minor_locator( MultipleLocator( 200 ) )
+    ax.yaxis.set_minor_locator( MultipleLocator( yminor ) )
 
     #  Now, stack plot.
 
@@ -511,12 +510,3 @@ def distribution_solartime_figure( year, month, day, epsfile ):
 
     return
 
-
-#  Main program.
-
-if __name__ == "__main__":
-    alldata = occultation_count_by_mission( 2006, 2022 ) #1995 - 2021
-#   occultation_count_figure( 'occultation_count.eps' )
-#   distribution_solartime_figure( 2009, 1, 1, epsfile="distribution_2009-01-01.eps" )
-
-    pass

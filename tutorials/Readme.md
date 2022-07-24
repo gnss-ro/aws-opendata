@@ -66,6 +66,12 @@ and in solar-time-latitude space. Note that *occultation_count_figure* must
 be executed prior to calling *distribution_solartime_figure* in order to
 compose the mission color table. The plots are all encapsulated postscript.
 
+Because of the size of the database, it is best to execute the function 
+*occultation_count_by_mission* using the python executable *count_occultations* 
+in parallel, parceling out by year ranges on the order of a decade. To 
+create the matplotlib stack plot, then use the python executable 
+*plot_count_occultations*. 
+
 In order to run the code, be sure the configuration in the header is set to 
 the correct values of "aws_profile", "aws_region", and "dynamodb_table". 
 
