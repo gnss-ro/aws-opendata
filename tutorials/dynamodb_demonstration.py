@@ -357,7 +357,7 @@ def occultation_count_figure( alldata, epsfile, yticks=np.arange(0,5001,1000), y
     #  Now do the stack plot.
 
     fig = plt.figure( figsize=[6,3] )
-    ax = fig.add_axes( [ 0.12, 0.15, 0.86, 0.83 ] )
+    ax = fig.add_axes( [ 0.12, 0.15, 0.86, 0.81 ] )
 
     #  x axis.
 
