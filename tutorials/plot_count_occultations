@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 
+import re
+import json
 import numpy as np
-from dynamodb_demonstration import occultation_count_figure
+from dynamodb_demonstration import occultation_count_figure, merge_jsonfiles
 
 #  Main program.
 
@@ -14,12 +16,15 @@ if __name__ == "__main__":
     # Defaults. 
 
     ytickdef_default = "0,5000,1000,200"
+    output_default = "plot_count_occultations.eps"
 
     parser = argparse.ArgumentParser( description="Plot a timeseries of the number of " + \
             "occultations by mission." )
 
-    parser.add_argument( "-o", destination="output", type=str, help="The name of the output " + \
-            "encapsulated postscript file." )
+    parser.add_argument( "-o", dest="output", type=str, default=output_default, 
+            help="The name of the output encapsulated postscript file. " + \
+                    f"The default is {output_default}." )
+
     parser.add_argument( "--ytickdef", type=str, default=ytickdef_default, 
             help="Four numbers separated by commas containing (1) the minimum " + \
                     "y tick mark, (2) the maximum y tick mark, (3) the interval " + \
@@ -27,7 +32,7 @@ if __name__ == "__main__":
                     "tick marks. The default is " + ytickdef_default )
 
     parser.add_argument( "jsonfiles", metavar="jsonfile", type=str, nargs="+", 
-            "Path to a JSON file containing occultation counts" )
+            help="Path to a JSON file containing occultation counts" )
 
     args = parser.parse_args()
 
@@ -39,20 +44,7 @@ if __name__ == "__main__":
 
     #  Read the data. 
 
-    alldata_tmp = []
-    for jsonfile in args.jsonfiles: 
-        with open( jsonfile, 'r' ) as fp: 
-            alldata_tmp += json.load( fp )
-
-    #  Sort the data. 
-
-    yearmonths = [ f"{rec['year']:04d}-{rec['month']:02d}" for rec in alldata_tmp ]
-    yearmonths_sorted = sorted( yearmonths )
-
-    alldata = []
-    for yearmonth in yearmonths_sorted: 
-        irec = yearmonths.index( yearmonth )
-        alldata.append( alldata_tmp[irec] )
+    alldata = merge_jsonfiles( args.jsonfiles )
 
     #  Plot. 
 

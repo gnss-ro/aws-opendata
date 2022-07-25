@@ -29,9 +29,9 @@ The user only need modify a few parameters in the "IMPORTANT: Configuration"
 section below in order for the code to function.
 
 
-Version: 1.0
+Version: 1.1
 Author: Stephen Leroy (sleroy@aer.com)
-Date: May 17, 2022
+Date: July 25, 2022
 
 """
 
@@ -76,6 +76,8 @@ import boto3
 from boto3.dynamodb.conditions import Key, Attr
 from botocore.handlers import disable_signing
 
+import pdb
+
 #  The RO missions in the data archive with pointers to the names
 #  of the satellites in each RO mission. This dictionary is a summary
 #  of Table 5 in the Data-Description.pdf document.
@@ -118,7 +120,6 @@ valid_constellations = [ "G" ]
 
 #  Intermediate files: RO data count by mission and mission color table.
 
-alldata_json_file = "occultation_count_by_mission.json"
 colors_json_file = "color_table_by_mission.json"
 
 #  Define month labeling strings.
@@ -237,21 +238,21 @@ def compute_center_intercomparison( year, month, day, mission, jsonfile ):
     #  for successful use.
 
     if aws_profile is None: 
-        session = boto3.Session( region_name=aws_region )
+        dynamodb_session = boto3.Session( region_name=aws_region )
     else:
-        session = boto3.Session( profile_name=aws_profile, region_name=aws_region )
+        dynamodb_session = boto3.Session( profile_name=aws_profile, region_name=aws_region )
 
     #  DynamoDB table object.
 
-    resource = session.resource( "dynamodb" )
-    table = resource.Table( dynamodb_table )
+    dynamodb_resource = dynamodb_session.resource( "dynamodb" )
+    table = dynamodb_resource.Table( dynamodb_table )
 
     #  AWS Open Data Repository of RO data.
 
     opendata_session = boto3.Session( region_name=aws_opendata_region )
-    resource = opendata_session.resource( "s3" )
-    resource.meta.client.meta.events.register('choose-signer.s3.*', disable_signing)
-    s3 = resource.Bucket( aws_opendata_bucket )
+    opendata_s3_resource = opendata_session.resource( "s3" )
+    opendata_s3_resource.meta.client.meta.events.register('choose-signer.s3.*', disable_signing)
+    s3 = opendata_s3_resource.Bucket( aws_opendata_bucket )
 
     #  Scan for RO soundings processed by UCAR and ROM SAF for mission,
     #  year, month, day.
@@ -333,6 +334,7 @@ def compute_center_intercomparison( year, month, day, mission, jsonfile ):
         diff_bendingAngle = np.ma.array( np.zeros( len(common_impactHeight) ), mask=False )
         diff_logrefractivity = np.ma.array( np.zeros( len(common_geopotentialHeight) ), mask=False )
         diff_dryTemperature = np.ma.array( np.zeros( len(common_geopotentialHeight) ), mask=False )
+        status = "success"
 
         for center in [ "ucar", "romsaf" ]:
 
@@ -342,7 +344,14 @@ def compute_center_intercomparison( year, month, day, mission, jsonfile ):
                 remote_path = sounding['romsaf_refractivityRetrieval']
 
             input_file = os.path.split( remote_path )[1]
-            s3.download_file( remote_path, input_file )
+            try: 
+                s3.download_file( remote_path, input_file )
+            except Exception as excpt: 
+                status = "fail"
+                message = f"Failed to download {remote_path} from s3://{aws_opendata_bucket}"
+                LOGGER.exception( message )
+                LOGGER.exception( json.dumps( excpt.args ) )
+                break
 
             #  Open NetCDF file.
 
@@ -356,7 +365,7 @@ def compute_center_intercomparison( year, month, day, mission, jsonfile ):
             #  Get radius of curvature in order to compute impact height from 
             #  impact parameter.
 
-            radiusOfCurvature = data.variables['radiusOfCurvature'].getValues()
+            radiusOfCurvature = data.variables['radiusOfCurvature'].getValue()
 
             #  Compute impact height from impact parameter by subtracting the local
             #  radius of curvature for this RO sounding.
@@ -403,6 +412,9 @@ def compute_center_intercomparison( year, month, day, mission, jsonfile ):
                 diff_bendingAngle -= bendingAngle
                 diff_logrefractivity -= logrefractivity
                 diff_dryTemperature -= dryTemperature
+
+
+        if status == "fail": continue
 
         #  Record the differences between UCAR and ROM SAF for bending angle,
         #  log-refractivity, and dry temperature.
