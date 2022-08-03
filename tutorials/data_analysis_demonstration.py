@@ -41,16 +41,16 @@ Date: July 25, 2022
 
 #  Define the name of the AWS profile to be used for authentication
 #  purposes. The authentication will be needed to access the DynamoDB
-#  database table. If no authentication is required, then set 
-#  aws_profile to None. 
+#  database table. If no authentication is required, then set
+#  aws_profile to None.
 
 aws_profile = None
 
-#  Define the AWS region where the DynamoDB database is manifested 
-#  and the name of the DynamoDB database table. 
+#  Define the AWS region where the DynamoDB database is manifested
+#  and the name of the DynamoDB database table.
 
 aws_region = "us-east-1"
-dynamodb_table = "gnss-ro-import-table"
+dynamodb_table = "gnss-ro-data-stagingv1_1"
 
 ##################################################
 #  Configuration complete.
@@ -237,7 +237,7 @@ def compute_center_intercomparison( year, month, day, mission, jsonfile ):
     #  AWS access. Be sure to establish authentication for profile aws_profile
     #  for successful use.
 
-    if aws_profile is None: 
+    if aws_profile is None:
         dynamodb_session = boto3.Session( region_name=aws_region )
     else:
         dynamodb_session = boto3.Session( profile_name=aws_profile, region_name=aws_region )
@@ -344,9 +344,9 @@ def compute_center_intercomparison( year, month, day, mission, jsonfile ):
                 remote_path = sounding['romsaf_refractivityRetrieval']
 
             input_file = os.path.split( remote_path )[1]
-            try: 
+            try:
                 s3.download_file( remote_path, input_file )
-            except Exception as excpt: 
+            except Exception as excpt:
                 status = "fail"
                 message = f"Failed to download {remote_path} from s3://{aws_opendata_bucket}"
                 LOGGER.exception( message )
@@ -362,7 +362,7 @@ def compute_center_intercomparison( year, month, day, mission, jsonfile ):
             input_bendingAngle = data.variables['bendingAngle'][:]
             input_impactParameter = data.variables['impactParameter'][:]
 
-            #  Get radius of curvature in order to compute impact height from 
+            #  Get radius of curvature in order to compute impact height from
             #  impact parameter.
 
             radiusOfCurvature = data.variables['radiusOfCurvature'].getValue()
