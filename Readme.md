@@ -17,9 +17,11 @@ This Readme presents a brief background to GNSS radio occultation, describes
 the AWS RO data formats *calibratedPhase*, *refractivityRetrieval*,
 *atmosphericRetrieval*, defines the path/file naming conventions for the RO
 data in the AWS Open Data Registry, briefly describes the RO DynamoDB database,
-and documents license information.
-[Here](http://github.com/gnss-ro/aws-opendata/blob/master/Data-Description.pdf)
-is a more detailed document.
+and documents license information. There will be multiple versions of the data 
+description document: 
+
+- [Data description document](http://github.com/gnss-ro/aws-opendata/blob/master/Data-Description-v1.0.pdf) for version 1.0. 
+- [Data description document](http://github.com/gnss-ro/aws-opendata/blob/master/Data-Description-v1.1.pdf) for version 1.1. This update removes *refractivityRetrieval* and *atmosphericRetrieval* files for bad occultations, creates a "setting" variable in those same two file types that defines whether an occultation is rising or setting, and will manifest COSMIC-2, Spire, and GeoOptics radio occultation data. 
 
 Directions on implementing the DynamoDB RO database in your own AWS computing
 environment, see [utilities](http://github.com/gnss-ro/aws-opendata/tree/master/utilities).
@@ -52,41 +54,41 @@ transmitters of other Global Navigation Satellite Systems (GNSS), such as
 the Russian GLONASS, the European Galileo, and the Chinese BeiDou. Still others
 use the transmitters of geo-synchronous regional navigation systems such as
 the Indian SBAS and the Japanese QZSS. Consequently, Earth radio occultation is
-now referred to as GNSS RO.
+now referred to as GNSS RO. 
 
-Because GNSS RO is a timing measurement as opposed to a radiance measurement,
-and because the amplitude and phase of the signal are tracked in the course
-of a sounding, GNSS RO begets two astonishing properties that set it aside
-from other remote sensing techniques for temperature and pressure. First,
-because the international definition of the unit of time can be scaled
-to an accuracy of one part in 10<sup>15</sup>, GNSS RO has the potential to
-benchmark the state of the climate to great accuracy. This makes GNSS RO a
-formidable climate monitoring technique. Second, because the phase of the
-radiation is measured in addition to the amplitude of the transmitted
-signal, holographic reconstruction methods become possible, and the result
-is extraordinary vertical resolution. The physical limitation on the
-vertical resolution is Fraunhofer diffraction, which yields a limit of 10
-meters in the vertical.  Other practical considerations provide the actual
-limitations, however --- the data rate, receiver electronic noise, and the
-horizontal-to-vertical aspect ratio of the atmospheric features being
-studied --- and the more practical result is that GNSS RO obtained
-~100-meter vertical resolution.  Such vertical resolution enables a host
-of interesting atmospheric process studies.
+Because GNSS RO is a timing measurement as opposed to a radiance measurement, 
+and because the amplitude and phase of the signal are tracked in the course 
+of a sounding, GNSS RO begets two astonishing properties that set it aside 
+from other remote sensing techniques for temperature and pressure. First, 
+because the international definition of the unit of time can be scaled 
+to an accuracy of one part in 10<sup>15</sup>, GNSS RO has the potential to 
+benchmark the state of the climate to great accuracy. This makes GNSS RO a 
+formidable climate monitoring technique. Second, because the phase of the 
+radiation is measured in addition to the amplitude of the transmitted 
+signal, holographic reconstruction methods become possible, and the result 
+is extraordinary vertical resolution. The physical limitation on the 
+vertical resolution is Fraunhofer diffraction, which yields a limit of 10 
+meters in the vertical.  Other practical considerations provide the actual 
+limitations, however --- the data rate, receiver electronic noise, and the 
+horizontal-to-vertical aspect ratio of the atmospheric features being 
+studied --- and the more practical result is that GNSS RO obtained 
+~100-meter vertical resolution.  Such vertical resolution enables a host 
+of interesting atmospheric process studies. 
 
-The path and file naming convention follow in the second section. The
-third section contains descriptions of the file formats available in the
-GNSS RO repository in the AWS Open Data Registry. A [detailed PDF
-document](http://github.com/gnss-ro/aws-opendata/blob/master/Data-Description.pdf)
-describes the rationale for the formats together with insights into
-their utility in addition to their actual contents. The following are all
-useful to a beginner at GNSS RO:
-* [A description of GNSS RO](http://doi.org/10.3319/TAO.2000.11.1.53(COSMIC));
-* [A complete error analysis of GNSS RO](http://doi.org/10.1029/97JD01569);
-* [A description of a typical GNSS RO retrieval system](http://doi.org/10.1016/S1364-6826(01)00114-6);
-* [Vertical coordinates in GNSS RO](http://doi.org/10.1002/2016JD025902);
-* [Physical optics processing algorithms](http://doi.org/10.5194/amt-14-853-2021);
-* [Statistical optimization to smooth RO in the upper stratosphere](http://doi.org/10.1029/2000RS002370);
-* [A description of super-refraction](http://doi.org/10.1029/2002RS002728);
+The path and file naming convention follow in the second section. The 
+third section contains descriptions of the file formats available in the 
+GNSS RO repository in the AWS Open Data Registry. A [detailed PDF 
+document](http://github.com/gnss-ro/aws-opendata/blob/master/Data-Description.pdf) 
+describes the rationale for the formats together with insights into 
+their utility in addition to their actual contents. The following are all 
+useful to a beginner at GNSS RO: 
+* [A description of GNSS RO](http://doi.org/10.3319/TAO.2000.11.1.53(COSMIC)); 
+* [A complete error analysis of GNSS RO](http://doi.org/10.1029/97JD01569); 
+* [A description of a typical GNSS RO retrieval system](http://doi.org/10.1016/S1364-6826(01)00114-6); 
+* [Vertical coordinates in GNSS RO](http://doi.org/10.1002/2016JD025902); 
+* [Physical optics processing algorithms](http://doi.org/10.5194/amt-14-853-2021); 
+* [Statistical optimization to smooth RO in the upper stratosphere](http://doi.org/10.1029/2000RS002370); 
+* [A description of super-refraction](http://doi.org/10.1029/2002RS002728); 
 * [Retrieving tropospheric water vapor in GNSS RO](http://doi.org/10.1175/JTECH-D-13-00233.1); and
 * [Ionospheric calibration and the removal of ionospheric residual](http://doi.org/10.5194/amt-8-3385-2015).
 
@@ -254,6 +256,7 @@ table.
 | kompsat5 | kompsat5 | Korean Multi-Purpose Satellite 5 (KompSat 5) |
 | paz | paz | Radio Occultations and Heavy Precipitation with PAZ (ROHP-PAZ) |
 | cosmic2 | cosmic2e1, cosmic2e2, cosmic2e3, cosmic2e4, cosmic2e5, cosmic2e6 | Constellation Observing System for Meteorology, Ionosphere and Climate 2 (COSMIC-2) |
+| spire | spireS001, spireS002, ... spireS200 | Spire, Inc. |
 
 Multiple satellites are listed for each mission if the mission consisted of
 multiple satellites (such as COSMIC-1 and COSMIC-2) or the same program deployed
@@ -275,41 +278,41 @@ centers.
 
 | Processing center | center |
 | :---------------- | :----: |
-| UCAR COSMIC Project Office | ucar |
-| Jet Propulsion Laboratory, Caltech | jpl |
-| EUMETSAT Radio Occultation Meteorology Satellite Application Facility | romsaf |
+| UCAR COSMIC Project Office | ucar | 
+| Jet Propulsion Laboratory, Caltech | jpl | 
+| EUMETSAT Radio Occultation Meteorology Satellite Application Facility | romsaf | 
 
-##  DynamoDB database
+#  DynamoDB database
 
 A collection of JSON files is provided in the Open Data S3 bucket in the path 
-dynamo\_export\_subsets that constitutes a complete catalogue of RO soundings
-manifested in the S3 bucket along with useful metadata on the soundings, including
-reference longitude, latitude, time, whether it is a rising or setting RO
-sounding, etc. A utility is provided in the
-[utilities](http://github.com/gnss-ro/aws-opendata/tree/master/utilities) folder that will
-convert the collection of files---split up according to mission and year---into a
-DynamoDB database table. The same folder contains tutorial demonstration Python
-code that contains examples of how to manipulate the DynamoDB database to do
-basic analysis of RO data using AWS services.
+dynamo\_export\_subsets that constitutes a complete catalogue of RO soundings 
+manifested in the S3 bucket along with useful metadata on the soundings, including 
+reference longitude, latitude, time, whether it is a rising or setting RO 
+sounding, etc. A utility is provided in the 
+[utilities](http://github.com/gnss-ro/aws-opendata/tree/master/utilities) folder that will 
+convert the collection of files---split up according to mission and year---into a 
+DynamoDB database table. The same folder contains tutorial demonstration Python 
+code that contains examples of how to manipulate the DynamoDB database to do 
+basic analysis of RO data using AWS services. 
 
-##  Data use licenses, acknowledgments
+#  Data use licenses, acknowledgments
 
-The format definitions are the outcome of consultations of an international team
-of GNSS RO retreival scientists and experts. They were drawn largely from the
-International Radio Occultation Working Group (IROWG), from public and private
-concerns, from universities, government laboratories, and satellite agencies.
+The format definitions are the outcome of consultations of an international team 
+of GNSS RO retreival scientists and experts. They were drawn largely from the 
+International Radio Occultation Working Group (IROWG), from public and private 
+concerns, from universities, government laboratories, and satellite agencies. 
 
-The data use licenses for the various contributing centers are
-* The COSMIC Project Office at UCAR, a [creative commons license](https://www.ucar.edu/terms-of-use/data),
-* The NASA Jet Propulsion Laboratory, California Institute of Technology, a
-[creative commons license](https://creativecommmons.org/licenses/by/4.0/legalcode), and
-* The ROM SAF of EUMETSAT, the [EUMETSAT data use license](https://www.eumetsat.int/eumetsat-data-licensing).
+The data use licenses for the various contributing centers are 
+* The COSMIC Project Office at UCAR, a [creative commons license](https://www.ucar.edu/terms-of-use/data), 
+* The NASA Jet Propulsion Laboratory, California Institute of Technology, a 
+[creative commons license](https://creativecommmons.org/licenses/by/4.0/legalcode), and 
+* The ROM SAF of EUMETSAT, the [EUMETSAT data use license](https://www.eumetsat.int/eumetsat-data-licensing). 
 
-The repository of GNSS RO data in the AWS Open Data Registry was assembled and
-continues to be maintained by scientists and software engineers at Atmospheric
-and Environmental Research, Inc. Funding for this effort was provided by the NASA
-Advancing Collaborative Connections for Earth System Science (ACCESS) Program 2019,
-grant 80NSSC21M0052.
+The repository of GNSS RO data in the AWS Open Data Registry was assembled and 
+continues to be maintained by scientists and software engineers at Atmospheric 
+and Environmental Research, Inc. Funding for this effort was provided by the NASA 
+Advancing Collaborative Connections for Earth System Science (ACCESS) Program 2019, 
+grant 80NSSC21M0052. 
 
 
-*Last update: 16 May 2022*
+*Last update: 22 June 2022*

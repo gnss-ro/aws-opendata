@@ -1,0 +1,54 @@
+#!/usr/bin/env python3
+
+import re
+import json
+import numpy as np
+from dynamodb_demonstration import occultation_count_figure, merge_jsonfiles
+
+#  Main program.
+
+from dynamodb_demonstration import occultation_count_by_mission
+
+if __name__ == "__main__":
+
+    import argparse
+
+    # Defaults. 
+
+    ytickdef_default = "0,5000,1000,200"
+    output_default = "plot_count_occultations.eps"
+
+    parser = argparse.ArgumentParser( description="Plot a timeseries of the number of " + \
+            "occultations by mission." )
+
+    parser.add_argument( "-o", dest="output", type=str, default=output_default, 
+            help="The name of the output encapsulated postscript file. " + \
+                    f"The default is {output_default}." )
+
+    parser.add_argument( "--ytickdef", type=str, default=ytickdef_default, 
+            help="Four numbers separated by commas containing (1) the minimum " + \
+                    "y tick mark, (2) the maximum y tick mark, (3) the interval " + \
+                    "between major tick marks, and (4) the interval between minor " + \
+                    "tick marks. The default is " + ytickdef_default )
+
+    parser.add_argument( "jsonfiles", metavar="jsonfile", type=str, nargs="+", 
+            help="Path to a JSON file containing occultation counts" )
+
+    args = parser.parse_args()
+
+    #  Y tick definitions. 
+
+    s = re.split( ",", args.ytickdef )
+    yticks = np.arange( float( s[0] ), float( s[1] ) + 0.01, float( s[2] ) )
+    yminor = float( s[3] )
+
+    #  Read the data. 
+
+    alldata = merge_jsonfiles( args.jsonfiles )
+
+    #  Plot. 
+
+    ret = occultation_count_figure( alldata, args.output, yticks=yticks, yminor=yminor )
+
+    pass
+

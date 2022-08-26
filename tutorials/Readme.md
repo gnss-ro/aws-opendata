@@ -1,4 +1,4 @@
-GNSS RO in AWS Utilities
+GNSS RO in AWS Tutorials
 ============================================
 
 **AWS Location**: s3://gnss-ro-data
@@ -53,8 +53,9 @@ The first python module is
 It contains three
 functions that illustrate how the DynamoDB database of GNSS RO data can be
 manipulated. The major functionality illustrated in the code is use of the
-*query* DynamoDB method. It always requires a precisely defined partition
-key and a sort key, the latter of which can be only partially defined. The 
+*query* DynamoDB method. It always requires a partition
+key and a sort key, the former must be precisely defined but the latter 
+can be only loosely defined. The 
 first method, *occultation_count_by_mission*, computes a monthly tally of 
 occultation count by RO mission. It shows how to query the table by mission, 
 composing all possible partition keys for each mission. The output is 
@@ -66,8 +67,31 @@ and in solar-time-latitude space. Note that *occultation_count_figure* must
 be executed prior to calling *distribution_solartime_figure* in order to
 compose the mission color table. The plots are all encapsulated postscript.
 
+Because of the size of the database, it is best to execute the function 
+*occultation_count_by_mission* using the python executable *count_occultations* 
+in parallel, parceling out by year ranges on the order of a decade. To 
+create the matplotlib stack plot, then use the python executable 
+*plot_count_occultations*. All told, it takes approximately 18 hours of 
+run time to catalogue the occultation counts, most of the time being spent 
+querying the database. In order to make the querying more tractable, we have 
+provided a command line executable, *count_occultations*, that enables running multiple query 
+sessions simultaneously, writing the occultation counts into separate JSON 
+files. For example, 
+```
+./count_occultations 1995 2004 count_occultations.1995-2004.json &
+./count_occultations 2005 2014 count_occultations.2005-2014.json &
+./count_occultations 2015 2022 count_occultations.2015-2022.json &
+```
+Once these jobs are completed, then you can use the command line 
+python executable *plot_count_occultations* to generate an encapsulated 
+postscript plot of the occultation counts by mission. 
+```
+./plot_count_occultations count_occultations.*.json
+```
+
 In order to run the code, be sure the configuration in the header is set to 
-the correct values of "aws_profile", "aws_region", and "dynamodb_table". 
+the correct values of "aws_profile", "aws_region", and "dynamodb_table", 
+which should enable reading of your private copy of the DynamoDB database. 
 
 ### Data analysis tutorial
 
@@ -82,7 +106,9 @@ both UCAR and ROM SAF for a particular day of COSMIC-1 data; and
 box-and-whisker plots.
 
 As above, be sure the configuration in the header is set to the correct 
-values of "aws_profile", "aws_region", and "dynamodb_table". 
+values of "aws_profile", "aws_region", and "dynamodb_table" for access 
+to your private copy of the DynamoDB database. The RO data are actually 
+read from the public AWS Open Data Registry repository of RO data. 
 
 ### Questions? Comments? 
 
