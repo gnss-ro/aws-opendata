@@ -27,6 +27,6 @@ Instructions:
 9. under Schedule, select Run "on pipeline activation"
 10.Disable logging
 11. Select "Activate" at the bottom.  The IAM roles should be created for you assuming the IAM role you are signed in as has permissions.
-
+12. To update this table you can run the "import_gnss-ro_dynamoDB.py" with the date string option.
 
 Note: this pipeline may take a bit to start up, but should import all data into the specified DynamoDB table in 2-4 hours.
