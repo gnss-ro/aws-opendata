@@ -249,4 +249,36 @@ solar time (local time) of the occultation, whether it is a rising or setting oc
 various data files in the S3 bucket.
 
 For an explicit demonstration of how to use the DynamoDB database, see the
-[tutorial demonstrations](http://github.com/gnss-ro/aws-opendata/tree/master/tutorials).
+[tutorial demonstrations](http://github.com/gnss-ro/aws-opendata/tree/master/tutorials). Creating your 
+own DynamoDB table of all RO data can be extraordinarily time consuming: using a single computer it can 
+take several weeks! We instead using the AWS service DataPipeline. The instructions for creating your 
+own DynamoDB table by DataPipeline are below. When implemented correctly, it should take only a few hours 
+to create your own DynamoDB table of RO metadata. 
+
+The prerequisites are as follows: 
+* AWS console access
+* DynamoDB table created as such:
+    - Go to the dynamoDB Service in the AWS console
+    - Select "Create table"
+    - Table name = "gnss-ro-import"
+    - Partition key = "leo-ttt"
+    - Sort key = "date-time"
+    - Select Custom Settings
+    - Choose "Capacity mode" = On-demand
+    - Finish by selecting "Create table"
+
+Instructions:
+1. In your AWS console, go to the Data Pipeline Service
+2. Click "create new pipeline"
+3. Enter a Name and Description of your choice
+4. For Source: choose "DynamoDB Templates" >> "Import DynamoDB backup data from S3"
+5. Input s3 folder: s3://gnss-ro-data/dynamo/v1.1/export_subsets/
+6. Target DynamoDB table name: "gnss-ro-import"  (must match the above table name)
+7. DynamoDB write throughput ratio: 0.9
+8. Region of the DynamoDB table: "us-east-1"
+9. under Schedule, select Run "on pipeline activation"
+10.Disable logging
+11. Select "Activate" at the bottom.  The IAM roles should be created for you assuming the IAM role you are signed in as has permissions.
+12. To update this table you can run the "import_gnss-ro_dynamoDB.py" with the date string option.
+
+Note: this pipeline may take a bit to start up, but should import all data into the specified DynamoDB table in 2-4 hours.
