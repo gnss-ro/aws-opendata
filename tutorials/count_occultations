@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
-from dynamodb_demonstration import occultation_count_by_mission
-
 #  Main program.
 
-from dynamodb_demonstration import occultation_count_by_mission
+import os
+import json
+from datetime import datetime, timedelta
+from awsgnssroutils import RODatabaseClient
 
 if __name__ == "__main__":
 
@@ -19,7 +20,57 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    alldata = occultation_count_by_mission( args.start_year, args.end_year, args.output_json )
+    #  Database portal. 
+
+    HOME = os.path.expanduser( "~" )
+    repository = os.path.join( HOME, "local/rodatabase" )
+    db = RODatabaseClient( repository=repository )
+
+    #  Define the year range over which to query the database. 
+
+    startmonth = datetime( year=args.start_year, month=1, day=1 )
+    endmonth = datetime( year=args.end_year, month=12, day=1 )
+
+    #  Loop over months in the time interval. 
+
+    month = startmonth + timedelta(seconds=0)
+    alldata = []
+
+    while month <= endmonth: 
+
+        #  Establish the datetime range for the query for a month's worth of RO 
+        #  metadata. 
+
+        tmp = month + timedelta(days=31)
+        nextmonth = datetime( year=tmp.year, month=tmp.month, day=1 )
+
+        #  Query the database. 
+
+        monthly_occs = db.query( datetimerange=( month.isoformat(), nextmonth.isoformat() ) )
+
+        #  Separate the month of RO metadata by mission. 
+
+        rec = { 'year': month.year, 'month': month.month, 'noccs': {} }
+        missions = monthly_occs.info( "mission" )
+
+        #  Loop over mission. 
+
+        for mission in missions: 
+            monthly_occs_by_mission = monthly_occs.filter( missions=mission )
+            rec['noccs'].update( { mission: monthly_occs_by_mission.size } )
+
+        #  Append the month to alldata. 
+
+        print( rec )
+        alldata.append( rec )
+        month = nextmonth
+
+    #  Write to output. 
+
+    with open( args.output_json, 'w' ) as out: 
+        print( f"Writing output to {args.output_json}." )
+        json.dump( alldata, out, indent="  " )
+
 
     pass
 
