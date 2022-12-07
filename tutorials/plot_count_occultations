@@ -4,64 +4,16 @@
 
 import os
 import re
-import sys
 import json
-from datetime import datetime, timedelta
-
-from dynamodb_demonstration import occultation_count_figure, merge_jsonfiles
+import pdb
 
 #  Import installed modules.
 
-from netCDF4 import Dataset
 import numpy as np
-import cartopy
 import matplotlib.cm as cm
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator
 
-
-##################################################
-#  IMPORTANT: Configuration
-##################################################
-
-#  Define the name of the AWS profile to be used for authentication
-#  purposes. The authentication will be needed to access the DynamoDB
-#  database table. If no authentication is required, then set
-#  aws_profile to None.
-
-aws_profile = None
-
-#  Define the AWS region where the DynamoDB database is manifested
-#  and the name of the DynamoDB database table.
-
-aws_region = "us-east-1"
-dynamodb_table = "gnss-ro-data-stagingv1_1"
-
-##################################################
-#  Configuration complete.
-##################################################
-
-
-#  The RO missions in the data archive with pointers to the names
-#  of the satellites in each RO mission. This dictionary is a summary
-#  of Table 5 in the Data-Description.pdf document.
-
-valid_missions = {
-    'gpsmet': [ "gpsmet", "gpsmetas" ],
-    'grace': [ "gracea", "graceb" ],
-    'sacc': [ "sacc" ],
-    'champ': [ "champ" ],
-    'cosmic1': [ "cosmic1c{:1d}".format(i) for i in range(1,7) ],
-    'tsx': [ "tsx" ],
-    'tdx': [ "tdx" ],
-    'cnofs': [ "cnofs" ],
-    'metop': [ "metopa", "metopb", "metopc" ],
-    'kompsat5': [ "kompsat5" ],
-    'paz': [ "paz" ],
-    'cosmic2': [ "cosmic2e{:1d}".format(i) for i in range(1,7) ],
-    'spire': [ "spireS{:03d}".format(i) for i in range(99,151) ],
-    'geoopt': [ "geooptG{:02d}".format(i) for i in range(1,8) ]
-    }
 
 #  Matplotlib default settings.
 
@@ -77,74 +29,9 @@ plt.rcParams.update( {
   'ytick.minor.width': axeslinewidth,
   'axes.linewidth': axeslinewidth } )
 
-#  GNSS constellations used as RO transmitters for this analysis. This must
-#  include "R" in addition to "G" when cosmic2 data or data from the
-#  commercial RO data providers become available.
-
-# valid_constellations = [ "G", "R" ]
-valid_constellations = [ "G", "R", "E" ]
-
 #  Intermediate files: mission color table.
 
 colors_json_file = "color_table_by_mission.json"
-
-#  Define month labeling strings.
-
-monthstrings = "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split()
-
-#  Logger.
-
-import logging
-
-LOGGER = logging.getLogger( __name__ )
-handlers = [ logging.FileHandler( filename="dynamodb_demonstration.log" ),
-    logging.StreamHandler( sys.stdout ) ]
-formatstr = '%(pathname)s:%(lineno)d %(levelname)s: %(message)s'
-logging.basicConfig( handlers=handlers, level=logging.INFO, format=formatstr )
-
-#  Physical constants.
-
-gravity = 9.80665           # WMO standard gravity [J/kg/m]
-k1 = 77.6e-2                # First term in refractivity equation [N-units K/Pa]
-
-################################################################################
-#  Useful utilities.
-################################################################################
-
-def latlabels( lats ):
-    """Create a list of tick labels for latitutes based on a list/array of
-    tick values."""
-
-    ylabels = []
-    for lat in lats:
-        if lat < 0:
-            ylabel = "{:}S".format( np.abs( lat ) )
-        elif lat > 0:
-            ylabel = "{:}N".format( np.abs( lat ) )
-        else:
-            ylabel = "Eq"
-        ylabels.append( ylabel )
-
-    return ylabels
-
-def get_transmitters( constellations ):
-    """Return a list of possible transmitter names as 3-character PRNs"""
-
-    transmitters = []
-    for constellation in constellations:
-        if constellation == "G":
-            nprns = 32
-        elif constellation == "R":
-            nprns = 24
-        elif constellation == "E":
-            nprns = 36
-        elif constellation == "C":
-            nprns = 61
-        transmitters += [ f"{constellation}{prn:02d}" for prn in range(1,nprns+1) ]
-
-    transmitters.sort()
-
-    return transmitters
 
 
 def merge_jsonfiles( jsonfiles, output_jsonfile=None ):
@@ -168,6 +55,21 @@ def merge_jsonfiles( jsonfiles, output_jsonfile=None ):
     for yearmonth in yearmonths_sorted:
         irec = yearmonths.index( yearmonth )
         alldata.append( alldata_tmp[irec] )
+
+    #  Create a list of missions. 
+
+    missions = set()
+    for rec in alldata: 
+        missions = missions.union( rec['noccs'].keys() )
+    missions = list( missions )
+
+    #  Be certain that every record in alldata has a key for every mission. 
+
+    for rec in alldata: 
+        recmissions = rec['noccs'].keys()
+        for mission in missions: 
+            if mission not in recmissions: 
+                rec['noccs'].update( { mission: 0 } )
 
     #  Write to output if requested.
 
@@ -195,6 +97,8 @@ def occultation_count_figure( alldata, epsfile, yticks=np.arange(0,5001,1000), y
 
     missions = list( alldata[0]['noccs'].keys() )
     start_months = [ None for m in missions ]
+
+    pdb.set_trace()
 
     for rec in alldata:
         for im, m in enumerate( missions ):
@@ -285,149 +189,6 @@ def occultation_count_figure( alldata, epsfile, yticks=np.arange(0,5001,1000), y
 
     print( f"Saving to {epsfile}." )
     plt.savefig( epsfile, format="eps" )
-
-    return
-
-
-def distribution_solartime_figure( year, month, day, epsfile ):
-    """Create a figure showing the distribution of occultations, by mission, for
-    one day of soundings as specified by year, month, day. The figure is saved
-    as encapsulated output to epsfile."""
-
-    #  Set up session and dynamodb table.
-
-    if aws_profile is None:
-        session = boto3.Session( region_name=aws_region )
-    else:
-        session = boto3.Session( profile_name=aws_profile, region_name=aws_region )
-
-    resource = session.resource( "dynamodb" )
-    table = resource.Table( dynamodb_table )
-
-    #  Which missions have data for this month?
-
-    with open( alldata_json_file, 'r' ) as d:
-        alldata = json.load( d )
-
-    for rec in alldata:
-        if rec['year'] == year and rec['month'] == month:
-            missions = [ m for m in rec['noccs'].keys() if rec['noccs'][m] > 0 ]
-            break
-
-    #  Get all soundings for this month by mission.
-
-    maprecs = []
-
-    #  Get list of transmitters.
-
-    transmitters = get_transmitters( [ "G", "R" ] )
-
-    #  Define sort key range.
-
-    dtime1 = datetime( year, month, day )
-    dtime2 = dtime1 + timedelta( minutes=1439 )
-
-    sortkey1 = "{:4d}-{:02d}-{:02d}-{:02d}-{:02d}".format(
-            dtime1.year, dtime1.month, dtime1.day, dtime1.hour, dtime1.minute )
-    sortkey2 = "{:4d}-{:02d}-{:02d}-{:02d}-{:02d}".format(
-            dtime2.year, dtime2.month, dtime2.day, dtime2.hour, dtime2.minute )
-
-    #  Loop over missions.
-
-    for mission, satellites in valid_missions.items():
-
-        if mission not in missions: continue
-
-        #  For each mission-year-month, retrieve all soundings, decimate, and retain
-        #  geolocation information.
-
-        rec = { 'mission': mission, 'longitudes': [], 'latitudes': [], 'solartimes': [] }
-        noccs = 0
-
-        for satellite in satellites:
-            for transmitter in transmitters:
-                partitionkey = f"{satellite}-{transmitter}"
-
-                #  Query the database.
-
-                ret = table.query(
-                        KeyConditionExpression =
-                            Key('leo-ttt').eq( partitionkey ) &
-                            Key('date-time').between( sortkey1, sortkey2 )
-                        )
-
-                if ret['Count'] != 0:
-                    for item in ret['Items']:
-                        if float( item['longitude'] ) == -999.99 \
-                                or float( item['latitude'] ) == -999.99 \
-                                or float( item['local_time'] ) == -999.99 :
-                            continue
-                        rec['longitudes'].append( float( item['longitude'] ) )
-                        rec['latitudes'].append( float( item['latitude'] ) )
-                        rec['solartimes'].append( float( item['local_time'] ) )
-                        noccs += 1
-
-        maprecs.append( rec )
-
-    #  Read colormap.
-
-    if not os.path.isfile( colors_json_file ):
-        LOGGER.exception( f"File {colors_json_file} does not exist. It should be " +
-                "generated by occultation_count_figure beforehand." )
-        return
-
-    with open( colors_json_file, 'r' ) as c:
-        colormap = json.load( c )
-
-    #  Execute map.
-
-    fig = plt.figure( figsize=(6.5,2.0) )
-
-    #  Longitude-latitude map.
-
-    ax = fig.add_axes( [0.01,0.22,0.45,0.67], projection=cartopy.crs.PlateCarree() )
-    ax.coastlines( )
-
-    ax.set_xlim( -180, 180 )
-    ax.set_ylim( -90, 90 )
-
-    title = "(a) RO geolocations for {:} {:} {:4d}".format( day, monthstrings[month-1], year )
-    ax.set_title( title )
-
-    #  Loop over mission records, plotting occ locations.
-
-    for rec in maprecs:
-        color = colormap[rec['mission']]
-        ax.scatter( rec['longitudes'], rec['latitudes'], color=color, s=0.25 )
-
-    #  Next axis: solar time distribution.
-
-    ax = fig.add_axes( [0.54,0.22,0.43,0.67] )
-
-    title = "(b) RO solar times for {:} {:} {:4d}".format( day, monthstrings[month-1], year )
-    ax.set_title( title )
-
-    ax.set_xlim( 0, 24 )
-    ax.set_xticks( np.arange( 0, 24.1, 6 ) )
-    ax.xaxis.set_minor_locator( MultipleLocator( 1 ) )
-    ax.set_xticklabels( [ f"{v:02d}:00" for v in ax.get_xticks().astype('i') ] )
-
-    yticks = np.arange( -90, 90.1, 30 ).astype('i')
-    ax.set_ylim( -90, 90 )
-    ax.set_yticks( yticks )
-    ax.yaxis.set_minor_locator( MultipleLocator( 10 ) )
-    ax.set_yticklabels( latlabels( yticks ) )
-
-    #  Loop over mission records, plotting occ solartimes.
-
-    for rec in maprecs:
-        color = colormap[rec['mission']]
-        ax.scatter( rec['solartimes'], rec['latitudes'], color=color, s=0.25 )
-
-    #  Done with figure.
-
-    print( f"Writing to {epsfile}." )
-    fig.savefig( epsfile, format='eps' )
 
     return
 
