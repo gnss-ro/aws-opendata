@@ -175,7 +175,7 @@ if __name__ == "__main__":
 
     # Defaults. 
 
-    output_default = "distribution_solartime_plot.eps"
+    output_default = "plot_distribution_solartime.eps"
 
     parser = argparse.ArgumentParser( description="Generate a plot show the lon-lat " + \
             "distribution of occultations for one day and the local time-lat distribution " + \
