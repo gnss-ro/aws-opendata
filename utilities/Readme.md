@@ -13,39 +13,56 @@
 
 ## Introduction
 
-There are two options to performing database inquiries on the radio occultation 
-data contained in the AWS Registry of Open Data. The first is to use a utility 
-provided in the Python module **awsgnssroutils.py**, which enables a Python 
-programmer to query the online RO database, mirror the contents of the database 
-on a local file system as needed, and download RO data files. The second is to 
-construct a DynamoDB database based on the contents of the AWS Registry of Open 
-Data for GNSS RO. DynamoDB is a much more efficient database engine than the 
-Python module **awsgnssroutils.py**, but constructing the DynamoDB table and 
-executing the queries are more complicated. In the material below, we introduce 
-both the Python module and offer instruction on buildling a DynamoDB table and 
-querying it. 
+A utility is provided in the Python module **awsgnssroutils.py** that enables a Python 
+programmer to query the AWS GNSS radio occultation (RO) database, mirror the 
+contents of the database 
+to a local file system as needed, and download RO data files. Beneath its hood 
+it interfaces directly with the GNSS RO metadata stored in the 
+AWS Registry of Open Data repository of GNSS RO data. Use of the utility does not 
+require access to an AWS account, and the user need not issue any commands 
+directly by an AWS API. Even the metadata for GNSS RO have become voluminous, 
+so first queries using the Python utility can be time consuming. If the user 
+creates a local mirror of the RO metadata --- which is extremely highly recommended --- 
+subsequent queries of the same metadata will proceed a factor of 100 to 1000 
+times faster than the first. 
+
+If instead a user chooses to take advantage of the AWS DynamoDB service in order to 
+perform queries, see 
+[deprecated](https://github.com/gnss-ro/aws-opendata/blob/master/utilities/deprecated/). 
+The DynamoDB service is a more efficient database service than the Python 
+utility described herein, but considerable effort will be necessary to create a 
+private copy of the DynamoDB table in the user's own AWS account, and DynamoDB 
+database queries are more complicated coding than with the provided Python 
+module. 
 
 ## Python database module
 
 *Prerequisites:* numpy, boto3, s3fs
 
-The Python module is **awsgnssroutils.py**, which can be downloaded from this 
-repository. It contains the definitions of two object classes: *RODatabaseClient* 
+*Notebook:* 
+The jupyter notebook 
+[demonstration_notebook.ipynb](https://github.com/gnss-ro/aws-opendata/blob/master/utilities/demonstration_notebook.ipynb) 
+demonstrates how to use 
+the *RODatabaseClient* and *OccList* classes to query the RO database. 
+
+The Python module is [awsgnssroutils.py](https://github.com/gnss-ro/aws-opendata/blob/master/utilities/awsgnssroutils.py). 
+It contains the definitions of two object classes: *RODatabaseClient* 
 and *OccList*. *RODatabaseClient* functions as a portal to a database of the 
 metadata associated with all of the Earth GNSS RO data in the AWS Registry of 
-Open Data. It contains two methods that generate the metadata for a subsets 
-of RO data, one being the restoration of a previously saved subset, and the 
-second being the generation of a new subset according to RO mission(s) and a 
-range of date-times for RO data. The subsets come in the form of instances of 
-*OccList*, which offers methods to filter/subset the list to create another 
-one, download the RO data files, and generate the values of RO metadata such as 
+Open Data. It contains two methods that generate metadata objects. (An RO 
+metadata object contains all metadata of a set of GNSS RO soundings, including 
+the satellites involved, their geolocations and time, whether they are rising 
+or setting occultations, and pointers to the 
+corresponding RO data in the AWS Registry of Open Data.)  The first method 
+restores a previously saved metadata object, and the 
+second method generated a new metadata object according to RO mission(s) and/or a 
+range of date-times. The metadata objects come in the form of instances of 
+*OccList*, which offers a method to further filter/subset the RO soundings they 
+contain to create a new metadata object, a method to 
+download RO data files, and a method to generate the values of RO metadata such as 
 geolocation and local time.  Inline documentation in the classes 
-*RODatabaseClass* and *OccList* is complete. 
-
-<span style="color:red"> 
-The jupyter notebook <b>demonstration_notebook.ipynb</b> demonstrates how to use 
-the <i>RODatabaseClient</i> and <i>OccList</i> classes to query the RO database. 
-</span>
+*RODatabaseClass* and *OccList* is complete: executing `help(RODatabaseClient)`
+or `help(OccList)` will provide thorough descriptions of usage. 
 
 ### RODatabaseClient
 
@@ -86,8 +103,9 @@ RO data over the year 2009 by
 ```
 occs2009 = db.query( datetimerange=("2009-01-01","2010-01-01") )
 ```
-in which both elements of the 2-tuple for "datetimerange" are ISO-format 
-datetime strings. A user can also query the database by mission(s) by 
+in which both elements of the 2-tuple for "datetimerange" are [ISO-format 
+datetime strings](https://www.w3.org/TR/NOTE-datetime). A user can also 
+query the database by mission(s) by 
 ```
 occs = db.query( missions=("sacc","tsx","tdx") )
 ```
@@ -166,119 +184,3 @@ RO processing center for one day, and does so in a way that maintains the same d
 structure as in the AWS Registry of Open Data S3 bucket with the local directory 
 "rodata" as the root of the download. 
 
-
-## AWS DynamoDB 
-
-*Prerequisites:* 
-In order for any of this to work, you must first get an account
-with AWS and obtain up-to-date authentication tokens. Typically, these authentication
-tokens will be referenced by a profile name, and that profile name should be set
-in the configuration section of the header of the import_gnss-ro_dynamoDB.py script.
-The variable that should be set is "aws_profile".
-
-### Python environment
-
-The specific packages required for each utility is listed in-line for each respective file. To
-easily create an environment to run the included utilities please see the
-[Install_python_miniconda_linux.sh](http://github.com/gnss-ro/aws-opendata/blob/master/utilities/Install_python_miniconda_linux.sh)
-bash script. This will install the latest python version via Miniconda and the necessary
-python packages.
-
-### Implement DynamoDB table
-
-A utility is provided to assist you in creating your own DynamoDB database
-table given the JSON files hosted in *s3://gnss-ro-data/dynamo_export_subsets*.
-There is a faster more efficient way however complex, using AWS DataPipeline.  We have
-also created a python script that uses boto3 to loop through and create the database one item at a time.
-However this second way is very time consuming to recreate the entire table, but great for partial chunks.
-
-#### AWS DataPipeline:
-This option will import the full table to your AWS DynamoDB within a few hours.
-The instructions to set the up are included here in "DynamoDB_full_import_instructions.txt". These instructions
-assume you have full access to your AWS account.
-
-To update it you can use the Python script below and simply type in the most recent month or day.
-For example:
-
-```
-python3 import_gnss-ro_dynamoDB.py --dynamodb_table_name my_ro_database --date_str "202208"
-```
-
-#### Python and DynamoDB
-The script is **import_gnss-ro_dynamoDB.py**. It creates a DynamoDB database
-given an RO mission name and optionally a date range for RO soundings. For example,
-in order to import all CHAMP RO data into your own DynamoDB table, execute the command
-
-```
-python3 import_gnss-ro_dynamoDB.py --dynamodb_table_name my_ro_database --mission champ
-```
-
-In order to import just one year of CHAMP entries into your database, try
-
-```
-python3 import_gnss-ro_dynamoDB.py --dynamodb_table_name my_ro_database --mission champ --date_str "2003"
-```
-
-for all of year 2003. Note that you can define the table name of your own database in place of
-"my_ro_database". To import just one month of CHAMP entries in the database, try
-
-```
-python3 import_gnss-ro_dynamoDB.py --dynamodb_table_name my_ro_database --mission champ --date_str "2003-02"
-python3 import_gnss-ro_dynamoDB.py --dynamodb_table_name my_ro_database --mission champ --date_str "2003-02-14"
-```
-
-If you wish to import all entries into your database, ...
-
-```
-python3 import_gnss-ro_dynamoDB.py --full
-```
-
-but this operation can take a very long time, up to several days.
-
-
-### Database design and usage
-
-A DynamoDB database is premised on the usage of "partition" and "sort" keys. Together, they uniquely
-define an RO sounding. In this case, the partition key is "leo-ttt" where "leo" is the low-Earth-orbiting
-receiver name and "ttt" is the GNSS transmitter identifier. The sort key is "yyyy-mm-dd-hh-mm" (year,
-month, day, hour, minute) of the RO sounding. See the main
-[Readme document](http://github.com/gnss-ro/aws-opendata/blob/master/Readme.md). Any query of the database requires
-a unique specification of the partition key and at least a partial definition of the sort key. Each
-entry (for a unique radio occultation sounding) contains information on the time, longitude, latitude,
-solar time (local time) of the occultation, whether it is a rising or setting occultation, and pointers to the
-various data files in the S3 bucket.
-
-For an explicit demonstration of how to use the DynamoDB database, see the
-[tutorial demonstrations](http://github.com/gnss-ro/aws-opendata/tree/master/tutorials). Creating your 
-own DynamoDB table of all RO data can be extraordinarily time consuming: using a single computer it can 
-take several weeks! We instead using the AWS service DataPipeline. The instructions for creating your 
-own DynamoDB table by DataPipeline are below. When implemented correctly, it should take only a few hours 
-to create your own DynamoDB table of RO metadata. 
-
-The prerequisites are as follows: 
-* AWS console access
-* DynamoDB table created as such:
-    - Go to the dynamoDB Service in the AWS console
-    - Select "Create table"
-    - Table name = "gnss-ro-import"
-    - Partition key = "leo-ttt"
-    - Sort key = "date-time"
-    - Select Custom Settings
-    - Choose "Capacity mode" = On-demand
-    - Finish by selecting "Create table"
-
-Instructions:
-1. In your AWS console, go to the Data Pipeline Service
-2. Click "create new pipeline"
-3. Enter a Name and Description of your choice
-4. For Source: choose "DynamoDB Templates" >> "Import DynamoDB backup data from S3"
-5. Input s3 folder: s3://gnss-ro-data/dynamo/v1.1/export_subsets/
-6. Target DynamoDB table name: "gnss-ro-import"  (must match the above table name)
-7. DynamoDB write throughput ratio: 0.9
-8. Region of the DynamoDB table: "us-east-1"
-9. under Schedule, select Run "on pipeline activation"
-10.Disable logging
-11. Select "Activate" at the bottom.  The IAM roles should be created for you assuming the IAM role you are signed in as has permissions.
-12. To update this table you can run the "import_gnss-ro_dynamoDB.py" with the date string option.
-
-Note: this pipeline may take a bit to start up, but should import all data into the specified DynamoDB table in 2-4 hours.
