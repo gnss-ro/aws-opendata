@@ -20,9 +20,9 @@ to a local file system as needed, and download RO data files. Beneath its hood
 it interfaces directly with the GNSS RO metadata stored in the 
 AWS Registry of Open Data repository of GNSS RO data. Use of the utility does not 
 require access to an AWS account, and the user need not issue any commands 
-directly by an AWS API. Even the metadata for GNSS RO have become voluminous, 
+directly by an AWS API. The metadata for GNSS RO have become voluminous, 
 so first queries using the Python utility can be time consuming. If the user 
-creates a local mirror of the RO metadata --- which is extremely highly recommended --- 
+creates a local mirror of the RO metadata &mdash; which is extremely highly recommended &mdash;
 subsequent queries of the same metadata will proceed a factor of 100 to 1000 
 times faster than the first. 
 
@@ -31,9 +31,9 @@ perform queries, see
 [deprecated](https://github.com/gnss-ro/aws-opendata/blob/master/utilities/deprecated/). 
 The DynamoDB service is a more efficient database service than the Python 
 utility described herein, but considerable effort will be necessary to create a 
-private copy of the DynamoDB table in the user's own AWS account, and DynamoDB 
-database queries are more complicated coding than with the provided Python 
-module. 
+private copy of the DynamoDB table in the user's own AWS account, and the coding 
+for DynamoDB database queries is more complicated than coding using the provided 
+Python module. 
 
 ## Python database module
 
@@ -111,7 +111,9 @@ occs = db.query( missions=("sacc","tsx","tdx") )
 ```
 which will get metadata for all RO soundings by the RO missions SAC-C, 
 TerraSAR-X, and TanDEM-X. Both "occs2009" and "occs" are instances of 
-*OccList*. Use of the *RODatabaseClient.restore* method is illustrated below, 
+*OccList*. 
+
+Use of the *RODatabaseClient.restore* method is illustrated below, 
 in the description of the *OccList.save* method. 
 
 ### OccList
