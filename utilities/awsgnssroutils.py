@@ -1,8 +1,8 @@
 """awsgnssroutils.py
 
 Authors: Amy McVey (amcvey@aer.com) and Stephen Leroy (sleroy@aer.com)
-Version: 1.0
-Date: 23 November 2022
+Version: 1.0.1
+Date: 9 December 2022
 
 ================================================================================
 
@@ -699,7 +699,11 @@ class OccList():
 
     def __getitem__(self,items):
         new = self._data[items]
-        return OccList( data=new, s3=self._s3 ) 
+        if isinstance( new, dict ): 
+            out = OccList( data=[new], s3=self._s3 )
+        else: 
+            out = OccList( data=new, s3=self._s3 )
+        return out
 
     def __repr__(self): 
         return f'OccList({len(self._data)} items)' 
