@@ -1,8 +1,8 @@
 """awsgnssroutils.py
 
 Authors: Amy McVey (amcvey@aer.com) and Stephen Leroy (sleroy@aer.com)
-Version: 1.0.1
-Date: 9 December 2022
+Version: 1.1
+Date: 12 December 2022
 
 ================================================================================
 
@@ -209,6 +209,66 @@ class AWSgnssroutilsError( Error ):
         self.comment = comment
 
 
+
+################################################################################
+#  Useful utility functions and classes. 
+################################################################################
+
+def unsigned_S3FileSystem(): 
+    """This is a custom function that contains code to generate an authenticated 
+    instance of s3fs.S3FileSystem. In this particular case, authentication is 
+    UNSIGNED."""
+
+    s3 = s3fs.S3FileSystem( client_kwargs={ 'region_name': AWSregion }, 
+                                     config_kwargs={ 'signature_version': UNSIGNED } )
+
+    return s3
+
+class S3FileSystem(): 
+    """This class is a wrapper for s3fs.S3FileSystem that checks for broken 
+    instances and restores them when necessary."""
+
+    def __init__( self, S3FileSystem_create_function ): 
+        """Create a wrapper for s3fs.S3FileSystem. The sole argument points to a 
+        function that returns an instance of s3fs.S3FileSystem that is fully 
+        authenticated."""
+
+        self._s3fscreate = S3FileSystem_create_function 
+        self._s3 = self._s3fscreate()
+
+    def info( self, *args ): 
+        try: 
+            ret = self._s3.info( *args )
+        except: 
+            self._s3 = self._s3fscreate()
+            ret = self._s3.info( *args )
+        return ret
+
+    def download( self, *args ): 
+        try: 
+            ret = self._s3.download( *args )
+        except: 
+            self._s3 = self._s3fscreate()
+            ret = self._s3.download( *args )
+        return ret
+
+    def ls( self, *args ): 
+        try: 
+            ret = self._s3.ls( *args )
+        except: 
+            self._s3 = self._s3fscreate()
+            ret = self._s3.ls( *args )
+        return ret
+
+    def open( self, *args ): 
+        try: 
+            ret = self._s3.open( *args )
+        except: 
+            self._s3 = self._s3fscreate()
+            ret = self._s3.open( *args )
+        return ret
+
+
 ################################################################################
 #  Define the OccList class, which defines a list of occultations together with 
 #  the metadata on each occultation in the list. 
@@ -226,7 +286,7 @@ class OccList():
     def __init__( self, data, s3 ):
         """Create an instance of OccList. The data argument is a list of 
         items/RO soundings from the RO database.  The s3 argument is an 
-        instance of s3fs.S3FileSystem that enables access to the AWS 
+        instance of S3FileSystem that enables access to the AWS 
         repository of RO data."""
 
         if isinstance( data, list ): 
@@ -234,7 +294,7 @@ class OccList():
         else: 
             raise AWSgnssroutilsError( "BadInput", "Input argument data must be a list." )
 
-        if isinstance( s3, s3fs.S3FileSystem ): 
+        if isinstance( s3, S3FileSystem ): 
             self._s3 = s3
         else: 
             raise AWSgnssroutilsError( "BadInput", "Input argument s3 must be an " + \
@@ -745,8 +805,7 @@ class RODatabaseClient:
 #  Instantiate the s3 file system in AWS region AWSregion and with unsigned certificate 
 #  authentication. 
 
-        self._s3 = s3fs.S3FileSystem( client_kwargs={ 'region_name': AWSregion }, 
-                                     config_kwargs={ 'signature_version': UNSIGNED } )
+        self._s3 = S3FileSystem( unsigned_S3FileSystem )
 
 #  Update the existing repository if requested. 
 
