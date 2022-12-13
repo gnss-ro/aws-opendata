@@ -2,7 +2,7 @@
 
 Authors: Amy McVey (amcvey@aer.com) and Stephen Leroy (sleroy@aer.com)
 Version: 1.1
-Date: 12 December 2022
+Date: 13 December 2022
 
 ================================================================================
 
@@ -234,7 +234,16 @@ class S3FileSystem():
         authenticated."""
 
         self._s3fscreate = S3FileSystem_create_function 
-        self._s3 = self._s3fscreate()
+        message = "Argument to S3FileSystem must be a reference to a function " + \
+                "that returns an instance of s3fs.S3FileSystem." 
+
+        try: 
+            self._s3 = self._s3fscreate()
+        except: 
+            raise AWSgnssroutilsError( "IncorrectArgument", message )
+
+        if not isinstance( self._s3, s3fs.S3FileSystem ): 
+            raise AWSgnssroutilsError( "IncorrectArgument", message )
 
     def info( self, *args ): 
         try: 
