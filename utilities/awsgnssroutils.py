@@ -1,8 +1,8 @@
 """awsgnssroutils.py
 
 Authors: Amy McVey (amcvey@aer.com) and Stephen Leroy (sleroy@aer.com)
-Version: 1.1
-Date: 13 December 2022
+Version: 1.1.1
+Date: 19 December 2022
 
 ================================================================================
 
@@ -131,7 +131,15 @@ RODatabaseClient:
     for future restoration by 
 
     > spire.save( "spire_metadata.json" )
-    
+
+    One interesting project is for inter-center comparison, in which case you'll 
+    need to assure that all AWS file types are available. That can be done using 
+    the query keyword "availablefiletypes": 
+
+    cosmic1_day = rodb.query( missions="cosmic1", datetimerange=("2011-02-02","2011-02-03") )
+    cosmic1_day_available = cosmic1_day.filter( 
+            availablefiletypes=("ucar_refractivityRetrieval","romsaf_refractivityRetrieval") )
+
     The metadata also contain pointers to the RO sounding data files in the 
     AWS Open Data bucket. To get information on the data files available, 
     use the OccList.info( "filetype" ) method. For example, to find out the 
@@ -314,7 +322,8 @@ class OccList():
 
     def filter( self, missions=None, receivers=None, transmitters=None,
         GNSSconstellations=None, longituderange=None, latituderange=None,
-        datetimerange=None, localtimerange=None, geometry=None):
+        datetimerange=None, localtimerange=None, geometry=None, 
+        availablefiletypes=None ):
         '''Filter a list of occultations according to various criteria, such as 
         mission, receiver, transmitter, etc.  df is a list of items in the database, 
         and repository points to the local repository of the database data.
@@ -360,6 +369,16 @@ class OccList():
                             restrict the list to rising occultations only, or 
                             "setting" to restrict the list to setting 
                             occultations only. 
+
+        availablefiletypes  A list, set, or tuple of strings designating the 
+                            AWS RO data file types that must be present for 
+                            the retained soundings. Each file type must be of 
+                            the format "{center}_{filetype}" where the "center" 
+                            is one of the valid contributing RO processing 
+                            centers ("ucar", "jpl", "romsaf", etc.) and the 
+                            "filetype" is one of the valid AWS RO data file 
+                            types ("calibratedPhase", "refractivityRetrieval", 
+                            "atmosphericRetrieval". 
         '''
 
         #  Filter by GNSSconstellations or by transmitters, but not by both.
@@ -526,6 +545,37 @@ class OccList():
         f_geometry = geometry
 
 
+        #  Check availablefiletypes. 
+
+        if availablefiletypes is not None: 
+
+            if type( availablefiletypes ) not in [ str, list, set, tuple ]: 
+                raise AWSgnssroutilsError( "FaultyAvailableFiletypes", 'availablefiletypes must be of class ' + \
+                        '"str", "list", "set", or "tuple"' )
+
+            if isinstance( availablefiletypes, str ): 
+                f_availablefiletypes = { availablefiletypes }
+            else: 
+                f_availablefiletypes = set( availablefiletypes )
+
+            for availablefiletype in f_availablefiletypes: 
+                m = re.search( "^(\w+)_(\w+)$", availablefiletype )
+                if m: 
+                    center, filetype = m.group(1), m.group(2)
+                    if center not in valid_processing_centers: 
+                        raise AWSgnssroutilsError( "InvalidProcessingCenter", 
+                                f'Processing center "{center}" in availablefiletype {availablefiletype} ' + \
+                                        'is not valid.' )
+                    if filetype not in valid_file_types: 
+                        raise AWSgnssroutilsError( "InvalidFileType", 
+                                f'File type "{filetype}" in availablefiletype {availablefiletype} ' + \
+                                        'is not valid.' )
+                else: 
+                    raise AWSgnssroutilsError( "InvalidAvailableFiletype", 
+                                f'availablefiletype {availablefiletype} is not a valid format.' )
+        else: 
+            f_availablefiletypes = None
+
         # Loop through list of items, each a dictionary. 
 
         keep_list = []
@@ -585,6 +635,10 @@ class OccList():
                 else: 
                     keep &= ( item['setting'] and ( f_geometry == "setting" ) ) or \
                             ( ( not item['setting'] ) and ( f_geometry == "rising" ) )
+
+            if f_availablefiletypes is not None: 
+                keep &= f_availablefiletypes.issubset( item.keys() )
+
 
             #  Keep or don't keep in list.
 
