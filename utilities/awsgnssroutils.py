@@ -912,9 +912,7 @@ class RODatabaseClient:
 
         print( "Local repository update took {:} seconds.".format( round((time.time()-sTime),1) ) )
 
-    def query(self, missions=None, receivers=None, transmitters=None,
-        GNSSconstellations=None, longituderange=None, latituderange=None,
-        datetimerange=None, localtimerange=None, geometry=None):
+    def query(self, missions=None, receivers=None, datetimerange=None, **filterargs ): 
         '''Execute an inquiry on the RO database for RO soundings. At least one of 
         the keywords "missions" or "datetimerange" must be specified. If accessing 
         a database on the local file system, an inquiry will download all relevant 
@@ -1001,10 +999,7 @@ class RODatabaseClient:
             df = list( df_dict.values() )
 
             add_list = OccList( df, self._s3 ).filter( missions=missions, receivers=receivers, 
-                    transmitters=transmitters, GNSSconstellations=GNSSconstellations, 
-                    longituderange=longituderange, latituderange=latituderange,
-                    datetimerange=datetimerange, localtimerange=localtimerange, 
-                    geometry=geometry )
+                    datetimerange=datetimerange, **filterargs )
 
             ret_list += add_list
 
