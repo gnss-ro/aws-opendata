@@ -253,36 +253,36 @@ class S3FileSystem():
         if not isinstance( self._s3, s3fs.S3FileSystem ): 
             raise AWSgnssroutilsError( "IncorrectArgument", message )
 
-    def info( self, *args ): 
+    def info( self, x ): 
         try: 
-            ret = self._s3.info( *args )
+            ret = self._s3.info( x )
         except: 
             self._s3 = self._s3fscreate()
-            ret = self._s3.info( *args )
+            ret = self._s3.info( x )
         return ret
 
-    def download( self, *args ): 
+    def download( self, x, y ): 
         try: 
-            ret = self._s3.download( *args )
+            ret = self._s3.download( x, y )
         except: 
             self._s3 = self._s3fscreate()
-            ret = self._s3.download( *args )
+            ret = self._s3.download( x, y )
         return ret
 
-    def ls( self, *args ): 
+    def ls( self, x ): 
         try: 
-            ret = self._s3.ls( *args )
+            ret = self._s3.ls( x )
         except: 
             self._s3 = self._s3fscreate()
-            ret = self._s3.ls( *args )
+            ret = self._s3.ls( x )
         return ret
 
-    def open( self, *args ): 
+    def open( self, x ): 
         try: 
-            ret = self._s3.open( *args )
+            ret = self._s3.open( x )
         except: 
             self._s3 = self._s3fscreate()
-            ret = self._s3.open( *args )
+            ret = self._s3.open( x )
         return ret
 
 
