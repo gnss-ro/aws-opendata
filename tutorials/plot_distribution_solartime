@@ -1,0 +1,202 @@
+#!/usr/bin/env python3
+
+#  Import python standard modules.
+
+import os
+import json
+from datetime import datetime, timedelta
+
+#  Import installed modules.
+
+from awsgnssroutils import RODatabaseClient
+import numpy as np
+import cartopy
+import matplotlib.cm as cm
+import matplotlib.pyplot as plt
+from matplotlib.ticker import MultipleLocator
+
+#  Matplotlib default settings.
+
+axeslinewidth = 0.5
+plt.rcParams.update( {
+  'font.family': "Times New Roman",
+  'font.size': 8,
+  'font.weight': "normal",
+  'text.usetex': False,
+  'xtick.major.width': axeslinewidth,
+  'xtick.minor.width': axeslinewidth,
+  'ytick.major.width': axeslinewidth,
+  'ytick.minor.width': axeslinewidth,
+  'axes.linewidth': axeslinewidth } )
+
+#  Intermediate files: mission color table.
+
+colors_json_file = "color_table_by_mission.json"
+
+#  Define month labeling strings.
+
+monthstrings = "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split()
+
+#  Physical constants.
+
+gravity = 9.80665           # WMO standard gravity [J/kg/m]
+k1 = 77.6e-2                # First term in refractivity equation [N-units K/Pa]
+
+################################################################################
+#  Useful utilities.
+################################################################################
+
+def latlabels( lats ):
+    """Create a list of tick labels for latitutes based on a list/array of
+    tick values."""
+
+    ylabels = []
+    for lat in lats:
+        if lat < 0:
+            ylabel = "{:}".format( np.abs( lat ) ) + '\u00b0' + 'S'
+        elif lat > 0:
+            ylabel = "{:}".format( np.abs( lat ) ) + '\u00b0' + 'N'
+        else:
+            ylabel = "Eq"
+        ylabels.append( ylabel )
+
+    return ylabels
+
+
+def distribution_solartime_figure( year, month, day, epsfile ):
+    """Create a figure showing the distribution of occultations, by mission, for
+    one day of soundings as specified by year, month, day. The figure is saved
+    as encapsulated output to epsfile."""
+
+    #  Retrieve RO metadata for this day. 
+
+    dt = datetime( year=year, month=month, day=day )
+    dt1 = dt + timedelta(days=1)
+
+    HOME = os.path.expanduser( "~" )
+    repository = os.path.join( HOME, "local/rodatabase" )
+    db = RODatabaseClient( repository=repository )
+
+    occs = db.query( datetimerange=(dt.isoformat(),dt1.isoformat()) )
+
+    #  Which missions have data for this month?
+
+    missions = occs.info( "mission" )
+
+    #  Loop over missions.
+
+    maprecs = []
+
+    for mission in missions: 
+
+        #  For each mission-year-month, retrieve all soundings, decimate, and retain
+        #  geolocation information.
+
+        mission_occs = occs.filter( missions=mission )
+        rec = { 'mission': mission, 'longitudes': mission_occs.values("longitude"), 
+               'latitudes': mission_occs.values("latitude"), 
+               'solartimes': mission_occs.values("localtime") }
+        maprecs.append( rec )
+
+    #  Read colormap.
+
+    if not os.path.isfile( colors_json_file ):
+        print( f"{colors_json_file} not found. If you wish that colors in the " + \
+                "output file correspond to the colors in the output of plot_count_occultations, " + \
+                "be sure to run that program before this one." )
+        cmap = cm.get_cmap( 'tab20' )
+        colormap = { mission: cmap( imission*0.05 ) 
+                    for imission, mission in enumerate( missions ) }
+    else: 
+        print( f"Reading color map from {colors_json_file}." )
+        with open( colors_json_file, 'r' ) as c:
+            colormap = json.load( c )
+
+    #  Execute map.
+
+    fig = plt.figure( figsize=(6.5,2.0) )
+
+    #  Longitude-latitude map.
+
+    ax = fig.add_axes( [0.01,0.22,0.45,0.67], projection=cartopy.crs.PlateCarree() )
+    ax.coastlines( )
+
+    ax.set_xlim( -180, 180 )
+    ax.set_ylim( -90, 90 )
+
+    title = "(a) RO geolocations for {:} {:} {:4d}".format( dt.day, monthstrings[dt.month-1], dt.year )
+    ax.set_title( title )
+
+    #  Loop over mission records, plotting occ locations.
+
+    for rec in maprecs:
+        color = colormap[rec['mission']]
+        ax.scatter( rec['longitudes'], rec['latitudes'], color=color, s=0.25, label=rec['mission'] )
+
+    #  Next axis: solar time distribution.
+
+    ax = fig.add_axes( [0.54,0.22,0.43,0.67] )
+
+    title = "(b) RO solar times for {:} {:} {:4d}".format( day, monthstrings[month-1], year )
+    ax.set_title( title )
+
+    ax.set_xlim( 0, 24 )
+    ax.set_xticks( np.arange( 0, 24.1, 6 ) )
+    ax.xaxis.set_minor_locator( MultipleLocator( 1 ) )
+    ax.set_xticklabels( [ f"{v:02d}:00" for v in ax.get_xticks().astype('i') ] )
+
+    yticks = np.arange( -90, 90.1, 30 ).astype('i')
+    ax.set_ylim( -90, 90 )
+    ax.set_yticks( yticks )
+    ax.yaxis.set_minor_locator( MultipleLocator( 10 ) )
+    ax.set_yticklabels( latlabels( yticks ) )
+
+    #  Loop over mission records, plotting occ solartimes.
+
+    for rec in maprecs:
+        color = colormap[rec['mission']]
+        ax.scatter( rec['solartimes'], rec['latitudes'], color=color, s=0.25, label=rec['mission'] )
+
+    ax.legend( loc="lower left", fontsize="small" )
+
+    #  Done with figure.
+
+    print( f"Writing to {epsfile}." )
+    fig.savefig( epsfile, format='eps' )
+
+    return
+
+
+#  Main program.
+
+if __name__ == "__main__":
+
+    import argparse
+
+    # Defaults. 
+
+    output_default = "plot_distribution_solartime.eps"
+
+    parser = argparse.ArgumentParser( description="Generate a plot show the lon-lat " + \
+            "distribution of occultations for one day and the local time-lat distribution " + \
+            "for the same day." )
+
+    parser.add_argument( "date", type=str, 
+            help='The day of occultation data to map, in the format "YYYY-MM-DD" in which ' + \
+                    'YYYY is year, MM is zero-padded month, and DD is zero-padded day.' )
+
+    parser.add_argument( "-o", dest="output", type=str, default=output_default, 
+            help="The name of the output encapsulated postscript file. " + \
+                    f"The default is {output_default}." )
+
+    args = parser.parse_args()
+
+    dt = datetime.fromisoformat( args.date )
+
+    #  Plot. 
+
+    distribution_solartime_figure( dt.year, dt.month, dt.day, args.output )
+
+    pass
+
+
