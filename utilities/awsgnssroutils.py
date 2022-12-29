@@ -889,8 +889,9 @@ class RODatabaseClient:
 
         sTime = time.time()
         altzone = int( time.altzone / 3600 )     #  Correct for the time zone. 
+        allfiles = sorted( os.listdir( self._repository ) )
 
-        for filename in os.listdir(self._repository):
+        for filename in allfiles: 
             local_json_info = os.stat( os.path.join( self._repository, filename ) )
             local_LastModified_ctime = time.ctime( local_json_info.st_mtime )
             local_LastModified_unaware = datetime.datetime.strptime( local_LastModified_ctime, "%a %b %d %H:%M:%S %Y" )
@@ -908,7 +909,7 @@ class RODatabaseClient:
 
             if s3_LastModified > local_LastModified:
                 print( f"  Updating {filename}" )
-                s3.download(s3_uri, os.path.join(self._repository,filename) )
+                self._s3.download(s3_uri, os.path.join(self._repository,filename) )
 
         print( "Local repository update took {:} seconds.".format( round((time.time()-sTime),1) ) )
 
