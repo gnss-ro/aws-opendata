@@ -5,7 +5,6 @@
 import os
 import re
 import json
-import pdb
 
 #  Import installed modules.
 
@@ -97,8 +96,6 @@ def occultation_count_figure( alldata, epsfile, yticks=np.arange(0,5001,1000), y
 
     missions = list( alldata[0]['noccs'].keys() )
     start_months = [ None for m in missions ]
-
-    pdb.set_trace()
 
     for rec in alldata:
         for im, m in enumerate( missions ):
