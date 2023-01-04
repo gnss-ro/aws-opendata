@@ -29,8 +29,6 @@ environment, see [utilities](http://github.com/gnss-ro/aws-opendata/tree/master/
 Tutorial demonstrations can be found in
 [tutorials](http://github.com/gnss-ro/aws-opendata/tree/master/tutorials).
 
-<a href="tutorials/opac7irowg9_workshop.ipynb">OPAC Notebook</a>  
-<a href="Data-Description-v1.1.pdf">Data-Description-v1.1</a>
 
 ## Background
 
