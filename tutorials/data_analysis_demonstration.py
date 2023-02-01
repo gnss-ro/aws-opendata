@@ -24,14 +24,14 @@ The prerequisite nonstandard python modules that must be installed are
   * boto3
 
 Before any of this code is implemented, it is first necessary to manifest
-the DynamoDB database using the utilities in ???. The user only need
-modify a few parameters in the "IMPORTANT: Configuration" section below
-in order for the code to function.
+the DynamoDB database using the utilities in import_gnss-ro_dynamoDB.py.
+The user only need modify a few parameters in the "IMPORTANT: Configuration"
+section below in order for the code to function.
 
 
-Version: 1.0
+Version: 1.1
 Author: Stephen Leroy (sleroy@aer.com)
-Date: May 17, 2022
+Date: July 25, 2022
 
 """
 
@@ -41,18 +41,16 @@ Date: May 17, 2022
 
 #  Define the name of the AWS profile to be used for authentication
 #  purposes. The authentication will be needed to access the DynamoDB
-#  database table.
+#  database table. If no authentication is required, then set
+#  aws_profile to None.
 
-aws_profile = "aernasaprod"
+aws_profile = None
 
-#  Define the AWS region where the gnss-ro-data Open Data Registry
-#  S3 bucket is hosted *and* where the DynamoDB database is manifested.
+#  Define the AWS region where the DynamoDB database is manifested
+#  and the name of the DynamoDB database table.
 
 aws_region = "us-east-1"
-
-#  Define the name of the DynamoDB data base table.
-
-dynamodb_table = "gnss-ro-data-staging"
+dynamodb_table = "gnss-ro-data-stagingv1_1"
 
 ##################################################
 #  Configuration complete.
@@ -76,6 +74,9 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator
 import boto3
 from boto3.dynamodb.conditions import Key, Attr
+from botocore.handlers import disable_signing
+
+import pdb
 
 #  The RO missions in the data archive with pointers to the names
 #  of the satellites in each RO mission. This dictionary is a summary
@@ -100,14 +101,14 @@ valid_missions = {
 
 axeslinewidth = 0.5
 plt.rcParams.update( {
-  'font.family': "Times New Roman", 
-  'font.size': 8, 
-  'font.weight': "normal", 
-  'text.usetex': False, 
-  'xtick.major.width': axeslinewidth, 
-  'xtick.minor.width': axeslinewidth, 
-  'ytick.major.width': axeslinewidth, 
-  'ytick.minor.width': axeslinewidth, 
+  'font.family': "Times New Roman",
+  'font.size': 8,
+  'font.weight': "normal",
+  'text.usetex': False,
+  'xtick.major.width': axeslinewidth,
+  'xtick.minor.width': axeslinewidth,
+  'ytick.major.width': axeslinewidth,
+  'ytick.minor.width': axeslinewidth,
   'axes.linewidth': axeslinewidth } )
 
 #  GNSS constellations used as RO transmitters for this analysis. This must
@@ -119,12 +120,16 @@ valid_constellations = [ "G" ]
 
 #  Intermediate files: RO data count by mission and mission color table.
 
-alldata_json_file = "occultation_count_by_mission.json"
 colors_json_file = "color_table_by_mission.json"
 
 #  Define month labeling strings.
 
 monthstrings = "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split()
+
+#  Location of AWS Open Data Registry repository of RO data. Do not touch!
+
+aws_opendata_region = "us-east-1"
+aws_opendata_bucket = "gnss-ro-data"
 
 #  Logger.
 
@@ -152,12 +157,12 @@ def latlabels( lats ):
     tick values."""
 
     ylabels = []
-    for lat in lats: 
-        if lat < 0: 
+    for lat in lats:
+        if lat < 0:
             ylabel = "{:}S".format( np.abs( lat ) )
-        elif lat > 0: 
+        elif lat > 0:
             ylabel = "{:}N".format( np.abs( lat ) )
-        else: 
+        else:
             ylabel = "Eq"
         ylabels.append( ylabel )
 
@@ -218,32 +223,6 @@ def masked_interpolate( x_in, y_in, x_out ):
 
     return y_out
 
-def radius_of_curvature( ae, ap, lond, latd, coc ):
-    """Compute the radius of curvature [m] given the equatorial radius (ae) and
-    polar radius (ap) of the Earth, the geodetic longitude (lond) and latitude
-    (latd) of the sounding, and the center of curvature (coc[3], meters) of the
-    sounding."""
-
-    #  Compute the geocentric longitude and latitude in radians.
-
-    lonc = np.deg2rad( lond )
-    latc = np.arctan2( ap**2 * np.sin( np.deg2rad( latd ) ),
-            ae**2 * np.cos( np.deg2rad( latd ) ) )
-
-    #  Radius of the Earth at this latitude.
-
-    re = 1.0 / np.sqrt( np.cos( latc )**2 / ae**2 + np.sin( latc )**2 / ap**2 )
-
-    #  Compute the ECEF position of the surface location.
-
-    s = re * np.array( [ np.cos(lond) * np.cos(latd), np.sin(lond) * np.cos(latd), np.sin(latd) ] )
-
-    #  Radius of curvature of the Earth.
-
-    Rcurv = np.linalg.norm( s - coc )
-
-    return Rcurv
-
 
 ################################################################################
 #  Methods.
@@ -258,17 +237,22 @@ def compute_center_intercomparison( year, month, day, mission, jsonfile ):
     #  AWS access. Be sure to establish authentication for profile aws_profile
     #  for successful use.
 
-    session = boto3.Session( profile_name=aws_profile, region_name=aws_region )
+    if aws_profile is None:
+        dynamodb_session = boto3.Session( region_name=aws_region )
+    else:
+        dynamodb_session = boto3.Session( profile_name=aws_profile, region_name=aws_region )
 
     #  DynamoDB table object.
 
-    resource = session.resource( "dynamodb" )
-    table = resource.Table( dynamodb_table )
+    dynamodb_resource = dynamodb_session.resource( "dynamodb" )
+    table = dynamodb_resource.Table( dynamodb_table )
 
     #  AWS Open Data Repository of RO data.
 
-    resource = session.resource( "s3" )
-    s3 = resource.Bucket( "gnss-ro-data" )
+    opendata_session = boto3.Session( region_name=aws_opendata_region )
+    opendata_s3_resource = opendata_session.resource( "s3" )
+    opendata_s3_resource.meta.client.meta.events.register('choose-signer.s3.*', disable_signing)
+    s3 = opendata_s3_resource.Bucket( aws_opendata_bucket )
 
     #  Scan for RO soundings processed by UCAR and ROM SAF for mission,
     #  year, month, day.
@@ -350,6 +334,7 @@ def compute_center_intercomparison( year, month, day, mission, jsonfile ):
         diff_bendingAngle = np.ma.array( np.zeros( len(common_impactHeight) ), mask=False )
         diff_logrefractivity = np.ma.array( np.zeros( len(common_geopotentialHeight) ), mask=False )
         diff_dryTemperature = np.ma.array( np.zeros( len(common_geopotentialHeight) ), mask=False )
+        status = "success"
 
         for center in [ "ucar", "romsaf" ]:
 
@@ -359,7 +344,14 @@ def compute_center_intercomparison( year, month, day, mission, jsonfile ):
                 remote_path = sounding['romsaf_refractivityRetrieval']
 
             input_file = os.path.split( remote_path )[1]
-            s3.download_file( remote_path, input_file )
+            try:
+                s3.download_file( remote_path, input_file )
+            except Exception as excpt:
+                status = "fail"
+                message = f"Failed to download {remote_path} from s3://{aws_opendata_bucket}"
+                LOGGER.exception( message )
+                LOGGER.exception( json.dumps( excpt.args ) )
+                break
 
             #  Open NetCDF file.
 
@@ -370,21 +362,15 @@ def compute_center_intercomparison( year, month, day, mission, jsonfile ):
             input_bendingAngle = data.variables['bendingAngle'][:]
             input_impactParameter = data.variables['impactParameter'][:]
 
-            #  Find radius of curvature in order to compute impact height.
+            #  Get radius of curvature in order to compute impact height from
+            #  impact parameter.
 
-            equatorialRadius = data.variables['equatorialRadius'].getValue()
-            polarRadius = data.variables['polarRadius'].getValue()
-            refLongitude = data.variables['refLongitude'].getValue()
-            refLatitude = data.variables['refLatitude'].getValue()
-            centerOfCurvature = data.variables['centerOfCurvature'][:]
-
-            Rcurv = radius_of_curvature( equatorialRadius, polarRadius,
-                    refLongitude, refLatitude, centerOfCurvature )
+            radiusOfCurvature = data.variables['radiusOfCurvature'].getValue()
 
             #  Compute impact height from impact parameter by subtracting the local
             #  radius of curvature for this RO sounding.
 
-            input_impactHeight = input_impactParameter - Rcurv
+            input_impactHeight = input_impactParameter - radiusOfCurvature
 
             #  Interpolate bending angle onto the common impact heights.
 
@@ -426,6 +412,9 @@ def compute_center_intercomparison( year, month, day, mission, jsonfile ):
                 diff_bendingAngle -= bendingAngle
                 diff_logrefractivity -= logrefractivity
                 diff_dryTemperature -= dryTemperature
+
+
+        if status == "fail": continue
 
         #  Record the differences between UCAR and ROM SAF for bending angle,
         #  log-refractivity, and dry temperature.

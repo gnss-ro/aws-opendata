@@ -1,0 +1,76 @@
+#!/usr/bin/env python3
+
+#  Main program.
+
+import os
+import json
+from datetime import datetime, timedelta
+from awsgnssroutils import RODatabaseClient
+
+if __name__ == "__main__":
+
+    import argparse
+
+    parser = argparse.ArgumentParser( description="Count RO soundings by mission " + \
+            "in a given time interval and store counts in an output JSON file." )
+
+    parser.add_argument( "start_year", type=int, help="The year in which to begin the counting." )
+    parser.add_argument( "end_year", type=int, help="The last year of counting the soundings." )
+    parser.add_argument( "output_json", type=str, help="The name of the output JSON file." )
+
+    args = parser.parse_args()
+
+    #  Database portal. 
+
+    HOME = os.path.expanduser( "~" )
+    repository = os.path.join( HOME, "local/rodatabase" )
+    db = RODatabaseClient( repository=repository )
+
+    #  Define the year range over which to query the database. 
+
+    startmonth = datetime( year=args.start_year, month=1, day=1 )
+    endmonth = datetime( year=args.end_year, month=12, day=1 )
+
+    #  Loop over months in the time interval. 
+
+    month = startmonth + timedelta(seconds=0)
+    alldata = []
+
+    while month <= endmonth: 
+
+        #  Establish the datetime range for the query for a month's worth of RO 
+        #  metadata. 
+
+        tmp = month + timedelta(days=31)
+        nextmonth = datetime( year=tmp.year, month=tmp.month, day=1 )
+
+        #  Query the database. 
+
+        monthly_occs = db.query( datetimerange=( month.isoformat(), nextmonth.isoformat() ) )
+
+        #  Separate the month of RO metadata by mission. 
+
+        rec = { 'year': month.year, 'month': month.month, 'noccs': {} }
+        missions = monthly_occs.info( "mission" )
+
+        #  Loop over mission. 
+
+        for mission in missions: 
+            monthly_occs_by_mission = monthly_occs.filter( missions=mission )
+            rec['noccs'].update( { mission: monthly_occs_by_mission.size } )
+
+        #  Append the month to alldata. 
+
+        print( rec )
+        alldata.append( rec )
+        month = nextmonth
+
+    #  Write to output. 
+
+    with open( args.output_json, 'w' ) as out: 
+        print( f"Writing output to {args.output_json}." )
+        json.dump( alldata, out, indent="  " )
+
+
+    pass
+
