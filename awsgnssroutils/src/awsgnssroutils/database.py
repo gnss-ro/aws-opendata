@@ -16,167 +16,167 @@ The following non-standard modules must be installed: boto3, s3fs, numpy
 
 Functionality
 =============
-This module defines two classes: RODatabaseClient and OccList. The first 
-creates a portal to a database of RO metadata, and the second is an instance 
-of a list of radio occultations (ROs). Each are described below. 
+This module defines two classes: RODatabaseClient and OccList. The first
+creates a portal to a database of RO metadata, and the second is an instance
+of a list of radio occultations (ROs). Each are described below.
 
-RODatabaseClient: 
-    Create an instance of a portal to a metadata on all RO data in the AWS 
-    Registry of Open Data. It provides an option to create a repository of 
-    the RO metadata on the local file system as keyword "repository". For 
-    example, 
+RODatabaseClient:
+    Create an instance of a portal to a metadata on all RO data in the AWS
+    Registry of Open Data. It provides an option to create a repository of
+    the RO metadata on the local file system as keyword "repository". For
+    example,
 
     > rodb = RODatabaseClient()
 
-    creates a database interface directly to the AWS S3 bucket to access 
-    the metadata. This interface is slow but requires no local disk space. 
+    creates a database interface directly to the AWS S3 bucket to access
+    the metadata. This interface is slow but requires no local disk space.
 
     > rodb = RODatabaseClient( repository="rometadata" )
 
-    also creates a database interface but with a local repository of the 
-    metadata in the directory "rometadata".  It is far more efficient than 
-    the direct access method if a copy of requested metadata is already in 
-    the local repository. 
+    also creates a database interface but with a local repository of the
+    metadata in the directory "rometadata".  It is far more efficient than
+    the direct access method if a copy of requested metadata is already in
+    the local repository.
 
     > rodb = RODatabaseClient( repository="rometadata", update=False )
 
-    By specifying "update" as True, the local repository is updated at the 
-    instantiation of rodb. The update compares metadata in the repository 
+    By specifying "update" as True, the local repository is updated at the
+    instantiation of rodb. The update compares metadata in the repository
     of metadata on the local file system to the same metadata files in the
-    AWS Registry of Open Data and updates the local metadata as needed. 
-    The update does not add any "new" metadata files to the local repository. 
+    AWS Registry of Open Data and updates the local metadata as needed.
+    The update does not add any "new" metadata files to the local repository.
 
-    There are two methods to create a list of occultations through the 
-    database client. One is to perform an inquiry in which missions and/or 
-    a date-time range is specified, and a second is to restore a previously 
-    saved list of RO data. 
+    There are two methods to create a list of occultations through the
+    database client. One is to perform an inquiry in which missions and/or
+    a date-time range is specified, and a second is to restore a previously
+    saved list of RO data.
 
     > occlist = rodb.query( missions="champ" )
 
-    generates an OccList containing metadata on all CHAMP RO data. The inquiry 
-    can be performed instead over a range in time. The date-time fields are 
+    generates an OccList containing metadata on all CHAMP RO data. The inquiry
+    can be performed instead over a range in time. The date-time fields are
     always ISO format times...
 
     > occlist = rodb.query( datetimerange=("2019-06-01","2019-06-30") )
 
-    creates an OccList of metadata for all RO soundings in the month of June, 
-    2019, regardless of mission. 
+    creates an OccList of metadata for all RO soundings in the month of June,
+    2019, regardless of mission.
 
-    The other option to creating an OccList is be restoring a previously 
-    saved OccList: 
+    The other option to creating an OccList is be restoring a previously
+    saved OccList:
 
     > occlist = rodb.restore( "old_occlist.json" )
 
-    in which the old OccList was saved in a JSON format file. 
+    in which the old OccList was saved in a JSON format file.
 
     OccList
     =======
-    An instance of the class OccList is contains the metadata on a list of RO 
-    soundings along with pointers to the RO data files in the AWS Registry of 
-    Open Data S3 bucket. AWS functionality is completely embedded in the 
-    methods of the OccList class. Those methods include the ability to 
-    subset/filter the list according to geolocation and time, 
-    GNSS transmitter/constellation, GNSS receiver, whether it is a rising or a 
-    setting occultation, etc. It also includes the ability to combine 
-    instances of OccList, save the OccList to a JSON format file for future 
-    restoration by RODatabaseClient.restore, and even download RO data files. 
+    An instance of the class OccList is contains the metadata on a list of RO
+    soundings along with pointers to the RO data files in the AWS Registry of
+    Open Data S3 bucket. AWS functionality is completely embedded in the
+    methods of the OccList class. Those methods include the ability to
+    subset/filter the list according to geolocation and time,
+    GNSS transmitter/constellation, GNSS receiver, whether it is a rising or a
+    setting occultation, etc. It also includes the ability to combine
+    instances of OccList, save the OccList to a JSON format file for future
+    restoration by RODatabaseClient.restore, and even download RO data files.
 
-    In order to filter an OccList previously generated by 
-    RODatabaseClient.query or RODatabaseClient.restore, use the OccList.filter 
-    method: 
+    In order to filter an OccList previously generated by
+    RODatabaseClient.query or RODatabaseClient.restore, use the OccList.filter
+    method:
 
     > champoccs = rodb.query( missions="champ" )
     > champoccs_2003 = champoccs.filter( datetimerange=("2003-01-01","2004-01-01") )
 
-    illustrates how to apply a filter in date-time, retaining all CHAMP RO 
-    metadata for the year 2003. Filtering can be done in longitude and latitude 
-    as well: 
+    illustrates how to apply a filter in date-time, retaining all CHAMP RO
+    metadata for the year 2003. Filtering can be done in longitude and latitude
+    as well:
 
     > champoccs_US = champoccs.filter( longituderange=(-110,-70), latituderange=(25,55) )
 
-    and even those can be subset by local time (a.k.a. solar time): 
+    and even those can be subset by local time (a.k.a. solar time):
 
     > champoccs_US_midnight = champoccs_US.filter( localtimerange=(22,2) )
 
-    in which the local time range is given in hours and can wrap around 
-    midnight. Other filter options are for the GNSS constellation used as 
-    transmitters ("G" for GPS, "R" for GLONASS, "E" for Galileo, "C" for 
-    BeiDou), for individual transmitters ("G01", etc.), for individual 
-    receivers ("cosmic1c1", "metopb", etc.), and for occultation 'geometry' 
-    ("rising" vs. "setting"). 
+    in which the local time range is given in hours and can wrap around
+    midnight. Other filter options are for the GNSS constellation used as
+    transmitters ("G" for GPS, "R" for GLONASS, "E" for Galileo, "C" for
+    BeiDou), for individual transmitters ("G01", etc.), for individual
+    receivers ("cosmic1c1", "metopb", etc.), and for occultation 'geometry'
+    ("rising" vs. "setting").
 
-    One can get information on the metadata in an OccList using the 
-    OccList.info method. For instance, if you want to get a listing of all of 
-    the Spire receiver satellites, do 
+    One can get information on the metadata in an OccList using the
+    OccList.info method. For instance, if you want to get a listing of all of
+    the Spire receiver satellites, do
 
     > spire = rodb.query( "spire" )
     > spire_receivers = spire.info( "receiver" )
 
-    The first step in this process could be time consuming if the Spire 
-    metadata do not already reside on the local file system and the rodb object 
-    does not interface with a local repository. One can also get a list of the 
-    GNSS transmitters tracked by Spire on a particular day by 
+    The first step in this process could be time consuming if the Spire
+    metadata do not already reside on the local file system and the rodb object
+    does not interface with a local repository. One can also get a list of the
+    GNSS transmitters tracked by Spire on a particular day by
 
     > spire_day = spire.filter( datetimerange=("2021-12-01","2021-12-02") )
     > spire_day_transmitters = spire_day.info("transmitter")
 
-    which will give a list of all GNSS transmitters tracked by all Spire 
-    satellites on December 1, 2021. The spire_day list can be split up between 
-    rising and setting RO soundings as well: 
+    which will give a list of all GNSS transmitters tracked by all Spire
+    satellites on December 1, 2021. The spire_day list can be split up between
+    rising and setting RO soundings as well:
 
     > spire_day_rising = spire_day.filter( geometry="rising" )
     > spire_day_setting = spire_day.filter( geometry="setting" )
 
-    Then it is possible to save the spire metadata OccList to a JSON file 
-    for future restoration by 
+    Then it is possible to save the spire metadata OccList to a JSON file
+    for future restoration by
 
     > spire.save( "spire_metadata.json" )
 
-    One interesting project is for inter-center comparison, in which case you'll 
-    need to assure that all AWS file types are available. That can be done using 
-    the query keyword "availablefiletypes": 
+    One interesting project is for inter-center comparison, in which case you'll
+    need to assure that all AWS file types are available. That can be done using
+    the query keyword "availablefiletypes":
 
     cosmic1_day = rodb.query( missions="cosmic1", datetimerange=("2011-02-02","2011-02-03") )
-    cosmic1_day_available = cosmic1_day.filter( 
+    cosmic1_day_available = cosmic1_day.filter(
             availablefiletypes=("ucar_refractivityRetrieval","romsaf_refractivityRetrieval") )
 
-    The metadata also contain pointers to the RO sounding data files in the 
-    AWS Open Data bucket. To get information on the data files available, 
-    use the OccList.info( "filetype" ) method. For example, to find out the 
-    types of RO data files avialable for the month of June, 2009: 
+    The metadata also contain pointers to the RO sounding data files in the
+    AWS Open Data bucket. To get information on the data files available,
+    use the OccList.info( "filetype" ) method. For example, to find out the
+    types of RO data files avialable for the month of June, 2009:
 
     > June2009 = rodb.query( datetimerange=("2009-06-01","2009-07-01") )
     > filetype_dict = June2009.info( "filetype" )
 
-    which will return a dictionary with the AWS-native RO file types as keys 
-    with corresponding values being the counts of each. The file types have the 
-    format "{processing_center}_{file_type}" in which "processing_center" is an 
-    RO processing center that contributed to the AWS repository ("ucar", 
-    "romsaf", "jpl") and the "file_type" is one of "calibratedPhase", 
-    "refractivityRetrieval", or "atmosphericRetrieval". 
+    which will return a dictionary with the AWS-native RO file types as keys
+    with corresponding values being the counts of each. The file types have the
+    format "{processing_center}_{file_type}" in which "processing_center" is an
+    RO processing center that contributed to the AWS repository ("ucar",
+    "romsaf", "jpl") and the "file_type" is one of "calibratedPhase",
+    "refractivityRetrieval", or "atmosphericRetrieval".
 
-    The values of the longitude, latitude, datetime, and localtimes of the RO 
-    soundings in an OccList can be obtained using the OccList.values() method: 
+    The values of the longitude, latitude, datetime, and localtimes of the RO
+    soundings in an OccList can be obtained using the OccList.values() method:
 
     longitudes = June2009.values( "longitude" )
     latitudes = June2009.values( "latitude" )
     localtimes = June2009.values( "localtime" )
 
-    each of these variables being a masked numpy ndarray. 
+    each of these variables being a masked numpy ndarray.
 
-    Finally, RO data files themselves can be downloaded for subsequent 
-    scientific analysis using the OccList.download() method. If one wishes to 
-    download the all RO bending angle data contributed by JPL to the archive 
+    Finally, RO data files themselves can be downloaded for subsequent
+    scientific analysis using the OccList.download() method. If one wishes to
+    download the all RO bending angle data contributed by JPL to the archive
     for the week of June 5-11, 2012, one only need execute the commands
-    
+
     > week_list = rodb.query( datetimerange=("2012-06-05","2012-06-12") )
     > week_list.download( "jpl_refractivityRetrieval", "datadir" )
 
-    which will download all file type "refractivityRetrieval" contributed by 
-    JPL into the directory "datadir". All of the files will be entered into 
-    just one directory. If instead one wants to download the files maintaining 
-    the AWS directory structure, use the keyword "keep_aws_structure" in the 
-    method call: 
+    which will download all file type "refractivityRetrieval" contributed by
+    JPL into the directory "datadir". All of the files will be entered into
+    just one directory. If instead one wants to download the files maintaining
+    the AWS directory structure, use the keyword "keep_aws_structure" in the
+    method call:
 
     > week_list.download( "jpl_refractivityRetrieval", "datadir", \
             keep_aws_structure=True )
@@ -201,7 +201,7 @@ import re
 import time
 from botocore import UNSIGNED
 
-#  Usefule parameters. 
+#  Usefule parameters.
 
 valid_processing_centers = [ "ucar", "romsaf", "jpl" ]
 valid_file_types = [ "calibratedPhase", "refractivityRetrieval", "atmosphericRetrieval" ]
@@ -219,101 +219,101 @@ class AWSgnssroutilsError( Error ):
 
 
 ################################################################################
-#  Useful utility functions and classes. 
+#  Useful utility functions and classes.
 ################################################################################
 
-def unsigned_S3FileSystem(): 
-    """This is a custom function that contains code to generate an authenticated 
-    instance of s3fs.S3FileSystem. In this particular case, authentication is 
+def unsigned_S3FileSystem():
+    """This is a custom function that contains code to generate an authenticated
+    instance of s3fs.S3FileSystem. In this particular case, authentication is
     UNSIGNED."""
 
-    s3 = s3fs.S3FileSystem( client_kwargs={ 'region_name': AWSregion }, 
+    s3 = s3fs.S3FileSystem( client_kwargs={ 'region_name': AWSregion },
                                      config_kwargs={ 'signature_version': UNSIGNED } )
 
     return s3
 
-class S3FileSystem(): 
-    """This class is a wrapper for s3fs.S3FileSystem that checks for broken 
+class S3FileSystem():
+    """This class is a wrapper for s3fs.S3FileSystem that checks for broken
     instances and restores them when necessary."""
 
-    def __init__( self, S3FileSystem_create_function ): 
-        """Create a wrapper for s3fs.S3FileSystem. The sole argument points to a 
-        function that returns an instance of s3fs.S3FileSystem that is fully 
+    def __init__( self, S3FileSystem_create_function ):
+        """Create a wrapper for s3fs.S3FileSystem. The sole argument points to a
+        function that returns an instance of s3fs.S3FileSystem that is fully
         authenticated."""
 
-        self._s3fscreate = S3FileSystem_create_function 
+        self._s3fscreate = S3FileSystem_create_function
         message = "Argument to S3FileSystem must be a reference to a function " + \
-                "that returns an instance of s3fs.S3FileSystem." 
+                "that returns an instance of s3fs.S3FileSystem."
 
-        try: 
+        try:
             self._s3 = self._s3fscreate()
-        except: 
+        except:
             raise AWSgnssroutilsError( "IncorrectArgument", message )
 
-        if not isinstance( self._s3, s3fs.S3FileSystem ): 
+        if not isinstance( self._s3, s3fs.S3FileSystem ):
             raise AWSgnssroutilsError( "IncorrectArgument", message )
 
-    def info( self, x ): 
-        try: 
+    def info( self, x ):
+        try:
             ret = self._s3.info( x )
-        except: 
+        except:
             self._s3 = self._s3fscreate()
             ret = self._s3.info( x )
         return ret
 
-    def download( self, x, y ): 
-        try: 
+    def download( self, x, y ):
+        try:
             ret = self._s3.download( x, y )
-        except: 
+        except:
             self._s3 = self._s3fscreate()
             ret = self._s3.download( x, y )
         return ret
 
-    def ls( self, x ): 
-        try: 
+    def ls( self, x ):
+        try:
             ret = self._s3.ls( x )
-        except: 
+        except:
             self._s3 = self._s3fscreate()
             ret = self._s3.ls( x )
         return ret
 
-    def open( self, x ): 
-        try: 
+    def open( self, x ):
+        try:
             ret = self._s3.open( x )
-        except: 
+        except:
             self._s3 = self._s3fscreate()
             ret = self._s3.open( x )
         return ret
 
 
 ################################################################################
-#  Define the OccList class, which defines a list of occultations together with 
-#  the metadata on each occultation in the list. 
+#  Define the OccList class, which defines a list of occultations together with
+#  the metadata on each occultation in the list.
 ################################################################################
 
 class OccList():
-    """An instance containing a list of entries/radio occultation soundings 
-    in the AWS Registry of Open Data for GNSS RO data. It provides methods 
-    to filter/subset the list, get metadata on the occultations in the list, 
-    save the list for future use, download relevant database metadata for 
-    future inquiries directly from the AWS Open Data S3 bucket, and download 
-    all RO data associated with the entries in the list to the local file 
+    """An instance containing a list of entries/radio occultation soundings
+    in the AWS Registry of Open Data for GNSS RO data. It provides methods
+    to filter/subset the list, get metadata on the occultations in the list,
+    save the list for future use, download relevant database metadata for
+    future inquiries directly from the AWS Open Data S3 bucket, and download
+    all RO data associated with the entries in the list to the local file
     system."""
 
     def __init__( self, data, s3 ):
-        """Create an instance of OccList. The data argument is a list of 
-        items/RO soundings from the RO database.  The s3 argument is an 
-        instance of S3FileSystem that enables access to the AWS 
+        """Create an instance of OccList. The data argument is a list of
+        items/RO soundings from the RO database.  The s3 argument is an
+        instance of S3FileSystem that enables access to the AWS
         repository of RO data."""
 
-        if isinstance( data, list ): 
+        if isinstance( data, list ):
             self._data = data
-        else: 
+        else:
             raise AWSgnssroutilsError( "BadInput", "Input argument data must be a list." )
 
-        if isinstance( s3, S3FileSystem ): 
+        if isinstance( s3, S3FileSystem ):
             self._s3 = s3
-        else: 
+        else:
             raise AWSgnssroutilsError( "BadInput", "Input argument s3 must be an " + \
                     "instance of class s3fs.S3FileSystem" )
 
@@ -322,63 +322,63 @@ class OccList():
 
     def filter( self, missions=None, receivers=None, transmitters=None,
         GNSSconstellations=None, longituderange=None, latituderange=None,
-        datetimerange=None, localtimerange=None, geometry=None, 
+        datetimerange=None, localtimerange=None, geometry=None,
         availablefiletypes=None ):
-        '''Filter a list of occultations according to various criteria, such as 
-        mission, receiver, transmitter, etc.  df is a list of items in the database, 
+        '''Filter a list of occultations according to various criteria, such as
+        mission, receiver, transmitter, etc.  df is a list of items in the database,
         and repository points to the local repository of the database data.
 
-        Filtering can be done through the following keywords: 
+        Filtering can be done through the following keywords:
 
-        missions            A string or list-like object containing the names of 
-                            the missions over which to apply the filter. 
+        missions            A string or list-like object containing the names of
+                            the missions over which to apply the filter.
 
-        receivers           A string or list-like object containing the names of 
-                            the GNSS RO receivers over which to apply the filter. 
+        receivers           A string or list-like object containing the names of
+                            the GNSS RO receivers over which to apply the filter.
 
-        transmitters        A string or list-like object containing the names of 
-                            the GNSS transmitters over which to apply the filter. 
+        transmitters        A string or list-like object containing the names of
+                            the GNSS transmitters over which to apply the filter.
 
-        GNSSconstellations  A string or list-like object containing the names of 
-                            the GNSS constellations ("G" for GPS, "R" for 
-                            GLONASS, etc.) over which to apply the filter. 
+        GNSSconstellations  A string or list-like object containing the names of
+                            the GNSS constellations ("G" for GPS, "R" for
+                            GLONASS, etc.) over which to apply the filter.
 
-        longituderange      A two-element list-like object containing the 
-                            longitude bounds of the soundings to retain upon 
+        longituderange      A two-element list-like object containing the
+                            longitude bounds of the soundings to retain upon
                             applying the filter. Longitudes are bounded by -180
-                            to 180, and the region can wrap around the date line. 
+                            to 180, and the region can wrap around the date line.
 
-        latituderange       A two-element list-list object containing the 
-                            latitude bounds of the soundings to retain upon 
-                            applying the filter. Latitudes are bounded by -90 to 
-                            90. 
+        latituderange       A two-element list-list object containing the
+                            latitude bounds of the soundings to retain upon
+                            applying the filter. Latitudes are bounded by -90 to
+                            90.
 
-        datetimerange       A two-element list-like object containing the 
-                            date-time bounds of the soundings to retain upon 
-                            applying the filter. Each of the two elements must 
-                            be a string object with an ISO-format date-time. 
+        datetimerange       A two-element list-like object containing the
+                            date-time bounds of the soundings to retain upon
+                            applying the filter. Each of the two elements must
+                            be a string object with an ISO-format date-time.
 
-        localtimerange      A two-element list-like object containing the 
-                            local time bounds of the soundings to retain upon 
-                            applying the filter. Each of the two elements must 
-                            by a local/solar time in hours, ranging from 0 to 
-                            24. The range can wrap around midnight (0 hrs). 
+        localtimerange      A two-element list-like object containing the
+                            local time bounds of the soundings to retain upon
+                            applying the filter. Each of the two elements must
+                            by a local/solar time in hours, ranging from 0 to
+                            24. The range can wrap around midnight (0 hrs).
 
-        geometry            A string defining the occultation geometry over 
-                            which to apply the filter. Must be "rising" to 
-                            restrict the list to rising occultations only, or 
-                            "setting" to restrict the list to setting 
-                            occultations only. 
+        geometry            A string defining the occultation geometry over
+                            which to apply the filter. Must be "rising" to
+                            restrict the list to rising occultations only, or
+                            "setting" to restrict the list to setting
+                            occultations only.
 
-        availablefiletypes  A list, set, or tuple of strings designating the 
-                            AWS RO data file types that must be present for 
-                            the retained soundings. Each file type must be of 
-                            the format "{center}_{filetype}" where the "center" 
-                            is one of the valid contributing RO processing 
-                            centers ("ucar", "jpl", "romsaf", etc.) and the 
-                            "filetype" is one of the valid AWS RO data file 
-                            types ("calibratedPhase", "refractivityRetrieval", 
-                            "atmosphericRetrieval". 
+        availablefiletypes  A list, set, or tuple of strings designating the
+                            AWS RO data file types that must be present for
+                            the retained soundings. Each file type must be of
+                            the format "{center}_{filetype}" where the "center"
+                            is one of the valid contributing RO processing
+                            centers ("ucar", "jpl", "romsaf", etc.) and the
+                            "filetype" is one of the valid AWS RO data file
+                            types ("calibratedPhase", "refractivityRetrieval",
+                            "atmosphericRetrieval".
         '''
 
         #  Filter by GNSSconstellations or by transmitters, but not by both.
@@ -545,38 +545,38 @@ class OccList():
         f_geometry = geometry
 
 
-        #  Check availablefiletypes. 
+        #  Check availablefiletypes.
 
-        if availablefiletypes is not None: 
+        if availablefiletypes is not None:
 
-            if type( availablefiletypes ) not in [ str, list, set, tuple ]: 
+            if type( availablefiletypes ) not in [ str, list, set, tuple ]:
                 raise AWSgnssroutilsError( "FaultyAvailableFiletypes", 'availablefiletypes must be of class ' + \
                         '"str", "list", "set", or "tuple"' )
 
-            if isinstance( availablefiletypes, str ): 
+            if isinstance( availablefiletypes, str ):
                 f_availablefiletypes = { availablefiletypes }
-            else: 
+            else:
                 f_availablefiletypes = set( availablefiletypes )
 
-            for availablefiletype in f_availablefiletypes: 
+            for availablefiletype in f_availablefiletypes:
                 m = re.search( "^(\w+)_(\w+)$", availablefiletype )
-                if m: 
+                if m:
                     center, filetype = m.group(1), m.group(2)
-                    if center not in valid_processing_centers: 
-                        raise AWSgnssroutilsError( "InvalidProcessingCenter", 
+                    if center not in valid_processing_centers:
+                        raise AWSgnssroutilsError( "InvalidProcessingCenter",
                                 f'Processing center "{center}" in availablefiletype {availablefiletype} ' + \
                                         'is not valid.' )
-                    if filetype not in valid_file_types: 
-                        raise AWSgnssroutilsError( "InvalidFileType", 
+                    if filetype not in valid_file_types:
+                        raise AWSgnssroutilsError( "InvalidFileType",
                                 f'File type "{filetype}" in availablefiletype {availablefiletype} ' + \
                                         'is not valid.' )
-                else: 
-                    raise AWSgnssroutilsError( "InvalidAvailableFiletype", 
+                else:
+                    raise AWSgnssroutilsError( "InvalidAvailableFiletype",
                                 f'availablefiletype {availablefiletype} is not a valid format.' )
-        else: 
+        else:
             f_availablefiletypes = None
 
-        # Loop through list of items, each a dictionary. 
+        # Loop through list of items, each a dictionary.
 
         keep_list = []
 
@@ -596,14 +596,14 @@ class OccList():
             if f_transmitters is not None:
                 keep &= ( item['transmitter'] in f_transmitters )
 
-            if f_datetimerange is not None: 
+            if f_datetimerange is not None:
                 dt = datetime.datetime( *[ int(s) for s in item['date-time'].split("-") ] )
                 keep &= ( f_datetimerange[0] <= dt and dt <= f_datetimerange[1] )
 
             if f_longituderange is not None:
-                if item['longitude'] == float_fill_value: 
+                if item['longitude'] == float_fill_value:
                     keep = False
-                else: 
+                else:
                     if f_longituderange[0] < f_longituderange[1]:
                         keep &= ( f_longituderange[0] <= item['longitude'] and \
                                 item['longitude'] <= f_longituderange[1] )
@@ -612,16 +612,16 @@ class OccList():
                                 item['longitude'] <= f_longituderange[1] )
 
             if f_latituderange is not None:
-                if item['latitude'] == float_fill_value: 
+                if item['latitude'] == float_fill_value:
                     keep = False
-                else: 
+                else:
                     keep &= ( f_latituderange[0] <= item['latitude'] and \
                                 item['latitude'] <= f_latituderange[1] )
 
             if f_localtimerange is not None:
-                if item['local_time'] == float_fill_value: 
+                if item['local_time'] == float_fill_value:
                     keep = False
-                else: 
+                else:
                     if f_localtimerange[0] < f_localtimerange[1]:
                         keep &= ( f_localtimerange[0] <= item['local_time'] and \
                                 item['local_time'] <= f_localtimerange[1] )
@@ -630,13 +630,13 @@ class OccList():
                                 item['local_time'] <= f_localtimerange[1] )
 
             if f_geometry is not None:
-                if item['setting'] is None: 
+                if item['setting'] is None:
                     keep = False
-                else: 
+                else:
                     keep &= ( item['setting'] and ( f_geometry == "setting" ) ) or \
                             ( ( not item['setting'] ) and ( f_geometry == "rising" ) )
 
-            if f_availablefiletypes is not None: 
+            if f_availablefiletypes is not None:
                 keep &= f_availablefiletypes.issubset( item.keys() )
 
 
@@ -647,10 +647,10 @@ class OccList():
 
         #  Generate new OccList based on kept items.
 
-        return OccList( data=keep_list, s3=self._s3 ) 
+        return OccList( data=keep_list, s3=self._s3 )
 
     def save(self, filename):
-        """Save instance of OccList to filename in line JSON format. The OccList 
+        """Save instance of OccList to filename in line JSON format. The OccList
         can be restored using RODatabaseClient.restore."""
 
         with open(filename,'w') as file:
@@ -660,37 +660,37 @@ class OccList():
         print( f"Search results saved to {filename}." )
 
     def info( self, param ):
-        '''Provides information on the following parameters: "mission", "receiver", 
-        "transmitter", "datetime", "longitude", "latitude", "localtime", "geometry", 
+        '''Provides information on the following parameters: "mission", "receiver",
+        "transmitter", "datetime", "longitude", "latitude", "localtime", "geometry",
         "filetype".
 
-        mission         Return a list of the missions in the OccList instance. 
+        mission         Return a list of the missions in the OccList instance.
 
-        receiver        Returns a list of the receivers in the OccList instance. 
+        receiver        Returns a list of the receivers in the OccList instance.
 
-        transmitter     Returns a list of the transmitters in the OccList instance. 
+        transmitter     Returns a list of the transmitters in the OccList instance.
 
-        datetime        Returns a dictionary with the "min" and "max" ISO-format 
-                        date-times in the OccList instance. 
+        datetime        Returns a dictionary with the "min" and "max" ISO-format
+                        date-times in the OccList instance.
 
-        longitude       Returns a dictionary with the "min" and "max" longitudes 
-                        in the OccList instance. 
+        longitude       Returns a dictionary with the "min" and "max" longitudes
+                        in the OccList instance.
 
-        latitude        Returns a dictionary with the "min" and "max" latitudes 
-                        in the OccList instance. 
+        latitude        Returns a dictionary with the "min" and "max" latitudes
+                        in the OccList instance.
 
-        localtime       Returns a dictionary with the "min" and "max" localtimes 
-                        in the OccList instance. 
+        localtime       Returns a dictionary with the "min" and "max" localtimes
+                        in the OccList instance.
 
-        geometry        Returns a dictionary of the counts of "rising" and 
-                        "setting" occultations in the OccList instance. 
+        geometry        Returns a dictionary of the counts of "rising" and
+                        "setting" occultations in the OccList instance.
 
-        filetype        Returns a dictionary of the counts of various file types, 
-                        with the names of the file types as the keys and the 
-                        counts as their values. 
+        filetype        Returns a dictionary of the counts of various file types,
+                        with the names of the file types as the keys and the
+                        counts as their values.
         '''
 
-        #  Show which filter key word to use based on the column they choose to show. 
+        #  Show which filter key word to use based on the column they choose to show.
 
         option_list = []
 
@@ -698,48 +698,48 @@ class OccList():
             option_list = [ item['date-time'] for item in self._data ]
             display = { 'min': min( option_list ), 'max': max( option_list ) }
 
-        elif param in [ 'longitude', 'latitude', 'localtime' ]: 
+        elif param in [ 'longitude', 'latitude', 'localtime' ]:
             xm = np.ma.masked_equal( [ item[param] for item in self._data ], float_fill_value )
             display = { "min":float(xm.min()), "max":float(xm.max()) }
 
-        elif param in [ 'mission', 'receiver', 'transmitter' ]: 
+        elif param in [ 'mission', 'receiver', 'transmitter' ]:
             display = sorted( list( { item[param] for item in self._data } ) )
 
         elif param == 'geometry':
             option_list = [ item['setting'] for item in self._data ]
             display = { 'nsetting':option_list.count(True), 'nrising':option_list.count(False) }
 
-        elif param == "filetype": 
+        elif param == "filetype":
             display = {}
-            for item in self._data: 
-                for key in item.keys(): 
+            for item in self._data:
+                for key in item.keys():
                     m = re.search( "^(\w+)_(\w+)$", key )
-                    if m: 
-                        if m.group(1) in valid_processing_centers and m.group(2) in valid_file_types: 
-                            if key not in display.keys(): 
+                    if m:
+                        if m.group(1) in valid_processing_centers and m.group(2) in valid_file_types:
+                            if key not in display.keys():
                                 display.update( { key: 0 } )
                             display[key] += 1
 
         return display
 
     def download(self, filetype, rootdir, keep_aws_structure = False):
-        '''Download RO data files of file type "filetype" from the AWS Registry of Open 
-        Data to into the local directory "rootdir". The "filetype" must be one of 
-        *_calibratedPhase, *_refractivityRetrieval, *_atmosphericRetrieval, where * is 
-        one of the valid contributed RO retrieval centers "ucar", "romsaf", "jpl". If 
-        "keep_aws_structure" is True, then maintain the same directory structure locally 
-        as in the AWS bucket; if False, download all data files into "rootdir" without 
+        '''Download RO data files of file type "filetype" from the AWS Registry of Open
+        Data to into the local directory "rootdir". The "filetype" must be one of
+        *_calibratedPhase, *_refractivityRetrieval, *_atmosphericRetrieval, where * is
+        one of the valid contributed RO retrieval centers "ucar", "romsaf", "jpl". If
+        "keep_aws_structure" is True, then maintain the same directory structure locally
+        as in the AWS bucket; if False, download all data files into "rootdir" without
         subdirectories. '''
 
         m = re.search( "^([a-z]+)_([a-zA-Z]+)$", filetype )
-        if m: 
-            if m.group(1) not in valid_processing_centers: 
+        if m:
+            if m.group(1) not in valid_processing_centers:
                 raise AWSgnssroutilsError( "InvalidInput", f'Invalid retrieval center "{m.group(1)}" ' + \
                         'requested; must be one of ' + ', '.join( valid_processing_centers ) )
-            elif m.group(2) not in valid_file_types: 
+            elif m.group(2) not in valid_file_types:
                 raise AWSgnssroutilsError( "InvalidInput", f'Invalid file type "{m.group(2)}" ' + \
                         'requested; must be one of ' + ', '.join( valid_file_types ) )
-        else: 
+        else:
             raise AWSgnssroutilsError( "InvalidInput", f'You must select the "filetype" to download ' + \
                 'as ' + ', '.join( [ f"*_{ft}" for f in valid_file_types ] ) + ', where * is one of ' + \
                 'the processing centers ' + ', '.join( valid_processing_centers ) )
@@ -763,16 +763,16 @@ class OccList():
 
             local_file = os.path.join( local_path, os.path.basename(ro_file) )
 
-            #  Make the local directory path if it doesn't already exist. 
+            #  Make the local directory path if it doesn't already exist.
 
             os.makedirs(local_path, exist_ok=True)
 
-            #  Download the file if it doesn't already exist locally. 
+            #  Download the file if it doesn't already exist locally.
 
             if not os.path.exists( local_file ):
                 self._s3.download( os.path.join( databaseS3bucket, ro_file ), local_file )
                 ret = True
-            else: 
+            else:
                 ret = False
 
             local_file_list.append( local_file )
@@ -780,130 +780,130 @@ class OccList():
         print( "Download took {:} seconds.".format( round((time.time()-sTime),1 ) ) )
         return local_file_list
 
-    def values( self, field ): 
-        """Return an ndarray of values of a requested field for the data in the 
-        OccList. Valid fields are "longitude", "latitude", "datetime", "localtime". 
-        Longitudes and latitudes are in degrees; datetime is an ISO format time; 
+    def values( self, field ):
+        """Return an ndarray of values of a requested field for the data in the
+        OccList. Valid fields are "longitude", "latitude", "datetime", "localtime".
+        Longitudes and latitudes are in degrees; datetime is an ISO format time;
         and local times are in hours."""
 
-        if field == "longitude": 
+        if field == "longitude":
             x = np.ma.masked_equal( [ item['longitude'] for item in self._data ], float_fill_value )
 
-        elif field == "latitude": 
+        elif field == "latitude":
             x = np.ma.masked_equal( [ item['latitude'] for item in self._data ], float_fill_value )
 
-        elif field == "localtime": 
+        elif field == "localtime":
             x = np.ma.masked_equal( [ item['local_time'] for item in self._data ], float_fill_value )
 
-        elif field == "datetime": 
-            x = [ item['datetime'] for item in self._data ] 
+        elif field == "datetime":
+            x = [ item['date-time'] for item in self._data ]
 
-        else: 
+        else:
             raise AWSgnssroutilsError( "InvalidArgument", "Valid fields are " + \
                     "longitude, latitude, localtime, datetime." )
 
         return x
 
-    #  Magic methods. 
+    #  Magic methods.
 
     def __add__(self, occlist2):
 
-        if not isinstance( occlist2, OccList ): 
+        if not isinstance( occlist2, OccList ):
             raise AWSgnssroutilsError( "FaultyAddition", "Unable to concatenate; both arguments must be instances of OccList." )
 
         return OccList( data=self._data + occlist2._data, s3=self._s3 )
 
     def __padd__(self, occlist2):
 
-        if not isinstance( occlist2, OccList ): 
+        if not isinstance( occlist2, OccList ):
             raise AWSgnssroutilsError( "FaultyAddition", "Unable to concatenate; both arguments must be instances of OccList." )
 
         return OccList( data=self._data + occlist2._data, s3=self._s3 )
 
     def __getitem__(self,items):
         new = self._data[items]
-        if isinstance( new, dict ): 
+        if isinstance( new, dict ):
             out = OccList( data=[new], s3=self._s3 )
-        else: 
+        else:
             out = OccList( data=new, s3=self._s3 )
         return out
 
-    def __repr__(self): 
-        return f'OccList({len(self._data)} items)' 
+    def __repr__(self):
+        return f'OccList({len(self._data)} items)'
 
 
 ################################################################################
-#  Define the RODatabaseClient class, which creates a portal to the database 
-#  of radio occultation data in the AWS Registry of Open Data. 
+#  Define the RODatabaseClient class, which creates a portal to the database
+#  of radio occultation data in the AWS Registry of Open Data.
 ################################################################################
 
 class RODatabaseClient:
-    '''Class to initialize filter of dynamo line JSON files named by mission and day. 
-    An instance of this class initiates a gateway to the database of GNSS radio 
+    '''Class to initialize filter of dynamo line JSON files named by mission and day.
+    An instance of this class initiates a gateway to the database of GNSS radio
     occultation data in the AWS Registry of Open Data. '''
 
     def __init__( self, repository=None, version=AWSversion, update=False ):
-        '''Create an instance of RODatabaseClient. This object serves as a portal 
-        to the database contents of the AWS Registry of Open Data repository of 
-        GNSS radio occultation data. 
+        '''Create an instance of RODatabaseClient. This object serves as a portal
+        to the database contents of the AWS Registry of Open Data repository of
+        GNSS radio occultation data.
 
-        repository  If set, it is the path to the directory on the local file 
-                    system where the contents of the RO database are stored 
-                    locally. If not set, the RO database is read directly from 
-                    the Open Data Registry S3 bucket. It is *highly* recommended 
-                    that the contents of the database be stored locally, as this 
+        repository  If set, it is the path to the directory on the local file
+                    system where the contents of the RO database are stored
+                    locally. If not set, the RO database is read directly from
+                    the Open Data Registry S3 bucket. It is *highly* recommended
+                    that the contents of the database be stored locally, as this
                     will greatly accelerate database inquiries.
 
-        version     The version of the contents of the AWS Registry of Open Data 
-                    that should be accessed. The various versions that are 
-                    accessible can be found in s3://gnss-ro-data/dynamo/. 
+        version     The version of the contents of the AWS Registry of Open Data
+                    that should be accessed. The various versions that are
+                    accessible can be found in s3://gnss-ro-data/dynamo/.
 
-        update      If requested, update the contents of the local repository 
+        update      If requested, update the contents of the local repository
                     to what currently exists in the AWS repository.
         '''
 
         self._version = version
         self._repository = repository
 
-#  Instantiate the s3 file system in AWS region AWSregion and with unsigned certificate 
-#  authentication. 
+#  Instantiate the s3 file system in AWS region AWSregion and with unsigned certificate
+#  authentication.
 
         self._s3 = S3FileSystem( unsigned_S3FileSystem )
 
-#  Update the existing repository if requested. 
+#  Update the existing repository if requested.
 
         self._update = update
-        if update and repository is not None: 
+        if update and repository is not None:
             self.update_repo()
 
 
     def update_repo(self):
-        '''This module will check for updated json files on the AWS Registry of Open Data. 
-        If there has been an update in files that are part of your local repo, they will be 
+        '''This module will check for updated json files on the AWS Registry of Open Data.
+        If there has been an update in files that are part of your local repo, they will be
         updated.'''
 
-        if not os.path.exists( self._repository ): 
+        if not os.path.exists( self._repository ):
             return
 
         print( f"Updating dynamo json files in {self._repository}." )
 
         sTime = time.time()
-        altzone = int( time.altzone / 3600 )     #  Correct for the time zone. 
+        altzone = int( time.altzone / 3600 )     #  Correct for the time zone.
         allfiles = sorted( os.listdir( self._repository ) )
 
-        for filename in allfiles: 
+        for filename in allfiles:
             local_json_info = os.stat( os.path.join( self._repository, filename ) )
             local_LastModified_ctime = time.ctime( local_json_info.st_mtime )
             local_LastModified_unaware = datetime.datetime.strptime( local_LastModified_ctime, "%a %b %d %H:%M:%S %Y" )
-            local_LastModified = datetime.datetime( local_LastModified_unaware.year, 
-                        local_LastModified_unaware.month, 
-                        local_LastModified_unaware.day, 
+            local_LastModified = datetime.datetime( local_LastModified_unaware.year,
+                        local_LastModified_unaware.month,
+                        local_LastModified_unaware.day,
                         local_LastModified_unaware.hour)
 
             s3_uri = os.path.join( databaseS3bucket, f'dynamo/{self._version}/export_subsets', filename )
             s3_info = self._s3.info( s3_uri )
             s3_LastModified_unaware = s3_info['LastModified']
-            s3_LastModified = datetime.datetime( s3_LastModified_unaware.year, 
+            s3_LastModified = datetime.datetime( s3_LastModified_unaware.year,
                                 s3_LastModified_unaware.month, s3_LastModified_unaware.day,
                                 s3_LastModified_unaware.hour-altzone )
 
@@ -913,28 +913,28 @@ class RODatabaseClient:
 
         print( "Local repository update took {:} seconds.".format( round((time.time()-sTime),1) ) )
 
-    def query(self, missions=None, receivers=None, datetimerange=None, **filterargs ): 
-        '''Execute an inquiry on the RO database for RO soundings. At least one of 
-        the keywords "missions" or "datetimerange" must be specified. If accessing 
-        a database on the local file system, an inquiry will download all relevant 
-        database files from the AWS repository. All other keywords will serve as 
+    def query(self, missions=None, receivers=None, datetimerange=None, **filterargs ):
+        '''Execute an inquiry on the RO database for RO soundings. At least one of
+        the keywords "missions" or "datetimerange" must be specified. If accessing
+        a database on the local file system, an inquiry will download all relevant
+        database files from the AWS repository. All other keywords will serve as
         filters on the inquiry. Return an instance of class OccList.'''
 
-        #  Check input. 
+        #  Check input.
 
         if missions is None and datetimerange is None:
             raise AWSgnssroutilsError( "InvalidInput", f"Either 'missions' or 'datetimerange' or both must be provided." )
 
-        #  Get listing of all JSON database files. 
+        #  Get listing of all JSON database files.
 
         initial_file_array = self._s3.ls( os.path.join( databaseS3bucket, f'dynamo/{self._version}/export_subsets' ) )
         print( f"Initial file count: {len(initial_file_array)}" )
 
-        # Filter by mission. 
+        # Filter by mission.
 
         if missions is None:
             file_array = initial_file_array.copy()
-        else: 
+        else:
             file_array = []
             for file in initial_file_array:
                 basename = os.path.basename(file)
@@ -943,16 +943,16 @@ class RODatabaseClient:
                     file_array.append( file )
             print( f"File count after filtering by mission: {len(file_array)}" )
 
-        # Filter by date. 
+        # Filter by date.
 
         if datetimerange is not None:
             remove_list = []
-            try: 
+            try:
                 dt = datetime.datetime.fromisoformat( datetimerange[0] )
                 rangeStart = datetime.datetime( dt.year, dt.month, dt.day )
                 dt = datetime.datetime.fromisoformat( datetimerange[1] )
                 rangeEnd = datetime.datetime( dt.year, dt.month, dt.day )
-            except: 
+            except:
                 raise AWSgnssroutilsError( "FaultyDateFormat", "The datetimerange elements are not ISO format datetimes" )
 
             for file in file_array:
@@ -966,9 +966,9 @@ class RODatabaseClient:
 
             print( f"File count after filtering by date: {len(file_array)}" )
 
-            # self._repository should be for line JSON files only. 
+            # self._repository should be for line JSON files only.
 
-        if self._repository is not None: 
+        if self._repository is not None:
 
             print( "Updating local database repository..." )
 
@@ -980,13 +980,13 @@ class RODatabaseClient:
                     self._s3.download(file, local_path)
                 local_file_array.append(local_path)
 
-            # Reset file_array to local path. 
+            # Reset file_array to local path.
 
             file_array = local_file_array
 
         print( "Searching files for RO events..." )
 
-        #  With file array, open up and read files in to query more. 
+        #  With file array, open up and read files in to query more.
 
         ret_list = OccList( data=[], s3=self._s3 )
 
@@ -999,45 +999,44 @@ class RODatabaseClient:
                     df_dict = json.loads( f.readline() )
             df = list( df_dict.values() )
 
-            add_list = OccList( df, self._s3 ).filter( missions=missions, receivers=receivers, 
+            add_list = OccList( df, self._s3 ).filter( missions=missions, receivers=receivers,
                     datetimerange=datetimerange, **filterargs )
 
             ret_list += add_list
 
         return ret_list
 
-    def restore( self, datafile ): 
-        """Restore a previously saved OccList from datafile, which is a 
+    def restore( self, datafile ):
+        """Restore a previously saved OccList from datafile, which is a
         JSON format file."""
 
-        if os.path.exists( datafile ): 
+        if os.path.exists( datafile ):
             print( f"Restoring previously saved OccList from {datafile}." )
             data = []
             with open( datafile, 'r' ) as f:
-                for line in f.readlines(): 
+                for line in f.readlines():
                     data.append( json.loads(line) )
-        else: 
+        else:
             raise AWSgnssroutilsError( "FaultyData", "Argument data must be a list " + \
                     "of RO database items or a path to a previously saved OccList." )
 
         occlist = OccList( data=data, s3=self._s3 )
         return occlist
 
-    def __repr__( self ): 
+    def __repr__( self ):
 
         output_list = []
 
-        if self._repository is not None: 
+        if self._repository is not None:
             output_list.append( f'repository="{self._repository}"' )
 
-        if self._version is not None: 
+        if self._version is not None:
             output_list.append( f'version="{self._version}"' )
 
-        if self._update: 
+        if self._update:
             output_list.append( "update=True" )
-        else: 
+        else:
             output_list.append( "update=False" )
 
         ret = "RODatabaseClient({:})".format( ", ".join( output_list ) )
         return ret
-
