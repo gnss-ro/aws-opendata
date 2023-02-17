@@ -119,8 +119,7 @@ The [opac7irowg9_workshop.ipynb](https://raw.githubusercontent.com/gnss-ro/aws-o
 code was used during the 2022 workshop in Austria. It walked users through s3fs and a
 program to perform queries of DynamoDB.
 As it is based on querying an AWS DynamoDB database table, you will not be able to execute
-this notebook without having first created your own private AWS DynamoDB table. Instructions for
-doing so are in http://github.com/gnss-ro/aws-opendata/tree/master/utilities.
+this notebook without having first created your own private AWS DynamoDB table. 
 
 ### Questions? Comments?
 
