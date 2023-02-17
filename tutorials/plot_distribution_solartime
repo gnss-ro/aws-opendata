@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 
 #  Import installed modules.
 
-from awsgnssroutils import RODatabaseClient
+from awsgnssroutils.database import RODatabaseClient
 import numpy as np
 import cartopy
 import matplotlib.cm as cm
