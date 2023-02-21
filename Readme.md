@@ -20,7 +20,6 @@ data in the AWS Open Data Registry, briefly describes the RO DynamoDB database,
 and documents license information. There will be multiple versions of the data 
 description document: 
 
-- [Data description document](http://github.com/gnss-ro/aws-opendata/blob/master/Data-Description-v1.0.pdf) for version 1.0. 
 - [Data description document](http://github.com/gnss-ro/aws-opendata/blob/master/Data-Description-v1.1.pdf) for version 1.1. This update removes *refractivityRetrieval* and *atmosphericRetrieval* files for bad occultations, creates a "setting" variable in those same two file types that defines whether an occultation is rising or setting, and will manifest COSMIC-2, Spire, and GeoOptics radio occultation data. 
 
 Access to the RO metadata and data files can be handled seamlessly through the 
