@@ -18,9 +18,9 @@ of a list of radio occultations (ROs). Each are described below.
 RODatabaseClient:
     Create an instance of a portal to a metadata on all RO data in the AWS
     Registry of Open Data. It provides an option to create a repository of
-    the RO metadata on the local file system as keyword "repository". 
+    the RO metadata on the local file system as keyword "repository".
 
-OccList: 
+OccList:
     An instance of the class OccList is contains the metadata on a list of RO
     soundings along with pointers to the RO data files in the AWS Registry of
     Open Data S3 bucket. AWS functionality is completely embedded in the
@@ -31,7 +31,7 @@ OccList:
     instances of OccList, save the OccList to a JSON format file for future
     restoration by RODatabaseClient.restore, and even download RO data files.
 
-See README documentation for further instruction on usage. 
+See README documentation for further instruction on usage.
 
 """
 
@@ -55,7 +55,14 @@ from botocore import UNSIGNED
 
 #  Usefule parameters.
 
-valid_processing_centers = [ "ucar", "romsaf", "jpl" ]
+
+#Update valid processing centers based on open data bucket listing
+s3 = s3fs.S3FileSystem( client_kwargs={ 'region_name': AWSregion },
+                                 config_kwargs={ 'signature_version': UNSIGNED }
+#lists processing_centers on open data bucket
+initial_prefix_array = s3.ls( os.path.join( databaseS3bucket, f'contributed/v1.1/' ) )
+valid_processing_centers = [os.path.basename(prefix) for prefix in initial_prefix_array ]
+
 valid_file_types = [ "calibratedPhase", "refractivityRetrieval", "atmosphericRetrieval" ]
 
 #  Exception handling.
@@ -69,10 +76,11 @@ class AWSgnssroutilsError( Error ):
         self.comment = comment
 
 
-
 ################################################################################
 #  Useful utility functions and classes.
 ################################################################################
+
+
 
 def unsigned_S3FileSystem():
     """This is a custom function that contains code to generate an authenticated
@@ -844,7 +852,7 @@ class RODatabaseClient:
 
         for file in file_array:
             if self._repository is None:
-                with self._s3.open(file, 'r') as f:
+                with self._s3.open(file) as f:
                     df_dict = json.loads( f.readline() )
             else:
                 with open(file, 'r') as f:
