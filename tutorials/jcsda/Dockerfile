@@ -16,8 +16,22 @@ RUN git clone -b develop https://github.com/JCSDA/ioda-bundle.git
 RUN rm -f ioda-bundle/CMakeLists.txt
 COPY CMakeLists.txt ioda-bundle/
 RUN bash ./build_ioda.sh 
-# RUN rm -fr build_ioda.sh ioda
 
-# WORKDIR /home/nonroot
-# USER nonroot
+#  Augment Python. 
+
+RUN pip install python-dateutil
+
+#  Organize. 
+
+RUN mkdir -p /opt/local/bin && mkdir -p /opt/local/lib 
+RUN cp -p /tmp/ioda-build/install-bin/*.py /opt/local/lib && \
+	cp -p -R /tmp/ioda-bundle/iodaconv/src/lib_python /opt/local/lib/ && \
+	chmod a-x `find /opt/local/lib -type f`
+RUN cp -p /tmp/ioda-build/install-bin/gnssro_AWSopendataNetcdf2ioda.py /opt/local/bin/gnssro_AWSopendataNetcdf2ioda && \
+	chmod 755 /opt/local/bin/gnssro_AWSopendataNetcdf2ioda
+
+#  Augment environment. 
+
+WORKDIR /home/nonroot
+USER nonroot
 
