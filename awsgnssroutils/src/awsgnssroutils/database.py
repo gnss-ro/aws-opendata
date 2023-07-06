@@ -53,15 +53,15 @@ import re
 import time
 from botocore import UNSIGNED
 
-#  Usefule parameters.
+#  Update valid processing centers as they appear in the AWS Registry of Open Data. 
 
-
-#Update valid processing centers based on open data bucket listing
 s3 = s3fs.S3FileSystem( client_kwargs={ 'region_name': AWSregion },
-                                 config_kwargs={ 'signature_version': UNSIGNED }
-#lists processing_centers on open data bucket
+                                 config_kwargs={ 'signature_version': UNSIGNED } )
+
 initial_prefix_array = s3.ls( os.path.join( databaseS3bucket, f'contributed/v1.1/' ) )
-valid_processing_centers = [os.path.basename(prefix) for prefix in initial_prefix_array ]
+valid_processing_centers = [ os.path.basename(prefix) for prefix in initial_prefix_array ]
+
+#  Define valid file types. 
 
 valid_file_types = [ "calibratedPhase", "refractivityRetrieval", "atmosphericRetrieval" ]
 
@@ -641,12 +641,29 @@ class OccList():
         return local_file_list
 
     def values( self, field ):
-        """Return an ndarray of values of a requested field for the data in the
-        OccList. Valid fields are "longitude", "latitude", "datetime", "localtime".
-        Longitudes and latitudes are in degrees; datetime is an ISO format time;
-        and local times are in hours."""
+        """Return an array of values of a requested field for the data in the
+        OccList. Valid fields are "longitude", "latitude", "datetime", "localtime", 
+        in which case ndarrays are returned. Longitudes and latitudes are in degrees; 
+        datetime is an ISO format time; and local times are in hours. Valid values 
+        also include paths to data files. If the requested field is "ucar_calibratedPhase", 
+        then a list of strings is returned, each element being the path to a ucar_calibratedPhase
+        file, for example."""
 
-        if field == "longitude":
+        m = re.search( "^([a-z]+)_([a-zA-Z]+)$", field )
+        
+        if m: 
+            processing_center, file_type = m.group(1), m.group(2)
+            if processing_center in valid_processing_centers and file_type in valid_file_types: 
+                x = []
+                for item in self._data: 
+                    if field in item.keys(): 
+                        if item[field] == "": 
+                            x.append( None )
+                        else: 
+                            x.append( "s3://" + os.path.join( databaseS3bucket, item[field] ) )
+                    else: 
+                        x.append( None )
+        elif field == "longitude":
             x = np.ma.masked_equal( [ item['longitude'] for item in self._data ], float_fill_value )
 
         elif field == "latitude":
