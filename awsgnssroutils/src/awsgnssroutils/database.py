@@ -1,7 +1,7 @@
 """database.py
 
 Authors: Amy McVey (amcvey@aer.com) and Stephen Leroy (sleroy@aer.com)
-Date: 29 June 2023
+Date: 2 Aug 2023
 
 ================================================================================
 
@@ -53,7 +53,7 @@ import re
 import time
 from botocore import UNSIGNED
 
-#  Update valid processing centers as they appear in the AWS Registry of Open Data. 
+#  Update valid processing centers as they appear in the AWS Registry of Open Data.
 
 s3 = s3fs.S3FileSystem( client_kwargs={ 'region_name': AWSregion },
                                  config_kwargs={ 'signature_version': UNSIGNED } )
@@ -61,7 +61,7 @@ s3 = s3fs.S3FileSystem( client_kwargs={ 'region_name': AWSregion },
 initial_prefix_array = s3.ls( os.path.join( databaseS3bucket, f'contributed/v1.1/' ) )
 valid_processing_centers = [ os.path.basename(prefix) for prefix in initial_prefix_array ]
 
-#  Define valid file types. 
+#  Define valid file types.
 
 valid_file_types = [ "calibratedPhase", "refractivityRetrieval", "atmosphericRetrieval" ]
 
@@ -642,26 +642,26 @@ class OccList():
 
     def values( self, field ):
         """Return an array of values of a requested field for the data in the
-        OccList. Valid fields are "longitude", "latitude", "datetime", "localtime", 
-        in which case ndarrays are returned. Longitudes and latitudes are in degrees; 
-        datetime is an ISO format time; and local times are in hours. Valid values 
-        also include paths to data files. If the requested field is "ucar_calibratedPhase", 
+        OccList. Valid fields are "longitude", "latitude", "datetime", "localtime",
+        in which case ndarrays are returned. Longitudes and latitudes are in degrees;
+        datetime is an ISO format time; and local times are in hours. Valid values
+        also include paths to data files. If the requested field is "ucar_calibratedPhase",
         then a list of strings is returned, each element being the path to a ucar_calibratedPhase
         file, for example."""
 
         m = re.search( "^([a-z]+)_([a-zA-Z]+)$", field )
-        
-        if m: 
+
+        if m:
             processing_center, file_type = m.group(1), m.group(2)
-            if processing_center in valid_processing_centers and file_type in valid_file_types: 
+            if processing_center in valid_processing_centers and file_type in valid_file_types:
                 x = []
-                for item in self._data: 
-                    if field in item.keys(): 
-                        if item[field] == "": 
+                for item in self._data:
+                    if field in item.keys():
+                        if item[field] == "":
                             x.append( None )
-                        else: 
+                        else:
                             x.append( "s3://" + os.path.join( databaseS3bucket, item[field] ) )
-                    else: 
+                    else:
                         x.append( None )
         elif field == "longitude":
             x = np.ma.masked_equal( [ item['longitude'] for item in self._data ], float_fill_value )
