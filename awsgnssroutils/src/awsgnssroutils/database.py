@@ -53,6 +53,12 @@ import re
 import time
 from botocore import UNSIGNED
 
+
+#  Logging output. 
+
+import logging
+LOGGER = logging.getLogger( __name__ )
+
 #  Usefule parameters.
 
 valid_processing_centers = [ "ucar", "romsaf", "jpl" ]
@@ -509,7 +515,7 @@ class OccList():
             for item in self._data:
                 file.write(json.dumps(item)+'\n')
 
-        print( f"Search results saved to {filename}." )
+        LOGGER.debug( f"Search results saved to {filename}." )
 
     def info( self, param ):
         '''Provides information on the following parameters: "mission", "receiver",
@@ -604,7 +610,7 @@ class OccList():
 
         sTime = time.time()
         local_file_list = []
-        print( f"Downloading {len(ro_file_list)} {filetype} files to {rootdir}." )
+        LOGGER.debug( f"Downloading {len(ro_file_list)} {filetype} files to {rootdir}." )
 
         for ro_file in ro_file_list:
 
@@ -629,14 +635,14 @@ class OccList():
 
             local_file_list.append( local_file )
 
-        print( "Download took {:} seconds.".format( round((time.time()-sTime),1 ) ) )
+        LOGGER.debug( "Download took {:} seconds.".format( round((time.time()-sTime),1 ) ) )
         return local_file_list
 
     def values( self, field ):
         """Return an ndarray of values of a requested field for the data in the
-        OccList. Valid fields are "longitude", "latitude", "datetime", "localtime".
-        Longitudes and latitudes are in degrees; datetime is an ISO format time;
-        and local times are in hours."""
+        OccList. Valid fields are "longitude", "latitude", "datetime", "localtime" 
+        and "time".  Longitudes and latitudes are in degrees; time is an ISO format 
+        time; and local times are in hours."""
 
         if field == "longitude":
             x = np.ma.masked_equal( [ item['longitude'] for item in self._data ], float_fill_value )
@@ -649,6 +655,9 @@ class OccList():
 
         elif field == "datetime":
             x = [ item['date-time'] for item in self._data ]
+
+        elif field == "time":
+            x = [ item['time'] for item in self._data ]
 
         else:
             raise AWSgnssroutilsError( "InvalidArgument", "Valid fields are " + \
@@ -737,7 +746,7 @@ class RODatabaseClient:
         if not os.path.exists( self._repository ):
             return
 
-        print( f"Updating dynamo json files in {self._repository}." )
+        LOGGER.debug( f"Updating dynamo json files in {self._repository}." )
 
         sTime = time.time()
         altzone = int( time.altzone / 3600 )     #  Correct for the time zone.
@@ -760,10 +769,10 @@ class RODatabaseClient:
                                 s3_LastModified_unaware.hour-altzone )
 
             if s3_LastModified > local_LastModified:
-                print( f"  Updating {filename}" )
+                LOGGER.info( f"  Updating {filename}" )
                 self._s3.download(s3_uri, os.path.join(self._repository,filename) )
 
-        print( "Local repository update took {:} seconds.".format( round((time.time()-sTime),1) ) )
+        LOGGER.debug( "Local repository update took {:} seconds.".format( round((time.time()-sTime),1) ) )
 
     def query(self, missions=None, receivers=None, datetimerange=None, **filterargs ):
         '''Execute an inquiry on the RO database for RO soundings. At least one of
@@ -780,7 +789,7 @@ class RODatabaseClient:
         #  Get listing of all JSON database files.
 
         initial_file_array = self._s3.ls( os.path.join( databaseS3bucket, f'dynamo/{self._version}/export_subsets' ) )
-        print( f"Initial file count: {len(initial_file_array)}" )
+        LOGGER.debug( f"Initial file count: {len(initial_file_array)}" )
 
         # Filter by mission.
 
@@ -793,7 +802,7 @@ class RODatabaseClient:
                 basename_mission = basename.split('_')[0]
                 if basename_mission in missions:
                     file_array.append( file )
-            print( f"File count after filtering by mission: {len(file_array)}" )
+            LOGGER.debug( f"File count after filtering by mission: {len(file_array)}" )
 
         # Filter by date.
 
@@ -816,13 +825,13 @@ class RODatabaseClient:
             for f in remove_list:
                 file_array.remove(f)
 
-            print( f"File count after filtering by date: {len(file_array)}" )
+            LOGGER.debug( f"File count after filtering by date: {len(file_array)}" )
 
             # self._repository should be for line JSON files only.
 
         if self._repository is not None:
 
-            print( "Updating local database repository..." )
+            LOGGER.info( "Updating local database repository..." )
 
             local_file_array = []
             os.makedirs(self._repository, exist_ok=True)
@@ -836,7 +845,7 @@ class RODatabaseClient:
 
             file_array = local_file_array
 
-        print( "Searching files for RO events..." )
+        LOGGER.debug( "Searching files for RO events..." )
 
         #  With file array, open up and read files in to query more.
 
@@ -863,7 +872,7 @@ class RODatabaseClient:
         JSON format file."""
 
         if os.path.exists( datafile ):
-            print( f"Restoring previously saved OccList from {datafile}." )
+            LOGGER.debug( f"Restoring previously saved OccList from {datafile}." )
             data = []
             with open( datafile, 'r' ) as f:
                 for line in f.readlines():
