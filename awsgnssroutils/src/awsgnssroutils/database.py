@@ -41,6 +41,7 @@ AWSregion = "us-east-1"
 databaseS3bucket = "gnss-ro-data"
 AWSversion = "v1.1"
 float_fill_value = -999.99
+resources_filename = ".awsgnssroutilsrc"
 
 #  Imports.
 
@@ -142,6 +143,39 @@ class S3FileSystem():
             self._s3 = self._s3fscreate()
             ret = self._s3.open( x )
         return ret
+
+
+################################################################################
+#  Initialize a repository. 
+################################################################################
+
+def initialize( repository ): 
+    """Create a local repository of previous database queries. "repository" is 
+    an absolute path to a directory containing information from all previous 
+    searches."""
+
+    #  Be sure the repository path is an absolute path. 
+
+    if repository != os.path.abspath( repository ): 
+        raise AWSgnssroutilsError( "BadRepositoryName", f'Path to repository ({repository}) must be an absolute path' )
+
+    #  Create path to repository if it doesn't already exist. 
+
+    os.makedirs( repository, exist_ok=True )
+
+    #  Record repository path to resource file. 
+
+    HOME = os.path.expanduser( "~" )
+    resources_file_path = os.path.join( HOME, resources_filename )
+
+    resources = { 'repository': repository }
+
+    with open( resources_file_path, 'w' ) as fp: 
+        json.dump( resources, fp )
+
+    #  Done. 
+
+    return
 
 
 ################################################################################
@@ -580,7 +614,7 @@ class OccList():
 
         return display
 
-    def download(self, filetype, rootdir, keep_aws_structure = False):
+    def download(self, filetype, rootdir, keep_aws_structure=True):
         '''Download RO data files of file type "filetype" from the AWS Registry of Open
         Data to into the local directory "rootdir". The "filetype" must be one of
         *_calibratedPhase, *_refractivityRetrieval, *_atmosphericRetrieval, where * is
@@ -710,10 +744,8 @@ class RODatabaseClient:
 
         repository  If set, it is the path to the directory on the local file
                     system where the contents of the RO database are stored
-                    locally. If not set, the RO database is read directly from
-                    the Open Data Registry S3 bucket. It is *highly* recommended
-                    that the contents of the database be stored locally, as this
-                    will greatly accelerate database inquiries.
+                    locally. If not set, the repository path is read from a 
+                    resources file created by the function initialize. 
 
         version     The version of the contents of the AWS Registry of Open Data
                     that should be accessed. The various versions that are
@@ -724,7 +756,19 @@ class RODatabaseClient:
         '''
 
         self._version = version
-        self._repository = repository
+
+        if repository is None: 
+            HOME = os.path.expanduser( "~" )
+            resources_file_path = os.path.join( HOME, resources_filename )
+            if not os.path.exists( resources_file_path ): 
+                raise AWSgnssroutilsError( "ResourcesFilesNotFound", "The resources " + \
+                        "file was not found; must be created with function initialize" )
+            with open( resources_file_path, 'r' ) as fp: 
+                resources = json.load( fp )
+            self._repository = resources['repository']
+
+        else: 
+            self._repository = repository
 
 #  Instantiate the s3 file system in AWS region AWSregion and with unsigned certificate
 #  authentication.
