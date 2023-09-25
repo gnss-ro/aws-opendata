@@ -628,7 +628,7 @@ class OccList():
             #  Download the file if it doesn't already exist locally.
 
             if not os.path.exists( local_file ):
-                self._s3.download( os.path.join( databaseS3bucket, ro_file ), local_file )
+                self._s3.download( "/".join( [databaseS3bucket,ro_file] ), local_file )
                 ret = True
             else:
                 ret = False
@@ -761,7 +761,7 @@ class RODatabaseClient:
                         local_LastModified_unaware.day,
                         local_LastModified_unaware.hour)
 
-            s3_uri = os.path.join( databaseS3bucket, f'dynamo/{self._version}/export_subsets', filename )
+            s3_uri = "/".join( [ databaseS3bucket, f'dynamo/{self._version}/export_subsets', filename ] )
             s3_info = self._s3.info( s3_uri )
             s3_LastModified_unaware = s3_info['LastModified']
             s3_LastModified = datetime.datetime( s3_LastModified_unaware.year,
@@ -788,7 +788,7 @@ class RODatabaseClient:
 
         #  Get listing of all JSON database files.
 
-        initial_file_array = self._s3.ls( os.path.join( databaseS3bucket, f'dynamo/{self._version}/export_subsets' ) )
+        initial_file_array = self._s3.ls( "/".join( [ databaseS3bucket, f'dynamo/{self._version}/export_subsets' ] ) )
         LOGGER.debug( f"Initial file count: {len(initial_file_array)}" )
 
         # Filter by mission.
