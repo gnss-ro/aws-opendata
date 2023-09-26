@@ -146,21 +146,30 @@ class S3FileSystem():
 
 
 ################################################################################
-#  Initialize a repository. 
+#  Resources utilities: initialize a resources file, read a resources file. 
 ################################################################################
 
 def initialize( repository, rodata=None ): 
-    """Create a local repository of previous database queries. "repository" is 
-    an absolute path to a directory containing information from all previous 
-    searches. "rodata" is the default path for download RO data. If it is not 
-    provided here, then it must be provided at the instantiation of 
-    RODatabaseClient or when the method OccList.download is called. In this 
-    case, "rodata" must be an absolute path."""
+    """Create a local repository for a history database queries. 
+
+    Create a local repository of prior database queries and record the 
+    directory path in a resources file that can be found in the user's home 
+    directory. Also, one can specify a default path for RO data downloads. 
+
+    repository          An absolute path to a directory containing 
+                        information from all previous searches. 
+
+    rodata              The default path for downloading RO data. If 
+                        it is not provided here, then it must be provided 
+                        when the method OccList.download is called. "rodata" 
+                        must be an absolute path.
+    """
 
     #  Be sure the repository path is an absolute path. 
 
     if repository != os.path.abspath( repository ): 
-        raise AWSgnssroutilsError( "BadPathName", f'Path to repository ({repository}) must be an absolute path' )
+        raise AWSgnssroutilsError( "BadPathName", 
+                f'Path to repository ({repository}) must be an absolute path' )
 
     resources = {}
 
@@ -187,11 +196,37 @@ def initialize( repository, rodata=None ):
     with open( resources_file_path, 'w' ) as fp: 
         json.dump( resources, fp )
 
-
-
     #  Done. 
 
     return
+
+
+def get_resources(): 
+    """Read the package resources from a file in the user's home 
+    directory and return contents in a dictionary."""
+
+    #  Define resources file path. 
+
+    HOME = os.path.expanduser( "~" )
+    resources_file_path = os.path.join( HOME, resources_filename )
+
+    if not os.path.exists( resources_file_path ): 
+        raise AWSgnssroutilsError( "NoResourcesFile", 
+                    f'The resources file "{resources_file_path}" could not be found' )
+
+    #  Read the resources. 
+
+    with open( resources_file_path, 'r' ) as fp: 
+        resources = json.load( fp )
+
+    #  Replace an empty string for rodata with a None. 
+
+    if resources['rodata'] == "": 
+        resources['rodata'] == None
+
+    #  Done. 
+
+    return resources
 
 
 ################################################################################
@@ -208,7 +243,7 @@ class OccList():
     all RO data associated with the entries in the list to the local file
     system."""
 
-    def __init__( self, data, s3, rodata ):
+    def __init__( self, data, s3 ):
         """Create an instance of OccList. The data argument is a list of
         items/RO soundings from the RO database.  The s3 argument is an
         instance of S3FileSystem that enables access to the AWS
@@ -224,8 +259,6 @@ class OccList():
         else:
             raise AWSgnssroutilsError( "BadInput", "Input argument s3 must be an " + \
                     "instance of class s3fs.S3FileSystem" )
-
-        self._rodata = rodata 
 
         self.size = len( self._data )
 
@@ -557,7 +590,7 @@ class OccList():
 
         #  Generate new OccList based on kept items.
 
-        return OccList( data=keep_list, s3=self._s3, rodata=self._rodata )
+        return OccList( data=keep_list, s3=self._s3 )
 
     def save(self, filename):
         """Save instance of OccList to filename in line JSON format. The OccList
@@ -634,22 +667,22 @@ class OccList():
 
     def download(self, filetype, rodata=None, keep_aws_structure=True):
         '''Download RO data files of file type "filetype" from the AWS Registry of Open
-        Data to into the local directory "rootdir". The "filetype" must be one of
+        Data to into the local directory "rodata". The "filetype" must be one of
         *_calibratedPhase, *_refractivityRetrieval, *_atmosphericRetrieval, where * is
-        one of the valid contributed RO retrieval centers "ucar", "romsaf", "jpl". If
-        "keep_aws_structure" is True, then maintain the same directory structure locally
-        as in the AWS bucket; if False, download all data files into "rootdir" without
-        subdirectories. '''
+        one of the valid contributed RO retrieval centers "ucar", "romsaf", "jpl", etc. 
+        If "keep_aws_structure" is True, then maintain the same directory structure 
+        locally as in the AWS bucket; if False, download all data files into "rootdir" 
+        without subdirectories. '''
 
         if rodata is not None: 
             rootdir = rodata
 
-        elif self._rodata is not None: 
-            rootdir = self._rodata
-
         else: 
-            raise AWSgnssroutilsError( "InvalidInput", f'"rodata" must be provided' )
-
+            resources = get_resources()
+            rootdir = resources['rodata']
+            if not keep_aws_structure: 
+                raise AWSgnssroutilsError( "BadArgument", 'keep_aws_structure must be ' + \
+                        'true if RO data are downloaded into the default directory' )
 
         m = re.search( "^([a-z]+)_([a-zA-Z]+)$", filetype )
         if m:
@@ -734,21 +767,21 @@ class OccList():
         if not isinstance( occlist2, OccList ):
             raise AWSgnssroutilsError( "FaultyAddition", "Unable to concatenate; both arguments must be instances of OccList." )
 
-        return OccList( data=self._data + occlist2._data, s3=self._s3, self._rodata )
+        return OccList( data=self._data + occlist2._data, s3=self._s3 )
 
     def __padd__(self, occlist2):
 
         if not isinstance( occlist2, OccList ):
             raise AWSgnssroutilsError( "FaultyAddition", "Unable to concatenate; both arguments must be instances of OccList." )
 
-        return OccList( data=self._data + occlist2._data, s3=self._s3, rodata=self._rodata )
+        return OccList( data=self._data + occlist2._data, s3=self._s3 )
 
     def __getitem__(self,items):
         new = self._data[items]
         if isinstance( new, dict ):
-            out = OccList( data=[new], s3=self._s3, rodata=self._rodata)
+            out = OccList( data=[new], s3=self._s3 )
         else:
-            out = OccList( data=new, s3=self._s3, rodata=self._rodata )
+            out = OccList( data=new, s3=self._s3 )
         return out
 
     def __repr__(self):
@@ -765,7 +798,7 @@ class RODatabaseClient:
     An instance of this class initiates a gateway to the database of GNSS radio
     occultation data in the AWS Registry of Open Data. '''
 
-    def __init__( self, repository=None, version=AWSversion, rodata=None, update=False ):
+    def __init__( self, repository=None, version=AWSversion, update=False ):
         '''Create an instance of RODatabaseClient. This object serves as a portal
         to the database contents of the AWS Registry of Open Data repository of
         GNSS radio occultation data.
@@ -778,10 +811,6 @@ class RODatabaseClient:
         version     The version of the contents of the AWS Registry of Open Data
                     that should be accessed. The various versions that are
                     accessible can be found in s3://gnss-ro-data/dynamo/.
-
-        rodata      Path to which all requested RO data files should be downloaded. 
-                    This overrides the rodata path in the resources file 
-                    generated by "initialize". 
 
         update      If requested, update the contents of the local repository
                     to what currently exists in the AWS repository.
@@ -804,15 +833,8 @@ class RODatabaseClient:
         #  Get location of local database repository of previous searches. 
 
         if repository is None: 
-            HOME = os.path.expanduser( "~" )
-            resources_file_path = os.path.join( HOME, resources_filename )
-            if not os.path.exists( resources_file_path ): 
-                raise AWSgnssroutilsError( "ResourcesFilesNotFound", "The resources " + \
-                        "file was not found; must be created with function initialize" )
-            with open( resources_file_path, 'r' ) as fp: 
-                resources = json.load( fp )
+            resources = get_resources()
             self._repository = resources['repository']
-
         else: 
             self._repository = repository
 
@@ -823,27 +845,6 @@ class RODatabaseClient:
         self._update = update
         if update: 
             self.update_repo()
-
-        #  Get path to local RO data. 
-
-        if rodata is not None: 
-            self._rodata = rodata
-
-        else: 
-            HOME = os.path.expanduser( "~" )
-            resources_file_path = os.path.join( HOME, resources_filename )
-            if not os.path.exists( resources_file_path ): 
-                raise AWSgnssroutilsError( "ResourcesFilesNotFound", "The resources " + \
-                        "file was not found; must be created with function initialize" )
-            with open( resources_file_path, 'r' ) as fp: 
-                resources = json.load( fp )
-
-            if resources['rodata'] == "": 
-                self._rodata = None
-            else: 
-                self._rodata = resources['rodata']
-
-            self._rodata = rodata
 
 
 
@@ -957,14 +958,14 @@ class RODatabaseClient:
 
         #  With file array, open up and read files in to query more.
 
-        ret_list = OccList( data=[], s3=self._s3, rodata=self._rodata )
+        ret_list = OccList( data=[], s3=self._s3 )
 
         for file in file_array:
             with open(file, 'r') as f:
                 df_dict = json.loads( f.readline() )
             df = list( df_dict.values() )
 
-            add_list = OccList( df, self._s3, rodata=self._rodata ).filter( missions=missions, receivers=receivers,
+            add_list = OccList( df, self._s3 ).filter( missions=missions, receivers=receivers,
                     datetimerange=datetimerange, **filterargs )
 
             ret_list += add_list
@@ -985,7 +986,7 @@ class RODatabaseClient:
             raise AWSgnssroutilsError( "FaultyData", "Argument data must be a list " + \
                     "of RO database items or a path to a previously saved OccList." )
 
-        occlist = OccList( data=data, s3=self._s3, rodata=self._rodata )
+        occlist = OccList( data=data, s3=self._s3 )
         return occlist
 
     def __repr__( self ):
