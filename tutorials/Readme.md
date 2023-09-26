@@ -64,8 +64,7 @@ initialize( "/home/myhome/local/rodatabase", rodata="/home/myhome/Data/rodata" )
 
 will define the first argument as the directory in which a history of 
 previous database queries will be stored and will define the second 
-argument as the location where all RO data files will be downloaded,  
-by default. 
+argument as the default location where all RO data files will be downloaded. 
 
 ### RO processing center inter-comparison 
 
