@@ -2,7 +2,6 @@
 
 #  Main program.
 
-import os
 import json
 from datetime import datetime, timedelta
 from awsgnssroutils.database import RODatabaseClient
@@ -22,9 +21,7 @@ if __name__ == "__main__":
 
     #  Database portal. 
 
-    HOME = os.path.expanduser( "~" )
-    repository = os.path.join( HOME, "local/rodatabase" )
-    db = RODatabaseClient( repository=repository )
+    db = RODatabaseClient()
 
     #  Define the year range over which to query the database. 
 
