@@ -43,6 +43,11 @@ setdefaults:
 
 See README documentation for further instruction on usage. 
 
+********************************************************************************
+Note to developer: Be certain to provide access to s3fs.S3FileSystem that 
+is auto-authenticating. See use_S3FileSystem definition, etc. 
+********************************************************************************
+
 """
 
 #  Define parameters of the database.
@@ -68,13 +73,6 @@ from botocore import UNSIGNED
 
 import logging
 LOGGER = logging.getLogger( __name__ )
-
-#  Useful parameters.
-
-valid_processing_centers = [ "ucar", "romsaf", "jpl", "eumetsat" ]
-valid_file_types = { 
-        'v1.1': [ "calibratedPhase", "refractivityRetrieval", "atmosphericRetrieval" ], 
-        'v2.0': [ "gnssrol1bv2", "gnssrol2av2", "gnssrol2bv2" ] }
 
 #  Exception handling.
 
@@ -162,6 +160,31 @@ class S3FileSystem():
 ################################################################################
 
 use_S3FileSystem = unsigned_S3FileSystem
+
+
+################################################################################
+#  Useful parameters. Scan the AWS RO data repository for valid processing 
+#  centers and valid file types. 
+################################################################################
+
+s3 = use_S3FileSystem()
+
+versions = [ entry.split("/")[-1] for entry in s3.ls(f'{databaseS3bucket}/contributed/') ]
+
+valid_processing_centers = {}
+valid_file_types = {}
+
+for version in versions: 
+    valid_processing_centers.update( { version: list( { entry.split("/")[-1] for entry in 
+                    s3.ls(f'{databaseS3bucket}/contributed/{version}/') } ) } )
+    fts = []
+    for center in valid_processing_centers[version]: 
+        missions = [ entry.split("/")[-1] for entry in 
+                    s3.ls(f'{databaseS3bucket}/contributed/{version}/{center}/') ]
+        for mission in missions: 
+            fts += [ entry.split("/")[-1] for entry in 
+                    s3.ls(f'{databaseS3bucket}/contributed/{version}/{center}/{mission}/') ]
+    valid_file_types.update( { version: list( set( fts ) ) } )
 
 
 ################################################################################
@@ -589,7 +612,7 @@ class OccList():
                 m = re.search( "^(\w+)_(\w+)$", availablefiletype )
                 if m:
                     center, filetype = m.group(1), m.group(2)
-                    if center not in valid_processing_centers:
+                    if center not in valid_processing_centers[self._version]:
                         raise AWSgnssroutilsError( "InvalidProcessingCenter",
                                 f'Processing center "{center}" in availablefiletype {availablefiletype} ' + \
                                         'is not valid.' )
@@ -742,7 +765,7 @@ class OccList():
                 for key in item.keys():
                     m = re.search( "^(\w+)_(\w+)$", key )
                     if m:
-                        if m.group(1) in valid_processing_centers and m.group(2) in valid_file_types[self._version]:
+                        if m.group(1) in valid_processing_centers[self._version] and m.group(2) in valid_file_types[self._version]:
                             if key not in display.keys():
                                 display.update( { key: 0 } )
                             display[key] += 1
@@ -789,16 +812,16 @@ class OccList():
 
         m = re.search( "^([a-z]+)_([a-zA-Z]+)$", filetype )
         if m:
-            if m.group(1) not in valid_processing_centers:
+            if m.group(1) not in valid_processing_centers[self._version]:
                 raise AWSgnssroutilsError( "InvalidInput", f'Invalid retrieval center "{m.group(1)}" ' + \
-                        'requested; must be one of ' + ', '.join( valid_processing_centers ) )
+                        'requested; must be one of ' + ', '.join( valid_processing_centers[self._version] ) )
             elif m.group(2) not in valid_file_types[self._version]:
                 raise AWSgnssroutilsError( "InvalidInput", f'Invalid file type "{m.group(2)}" ' + \
                         'requested; must be one of ' + ', '.join( valid_file_types[self._version] ) )
         else:
             raise AWSgnssroutilsError( "InvalidInput", f'You must select the "filetype" to download ' + \
                 'as ' + ', '.join( [ f"*_{ft}" for f in valid_file_types[self._version] ] ) + ', where * is one of ' + \
-                'the processing centers ' + ', '.join( valid_processing_centers ) )
+                'the processing centers ' + ', '.join( valid_processing_centers[self._version] ) )
 
         ro_file_list = []
         for item in self._data:
