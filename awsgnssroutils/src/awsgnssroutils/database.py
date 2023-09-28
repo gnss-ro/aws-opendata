@@ -66,6 +66,7 @@ import s3fs
 import json
 import re
 import time
+import subprocess
 from botocore import UNSIGNED
 
 
@@ -163,18 +164,17 @@ use_S3FileSystem = unsigned_S3FileSystem
 
 
 ################################################################################
-#  Useful parameters. Scan the AWS RO data repository for valid processing 
-#  centers and valid file types. 
+#  Useful parameters. Scan the AWS RO data repository for valid versions, valid 
+#  processing centers, and valid file types. 
 ################################################################################
 
 s3 = use_S3FileSystem()
 
-versions = [ entry.split("/")[-1] for entry in s3.ls(f'{databaseS3bucket}/contributed/') ]
-
+valid_versions = [ entry.split("/")[-1] for entry in s3.ls(f'{databaseS3bucket}/contributed/') ]
 valid_processing_centers = {}
 valid_file_types = {}
 
-for version in versions: 
+for version in valid_versions: 
     valid_processing_centers.update( { version: list( { entry.split("/")[-1] for entry in 
                     s3.ls(f'{databaseS3bucket}/contributed/{version}/') } ) } )
     fts = []
@@ -236,9 +236,6 @@ def setdefaults( repository=None, rodata=None, version=None ):
 
     if version is not None: 
 
-        s3 = S3FileSystem( use_S3FileSystem )
-        valid_versions = [ entry.split("/")[-1] for entry in 
-                      s3.ls( "/".join( [databaseS3bucket,"dynamo/"] ) ) ]
         if version not in valid_versions: 
             raise AWSgnssroutilsError( "InvalidVersion", f'Version "{version}" is invalid; ' + \
                     'valid versions are ' + ", ".join( valid_versions ) )
@@ -279,10 +276,6 @@ def populate():
 
     #  Check for validity of version. 
 
-    s3 = S3FileSystem( use_S3FileSystem )
-    valid_versions = [ entry.split("/")[-1] for entry in 
-            s3.ls( "/".join( [databaseS3bucket,"dynamo/"] ) ) ]
-
     if version not in valid_versions: 
         raise AWSgnssroutilsError( "InvalidVersion", f'Version "{version}" is invalid; ' + \
                 'valid versions are ' + ", ".join( valid_versions ) )
@@ -295,7 +288,7 @@ def populate():
 
     #  Synchronize using subprocess.
 
-    ret = subprocess.run( command )
+    ret = subprocess.run( command, capture_output=True )
 
     return
 
@@ -959,8 +952,6 @@ class RODatabaseClient:
         else: 
             uversion = version
 
-        valid_versions = [ entry.split("/")[-1] for entry in 
-                self._s3.ls( "/".join( [ databaseS3bucket, "dynamo/" ] ) ) ]
         if uversion not in valid_versions: 
             raise AWSgnssroutilsError( "InvalidVersion", f'Version "{uversion}" is invalid; ' + \
                     'valid versions are ' + ", ".join( valid_versions ) )
