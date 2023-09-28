@@ -12,7 +12,7 @@ authors = [
 description = "Utilities for access and manipulation of GNSS radio occultation in the AWS Registry of Open Data"
 readme = "README.md"
 requires-python = ">=3.8"
-dependencies = [ "hatchling", "s3fs", "numpy" ]
+dependencies = [ "hatchling", "awscli", "s3fs", "numpy" ]
 classifiers = [
 	"Programming Language :: Python :: 3",
 	"License :: OSI Approved :: BSD License",
