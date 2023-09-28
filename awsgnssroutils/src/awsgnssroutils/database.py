@@ -1,7 +1,7 @@
 """database.py
 
 Authors: Amy McVey (amcvey@aer.com) and Stephen Leroy (sleroy@aer.com)
-Date: 19 December 2022
+Date: 28 September 2023
 
 ================================================================================
 
@@ -31,6 +31,16 @@ OccList:
     instances of OccList, save the OccList to a JSON format file for future
     restoration by RODatabaseClient.restore, and even download RO data files.
 
+A very useful utility...
+
+setdefaults: 
+    A function that sets defaults for use of RODatabaseClient and OccList. 
+    It allows the user to specify defaults for storage of RO metadata 
+    database files ("repository") and for downloads of RO data files 
+    ("rodata"). In doing so, the user won't have to specify the repository 
+    every time an instance of RODatabaseClient is created nor specify a 
+    data download path every time the OccList.download method is called. 
+
 See README documentation for further instruction on usage. 
 
 """
@@ -41,7 +51,7 @@ AWSregion = "us-east-1"
 databaseS3bucket = "gnss-ro-data"
 AWSversion = "v1.1"
 float_fill_value = -999.99
-resources_filename = ".awsgnssroutilsrc"
+defaults_filename = ".awsgnssroutilsrc"
 
 #  Imports.
 
@@ -146,14 +156,14 @@ class S3FileSystem():
 
 
 ################################################################################
-#  Resources utilities: initialize a resources file, read a resources file. 
+#  Resources utilities: create a defaults file, read a defaults file. 
 ################################################################################
 
-def initialize( repository, rodata=None ): 
+def setdefaults( repository=None, rodata=None ): 
     """Create a local repository for a history database queries. 
 
     Create a local repository of prior database queries and record the 
-    directory path in a resources file that can be found in the user's home 
+    directory path in a defaults file that can be found in the user's home 
     directory. Also, one can specify a default path for RO data downloads. 
 
     repository          An absolute path to a directory containing 
@@ -165,68 +175,68 @@ def initialize( repository, rodata=None ):
                         must be an absolute path.
     """
 
-    #  Be sure the repository path is an absolute path. 
+    defaults = { 'repository': "", 'rodata': "" }
 
-    if repository != os.path.abspath( repository ): 
-        raise AWSgnssroutilsError( "BadPathName", 
-                f'Path to repository ({repository}) must be an absolute path' )
+    #  Be sure the paths are absolute paths. Also, create paths if they 
+    #  don't already exist. 
 
-    resources = {}
+    if repository is not None: 
+        if repository != os.path.abspath( repository ): 
+            raise AWSgnssroutilsError( "BadPathName", 
+                    f'Path to repository ({repository}) must be an absolute path' )
+        else: 
+            defaults['repository'] = repository
+            os.makedirs( repository, exist_ok=True )
 
-    #  Create path to repository if it doesn't already exist. 
-
-    os.makedirs( repository, exist_ok=True )
-    resources.update( { 'repository': repository } )
-
-    #  Create rodata path. 
-
-    if rodata is None: 
-        resources.update( { 'rodata': "" } )
-    else: 
+    if rodata is not None: 
         if rodata != os.path.abspath( rodata ): 
-            raise AWSgnssroutilsError( "BadPathName", f'Path to RO data ({rodata}) must be an absolute path' )
-        os.makedirs( rodata, exist_ok=True )
-        resources.update( { 'rodata': rodata } )
+            raise AWSgnssroutilsError( "BadPathName", 
+                    f'Path to rodata ({rodata}) must be an absolute path' )
+        else: 
+            defaults['rodata'] = rodata
+            os.makedirs( rodata, exist_ok=True )
 
     #  Record repository and rodata paths to resource file. 
 
     HOME = os.path.expanduser( "~" )
-    resources_file_path = os.path.join( HOME, resources_filename )
+    defaults_file_path = os.path.join( HOME, defaults_filename )
 
-    with open( resources_file_path, 'w' ) as fp: 
-        json.dump( resources, fp )
+    with open( defaults_file_path, 'w' ) as fp: 
+        json.dump( defaults, fp )
 
     #  Done. 
 
-    return
+    return defaults
 
 
-def get_resources(): 
-    """Read the package resources from a file in the user's home 
+def get_defaults(): 
+    """Read the module defaults from a file in the user's home 
     directory and return contents in a dictionary."""
 
-    #  Define resources file path. 
+    #  Define defaults file path. 
 
     HOME = os.path.expanduser( "~" )
-    resources_file_path = os.path.join( HOME, resources_filename )
+    defaults_file_path = os.path.join( HOME, defaults_filename )
 
-    if not os.path.exists( resources_file_path ): 
+    if not os.path.exists( defaults_file_path ): 
         raise AWSgnssroutilsError( "NoResourcesFile", 
-                    f'The resources file "{resources_file_path}" could not be found' )
+                    f'The defaults file "{defaults_file_path}" could not be found. ' + \
+                            'Be sure to create the defaults using the function ' + \
+                            'awsgnssroutils.database.setdefaults.' )
 
-    #  Read the resources. 
+    #  Read the defaults. 
 
-    with open( resources_file_path, 'r' ) as fp: 
-        resources = json.load( fp )
+    with open( defaults_file_path, 'r' ) as fp: 
+        defaults = json.load( fp )
 
-    #  Replace an empty string for rodata with a None. 
+    #  Replace emptry strings with Nones. 
 
-    if resources['rodata'] == "": 
-        resources['rodata'] == None
+    for key, value in defaults.items(): 
+        if value == "": defaults.update( { key: None } )
 
     #  Done. 
 
-    return resources
+    return defaults
 
 
 ################################################################################
@@ -666,20 +676,39 @@ class OccList():
         return display
 
     def download(self, filetype, rodata=None, keep_aws_structure=True):
-        '''Download RO data files of file type "filetype" from the AWS Registry of Open
-        Data to into the local directory "rodata". The "filetype" must be one of
-        *_calibratedPhase, *_refractivityRetrieval, *_atmosphericRetrieval, where * is
-        one of the valid contributed RO retrieval centers "ucar", "romsaf", "jpl", etc. 
-        If "keep_aws_structure" is True, then maintain the same directory structure 
-        locally as in the AWS bucket; if False, download all data files into "rootdir" 
-        without subdirectories. '''
+        """Download RO data files from AWS Registry of Open Data repository of RO 
+        data. 
+
+        Download RO data of file type "filetype" from the AWS Registry of Open
+        Data. The data are downloaded into the directory "rodata" as specified in 
+        the defaults (created by setdefaults) rodata is specified by the keyword. 
+
+        Arguments
+        =========
+
+        filetype            The filetype must be one of *_calibratedPhase, 
+                            *_refractivityRetrieval, *_atmosphericRetrieval, where 
+                            * is one of the valid contributed RO retrieval centers 
+                            "ucar", "romsaf", "jpl", etc. 
+
+        rodata              The path to the directory for downloaded RO data files. 
+                            It overrides the default download path created by 
+                            setdefaults. It can be a relative or absolute path. 
+
+        keep_aws_structure  If true, create a directory hierarchy in the same way 
+                            as exists in the RO repository in the AWS Registry of 
+                            Open Data. If false, all files are downloaded into the 
+                            same directory. Note that all RO files are downloaded 
+                            using the AWS hierarchy structure if rodata is not 
+                            specified as an argument here. 
+        """
 
         if rodata is not None: 
             rootdir = rodata
 
         else: 
-            resources = get_resources()
-            rootdir = resources['rodata']
+            defaults = get_defaults()
+            rootdir = defaults['rodata']
             if not keep_aws_structure: 
                 raise AWSgnssroutilsError( "BadArgument", 'keep_aws_structure must be ' + \
                         'true if RO data are downloaded into the default directory' )
@@ -806,7 +835,7 @@ class RODatabaseClient:
         repository  If set, it is the path to the directory on the local file
                     system where the contents of the RO database are stored
                     locally. If not set, the repository path is read from a 
-                    resources file created by the function initialize. 
+                    defaults file created by the function setdefaults. 
 
         version     The version of the contents of the AWS Registry of Open Data
                     that should be accessed. The various versions that are
@@ -833,8 +862,8 @@ class RODatabaseClient:
         #  Get location of local database repository of previous searches. 
 
         if repository is None: 
-            resources = get_resources()
-            self._repository = resources['repository']
+            defaults = get_defaults()
+            self._repository = defaults['repository']
         else: 
             self._repository = repository
 
