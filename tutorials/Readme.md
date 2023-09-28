@@ -55,11 +55,11 @@ The jupyter notebook is [awsgnssroutils_demonstration](https://raw.githubusercon
 
 In order to greatly simplify use of the awsgnssroutils, be sure to 
 initialize your local repository of RO database queries using 
-the awsgnssroutils.database.initialize function. For example, 
+the awsgnssroutils.database.setdefaults function. For example, 
 
 ```
-from awsgnssroutils.database import initialize
-initialize( "/home/myhome/local/rodatabase", rodata="/home/myhome/Data/rodata" )
+from awsgnssroutils.database import setdefaults
+setdefaults( "/home/myhome/local/rodatabase", rodata="/home/myhome/Data/rodata", version="1.1" )
 ```
 
 will define the first argument as the directory in which a history of 
