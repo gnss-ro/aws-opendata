@@ -259,7 +259,7 @@ def setdefaults( repository:str=None, rodata:str=None, version:str=None ) -> dic
     return defaults
 
 
-def populate(): 
+def populate() -> subprocess.CompletedProcess : 
     """Populate the metadata database in the path established by 
     setdefaults. 
 
@@ -342,11 +342,18 @@ class OccList():
     all RO data associated with the entries in the list to the local file
     system."""
 
-    def __init__( self, data, s3, version ):
-        """Create an instance of OccList. The data argument is a list of
-        items/RO soundings from the RO database.  The s3 argument is an
-        instance of S3FileSystem that enables access to the AWS
-        repository of RO data."""
+    def __init__( self, data:list, s3, version:str ):
+        """Create an instance of OccList. 
+
+        Arguments
+        =========
+        data        A list of items/RO soundings from the RO database. 
+
+        s3          An instance of S3FileSystem that enables access to the 
+                    AWS repository of RO data.
+
+        version     The AWS repository version.
+        """
 
         if isinstance( data, list ):
             self._data = data
@@ -375,8 +382,7 @@ class OccList():
                geometry:str=None,
                availablefiletypes:{str,tuple,list}=None ):
         """Filter a list of occultations according to various criteria, such as
-        mission, receiver, transmitter, etc.  df is a list of items in the database,
-        and repository points to the local repository of the database data.
+        mission, receiver, transmitter, etc.  
 
         Filtering can be done through the following keywords:
 
@@ -699,7 +705,7 @@ class OccList():
 
         return OccList( data=keep_list, s3=self._s3, version=self._version )
 
-    def save(self, filename):
+    def save(self, filename:str):
         """Save instance of OccList to filename in line JSON format. The OccList
         can be restored using RODatabaseClient.restore."""
 
@@ -709,7 +715,7 @@ class OccList():
 
         LOGGER.debug( f"Search results saved to {filename}." )
 
-    def info( self, param ) -> { list, dict }:
+    def info( self, param:str ) -> { list, dict }:
         '''Provides information on the following parameters: "mission", "receiver",
         "transmitter", "datetime", "longitude", "latitude", "localtime", "geometry",
         "filetype".
@@ -879,9 +885,11 @@ class OccList():
 
     def values( self, field:str ) -> np.ndarray :
         """Return an ndarray of values of a requested field for the data in the
-        OccList. Valid fields are "longitude", "latitude", "datetime", "localtime" 
-        and "time".  Longitudes and latitudes are in degrees; time is an ISO format 
-        time; and local times are in hours."""
+        OccList. 
+
+        Valid fields are "longitude", "latitude", "datetime", "localtime" and "time".  
+        Longitudes and latitudes are in degrees; time is an ISO format time; and 
+        local times are in hours."""
 
         if field == "longitude":
             x = np.ma.masked_equal( [ item['longitude'] for item in self._data ], float_fill_value )
