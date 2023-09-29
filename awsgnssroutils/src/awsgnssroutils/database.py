@@ -66,6 +66,7 @@ import s3fs
 import json
 import re
 import time
+from tqdm import tqdm
 import subprocess
 from botocore import UNSIGNED
 
@@ -91,7 +92,7 @@ class AWSgnssroutilsError( Error ):
 #  Useful utility functions and classes.
 ################################################################################
 
-def unsigned_S3FileSystem():
+def unsigned_S3FileSystem() -> s3fs.S3FileSystem :
     """This is a custom function that contains code to generate an authenticated
     instance of s3fs.S3FileSystem. In this particular case, authentication is
     UNSIGNED."""
@@ -191,7 +192,7 @@ for version in valid_versions:
 #  Resources utilities: create a defaults file, populate metadata database. 
 ################################################################################
 
-def setdefaults( repository=None, rodata=None, version=None ): 
+def setdefaults( repository:str=None, rodata:str=None, version:str=None ) -> dict: 
     """Create a local repository for a history database queries. 
 
     Create a local repository of prior database queries and record the 
@@ -297,7 +298,7 @@ def populate():
 #  Internal utilities. 
 ################################################################################
 
-def get_defaults(): 
+def get_defaults() -> dict: 
     """Read the module defaults from a file in the user's home 
     directory and return contents in a dictionary."""
 
@@ -363,10 +364,16 @@ class OccList():
         self.size = len( self._data )
 
 
-    def filter( self, missions=None, receivers=None, transmitters=None,
-        GNSSconstellations=None, longituderange=None, latituderange=None,
-        datetimerange=None, localtimerange=None, geometry=None,
-        availablefiletypes=None ):
+    def filter( self, missions:{str,tuple,list}=None, 
+               receivers:{str,tuple,list}=None, 
+               transmitters:{str,tuple,list}=None,
+               GNSSconstellations:{str,tuple,list}=None, 
+               longituderange:{str,tuple,list}=None, 
+               latituderange:{str,tuple,list}=None,
+               datetimerange:{tuple,list}=None, 
+               localtimerange:{tuple,list}=None, 
+               geometry:str=None,
+               availablefiletypes:{str,tuple,list}=None ):
         """Filter a list of occultations according to various criteria, such as
         mission, receiver, transmitter, etc.  df is a list of items in the database,
         and repository points to the local repository of the database data.
@@ -702,7 +709,7 @@ class OccList():
 
         LOGGER.debug( f"Search results saved to {filename}." )
 
-    def info( self, param ):
+    def info( self, param ) -> { list, dict }:
         '''Provides information on the following parameters: "mission", "receiver",
         "transmitter", "datetime", "longitude", "latitude", "localtime", "geometry",
         "filetype".
@@ -765,7 +772,8 @@ class OccList():
 
         return display
 
-    def download(self, filetype, rodata=None, keep_aws_structure=True):
+    def download(self, filetype:str, rodata:str=None, 
+                 keep_aws_structure:bool=True, silent:bool=False ) -> list :
         """Download RO data files from AWS Registry of Open Data repository of RO 
         data. 
 
@@ -791,6 +799,9 @@ class OccList():
                             same directory. Note that all RO files are downloaded 
                             using the AWS hierarchy structure if rodata is not 
                             specified as an argument here. 
+
+        silent              By setting to True, no progress bars are displayed. 
+                            Progress bars are shown by default. 
         """
 
         if rodata is not None: 
@@ -806,15 +817,21 @@ class OccList():
         m = re.search( "^([a-z]+)_([a-zA-Z]+)$", filetype )
         if m:
             if m.group(1) not in valid_processing_centers[self._version]:
-                raise AWSgnssroutilsError( "InvalidInput", f'Invalid retrieval center "{m.group(1)}" ' + \
-                        'requested; must be one of ' + ', '.join( valid_processing_centers[self._version] ) )
+                raise AWSgnssroutilsError( "InvalidInput", 
+                        f'Invalid retrieval center "{m.group(1)}" ' + \
+                        'requested; must be one of ' + \
+                        ', '.join( valid_processing_centers[self._version] ) )
             elif m.group(2) not in valid_file_types[self._version]:
-                raise AWSgnssroutilsError( "InvalidInput", f'Invalid file type "{m.group(2)}" ' + \
-                        'requested; must be one of ' + ', '.join( valid_file_types[self._version] ) )
+                raise AWSgnssroutilsError( "InvalidInput", 
+                        f'Invalid file type "{m.group(2)}" ' + \
+                        'requested; must be one of ' + \
+                        ', '.join( valid_file_types[self._version] ) )
         else:
-            raise AWSgnssroutilsError( "InvalidInput", f'You must select the "filetype" to download ' + \
-                'as ' + ', '.join( [ f"*_{ft}" for f in valid_file_types[self._version] ] ) + ', where * is one of ' + \
-                'the processing centers ' + ', '.join( valid_processing_centers[self._version] ) )
+            raise AWSgnssroutilsError( "InvalidInput", 
+                        f'You must select the "filetype" to download ' + 'as ' + \
+                        ', '.join( [ f"*_{ft}" for f in valid_file_types[self._version] ] ) + \
+                        ', where * is one of the processing centers ' + \
+                        ', '.join( valid_processing_centers[self._version] ) )
 
         ro_file_list = []
         for item in self._data:
@@ -826,7 +843,15 @@ class OccList():
         local_file_list = []
         LOGGER.debug( f"Downloading {len(ro_file_list)} {filetype} files to {rootdir}." )
 
-        for ro_file in ro_file_list:
+        #  Progress bar or no progress bar. 
+
+        if silent: 
+            iterator = range(len(ro_file_list))
+        else: 
+            iterator = tqdm( range(len(ro_file_list)), desc="Downloading..." )
+
+        for ifile in iterator: 
+            ro_file = ro_file_list[ifile]
 
             if keep_aws_structure:
                 local_path = os.path.join( rootdir, os.path.dirname(ro_file) )
@@ -852,7 +877,7 @@ class OccList():
         LOGGER.debug( "Download took {:} seconds.".format( round((time.time()-sTime),1 ) ) )
         return local_file_list
 
-    def values( self, field ):
+    def values( self, field:str ) -> np.ndarray :
         """Return an ndarray of values of a requested field for the data in the
         OccList. Valid fields are "longitude", "latitude", "datetime", "localtime" 
         and "time".  Longitudes and latitudes are in degrees; time is an ISO format 
@@ -884,14 +909,16 @@ class OccList():
     def __add__(self, occlist2):
 
         if not isinstance( occlist2, OccList ):
-            raise AWSgnssroutilsError( "FaultyAddition", "Unable to concatenate; both arguments must be instances of OccList." )
+            raise AWSgnssroutilsError( "FaultyAddition", 
+                    "Unable to concatenate; both arguments must be instances of OccList." )
 
         return OccList( data=self._data + occlist2._data, s3=self._s3, version=self._version )
 
     def __padd__(self, occlist2):
 
         if not isinstance( occlist2, OccList ):
-            raise AWSgnssroutilsError( "FaultyAddition", "Unable to concatenate; both arguments must be instances of OccList." )
+            raise AWSgnssroutilsError( "FaultyAddition", 
+                    "Unable to concatenate; both arguments must be instances of OccList." )
 
         return OccList( data=self._data + occlist2._data, s3=self._s3, version=self._version )
 
@@ -917,7 +944,7 @@ class RODatabaseClient:
     An instance of this class initiates a gateway to the database of GNSS radio
     occultation data in the AWS Registry of Open Data. '''
 
-    def __init__( self, repository=None, version=None, update=False ):
+    def __init__( self, repository:str=None, version:str=None, update:bool=False ):
         '''Create an instance of RODatabaseClient. This object serves as a portal
         to the database contents of the AWS Registry of Open Data repository of
         GNSS radio occultation data.
@@ -1012,21 +1039,40 @@ class RODatabaseClient:
 
         LOGGER.debug( "Local repository update took {:} seconds.".format( round((time.time()-sTime),1) ) )
 
-    def query(self, missions=None, receivers=None, datetimerange=None, **filterargs ):
-        '''Execute an inquiry on the RO database for RO soundings. At least one of
-        the keywords "missions" or "datetimerange" must be specified. If accessing
-        a database on the local file system, an inquiry will download all relevant
-        database files from the AWS repository. All other keywords will serve as
-        filters on the inquiry. Return an instance of class OccList.'''
+    def query(self, missions:{str,tuple,list}=None, 
+              datetimerange:{tuple,list}=None, 
+              silent:bool=False, **filterargs ) -> OccList:
+        """Execute an query on the RO database for RO soundings. 
+
+        This method obtains database JSON files from the AWS S3 bucket if the 
+        requested files are not already available in the local repository. 
+        At least one of the keywords "missions" or "datetimerange" must be 
+        specified. All other keywords will serve as filters on the query. 
+        Return an instance of class OccList. 
+
+        Arguments
+        =========
+        missions        The names of the missions to query, as defined in the 
+                        documentation at github.com/gnss-ro/aws-opendata. 
+
+        datetimerange   A two-element tuple or list specifying the time range 
+                        over which to query RO metadata, both elements being 
+                        ISO format datetimes.
+
+        silent          Whether or not to run silently, generally pertaining 
+                        to progress bars. 
+        """
 
         #  Check input.
 
         if missions is None and datetimerange is None:
-            raise AWSgnssroutilsError( "InvalidInput", f"Either 'missions' or 'datetimerange' or both must be provided." )
+            raise AWSgnssroutilsError( "InvalidInput", 
+                    f"Either 'missions' or 'datetimerange' or both must be provided." )
 
         #  Get listing of all JSON database files.
 
-        initial_file_array = self._s3.ls( "/".join( [ databaseS3bucket, f'dynamo/{self._version}/export_subsets' ] ) )
+        initial_file_array = self._s3.ls( "/".join( 
+                    [ databaseS3bucket, f'dynamo/{self._version}/export_subsets' ] ) )
         LOGGER.debug( f"Initial file count: {len(initial_file_array)}" )
 
         # Filter by mission.
@@ -1072,7 +1118,15 @@ class RODatabaseClient:
         local_file_array = []
         os.makedirs(self._repository, exist_ok=True)
 
-        for file in file_array:
+        #  Progress bar? 
+
+        if silent: 
+            iterator = range(len(file_array))
+        else: 
+            iterator = tqdm( range(len(file_array)), desc="Downloading..." )
+
+        for ifile in iterator: 
+            file = file_array[ifile]
             local_path = os.path.join(self._repository,self._version,os.path.basename(file))
             if not os.path.exists(local_path):
                 self._s3.download(file, local_path)
@@ -1094,14 +1148,13 @@ class RODatabaseClient:
             df = list( df_dict.values() )
 
             add_list = OccList( df, s3=self._s3, version=self._version ).filter( 
-                    missions=missions, receivers=receivers,
-                    datetimerange=datetimerange, **filterargs )
+                    missions=missions, datetimerange=datetimerange, **filterargs )
 
             ret_list += add_list
 
         return ret_list
 
-    def restore( self, datafile ):
+    def restore( self, datafile:str ) -> OccList :
         """Restore a previously saved OccList from datafile, which is a
         JSON format file."""
 
