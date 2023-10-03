@@ -1,7 +1,7 @@
 """database.py
 
 Authors: Amy McVey (amcvey@aer.com) and Stephen Leroy (sleroy@aer.com)
-Date: 28 September 2023
+Date: 3 October 2023
 
 ================================================================================
 
@@ -31,7 +31,7 @@ OccList:
     instances of OccList, save the OccList to a JSON format file for future
     restoration by RODatabaseClient.restore, and even download RO data files.
 
-A very useful utility...
+Very useful utilities...
 
 setdefaults: 
     A function that sets defaults for use of RODatabaseClient and OccList. 
@@ -40,6 +40,11 @@ setdefaults:
     ("rodata"). In doing so, the user won't have to specify the repository 
     every time an instance of RODatabaseClient is created nor specify a 
     data download path every time the OccList.download method is called. 
+
+populate:
+    Pre-populate the metadata database in the default metadata storage 
+    directory. This will greatly accelerate all queries of the database, 
+    including first queries. Be sure to have run setdefaults in advance. 
 
 See README documentation for further instruction on usage. 
 
@@ -1150,7 +1155,13 @@ class RODatabaseClient:
 
         ret_list = OccList( data=[], s3=self._s3, version=self._version )
 
-        for file in file_array:
+        if silent: 
+            iterator = range(len(file_array))
+        else: 
+            iterator = tqdm( range(len(file_array)), desc="Loading..." )
+
+        for ifile in iterator:
+            file = file_array[ifile]
             with open(file, 'r') as f:
                 df_dict = json.loads( f.readline() )
             df = list( df_dict.values() )
