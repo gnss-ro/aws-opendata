@@ -10,7 +10,7 @@ A jupyter notebook is provided for introduction to this package as
 
 # Installation
 
-The following non-standard modules must be installed: s3fs, numpy. Installation 
+The following non-standard modules must be installed: s3fs, numpy, tqdm. Installation 
 of these dependencies is automatic when installing awsgnssroutils by pip (PyPI). 
 
 # Database Functionality
