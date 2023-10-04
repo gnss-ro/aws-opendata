@@ -53,6 +53,19 @@ maximize the efficiency of querying a large RO metadata database.
 
 The jupyter notebook is [awsgnssroutils_demonstration](https://raw.githubusercontent.com/gnss-ro/aws-opendata/master/tutorials/awsgnssroutils_demonstration.ipynb). 
 
+In order to greatly simplify use of the awsgnssroutils, be sure to 
+initialize your local repository of RO database queries using 
+the awsgnssroutils.database.setdefaults function. For example, 
+
+```
+from awsgnssroutils.database import setdefaults
+setdefaults( "/home/myhome/local/rodatabase", rodata="/home/myhome/Data/rodata", version="1.1" )
+```
+
+will define the first argument as the directory in which a history of 
+previous database queries will be stored and will define the second 
+argument as the default location where all RO data files will be downloaded. 
+
 ### RO processing center inter-comparison 
 
 The AWS Registry of Open Data repository of GNSS RO data contains 
