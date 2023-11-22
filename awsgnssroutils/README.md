@@ -1,12 +1,17 @@
-# AWS GNSS-RO Utils
+# AWS GNSS-RO Utilities
 
-This module contains utilities to query the AWS Registry of Open Data repository
-of GNSS radio occultation data. It does so using database files posted in the
-AWS repository.  
+This package &mdash; **awsgnssroutils** &mdash; contains a utility to 
+query the AWS Registry of Open Data repository of GNSS radio occultation 
+(RO) data and download RO data. It does so using the metadata database 
+files posted in the AWS repository.  
+
+A jupyter notebook is provided for introduction to this package as 
+[awsgnssroutils_demonstration](https://raw.githubusercontent.com/gnss-ro/aws-opendata/master/tutorials/awsgnssroutils_demonstration.ipynb). 
 
 # Installation
 
-The following non-standard modules must be installed: s3fs, numpy
+The following non-standard modules must be installed: s3fs, numpy, tqdm. Installation 
+of these dependencies is automatic when installing awsgnssroutils by pip (PyPI). 
 
 # Database Functionality
 
