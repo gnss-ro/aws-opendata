@@ -257,7 +257,9 @@ table.
 | kompsat5 | kompsat5 | Korean Multi-Purpose Satellite 5 (KompSat 5) |
 | paz | paz | Radio Occultations and Heavy Precipitation with PAZ (ROHP-PAZ) |
 | cosmic2 | cosmic2e1, cosmic2e2, cosmic2e3, cosmic2e4, cosmic2e5, cosmic2e6 | Constellation Observing System for Meteorology, Ionosphere and Climate 2 (COSMIC-2) |
-| spire | spireS001, spireS002, ... spireS200 | Spire, Inc. |
+| spire | spireS001, spireS002, ... spireS200 | Spire Global, Inc. |
+| geoopt | geooptG03, ... | GeoOptics, Inc. |
+| planetiq | planetiqGN02, planetiqGN03, ... | PlanetIQ, Inc. |
 
 Multiple satellites are listed for each mission if the mission consisted of
 multiple satellites (such as COSMIC-1 and COSMIC-2) or the same program deployed
@@ -281,20 +283,28 @@ centers.
 | :---------------- | :----: |
 | UCAR COSMIC Project Office | ucar | 
 | Jet Propulsion Laboratory, Caltech | jpl | 
-| EUMETSAT Radio Occultation Meteorology Satellite Application Facility | romsaf | 
+| Radio Occultation Meteorology Satellite Application Facility | romsaf | 
+| EUMETSAT | eumetsat | 
 
-#  DynamoDB database
+#  Database API
 
-A collection of JSON files is provided in the Open Data S3 bucket in the path 
-dynamo\_export\_subsets that constitutes a complete catalogue of RO soundings 
-manifested in the S3 bucket along with useful metadata on the soundings, including 
-reference longitude, latitude, time, whether it is a rising or setting RO 
-sounding, etc. A utility is provided in the 
-[utilities](http://github.com/gnss-ro/aws-opendata/tree/master/utilities) folder that will 
-convert the collection of files---split up according to mission and year---into a 
-DynamoDB database table. The same folder contains tutorial demonstration Python 
-code that contains examples of how to manipulate the DynamoDB database to do 
-basic analysis of RO data using AWS services. 
+An application programming interface (API) for Python is provided that simplifies 
+the querying, subsetting, and downloading of RO data according to metadata such 
+as geolocation, date-time range, local (solar) time range, RO mission or receiver 
+satellite, transmitting constellation or satellite, occultation geometry (rising 
+v. setting), and availability of RO data files. The API is available through 
+[PyPI](http://pypi.org/project/awsgnssroutils) and thus can be installed by a pip 
+install. The source code is provided here in the directory 
+[awsgnssroutils](http://github.com/gnss-ro/aws-opendata/tree/master/awsgnssroutils). 
+
+#  Tutorial demonstrations
+
+A set of five tutorial demonstrations is provided in the 
+[tutorials](http://github.com/gnss-ro/aws-opendata/tree/master/tutorials) directory. 
+The first demonstrates the use of the Python API, the others are representative of 
+common research activities that involve RO data. The tutorials specialize in 
+research using RO data in the AWS Registry of Open Data repository. The same 
+directory also contains material used in two public workshops. 
 
 #  Data use licenses, acknowledgments
 
@@ -307,13 +317,12 @@ The data use licenses for the various contributing centers are
 * The COSMIC Project Office at UCAR, a [creative commons license](https://www.ucar.edu/terms-of-use/data), 
 * The NASA Jet Propulsion Laboratory, California Institute of Technology, a 
 [creative commons license](https://creativecommmons.org/licenses/by/4.0/legalcode), and 
-* The ROM SAF of EUMETSAT, the [EUMETSAT data use license](https://www.eumetsat.int/eumetsat-data-licensing). 
+* The ROM SAF and EUMETSAT, the [EUMETSAT data use license](https://www.eumetsat.int/eumetsat-data-licensing). 
 
-The repository of GNSS RO data in the AWS Open Data Registry was assembled and 
+The repository of GNSS RO data in the AWS Registry of Open Data was assembled and 
 continues to be maintained by scientists and software engineers at Atmospheric 
 and Environmental Research, Inc. Funding for this effort was provided by the NASA 
 Advancing Collaborative Connections for Earth System Science (ACCESS) Program 2019, 
 grant 80NSSC21M0052. 
 
-
-*Last update: 22 June 2022*
+*Last update: 30 November 2023*
