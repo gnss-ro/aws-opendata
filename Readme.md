@@ -160,8 +160,8 @@ that directly enters into the RO retrieval process.
 ### Level 2a: Bending angle, refractivity, and dry atmosphere retrievals, refractivityRetrieval
 
 Retrievals of profiles of bending angle, microwave refractivity, and
-"dry" temperature and pressure are provided in **refractivityRetrieval** files.
-A dry atmospheric retrieval is a retrieval of temperature pressure
+"dry" pressure are provided in **refractivityRetrieval** files.
+A dry atmospheric retrieval is a retrieval of pressure and temperature 
 that is obtained when the contribution water vapor to microwave
 refractivity is considered non-existent. This is a good approximation
 in the upper troposphere and stratosphere, but not so in the lower
@@ -175,8 +175,10 @@ The variables include **impactParameter** (which is the independent
 coordinate for bending angle retrieval), **bendingAngle**,
 **combinedBendingAngle** (which is ionosphere-corrected) for
 bending angle retrievals; **altitude**, **geopotential**, **longitude**,
-**latitude**, **refractivity**, **dryPressure**, and **dryTemperature**
-for dry atmospheric retrievals. Other useful auxiliary data define a
+**latitude**, **refractivity** and **dryPressure**
+for dry atmospheric retrievals. Dry temperature can be computed by 
+dividing dry pressure by refractivity and multiplyting by 0.776 
+_N_-units K/Pa.  Other useful auxiliary data define a
 reference geolocation for the sounding, the shape of the mean sea
 level geoid, and the effective center of curvature for the sounding.
 
