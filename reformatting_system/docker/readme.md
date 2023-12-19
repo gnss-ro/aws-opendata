@@ -121,7 +121,7 @@ Dependencies: None
 
 ### Package architecture
 
-![Package architecture](ro-infrastructure/NASA-ACCESS-Deliverable/docker/images/Architecture.png "Architecture")
+![Package architecture](http://github.com/gnss-ro/aws-opendata/blob/master/reformatting_system/docker/images/Architecture.png "Architecture")
 
 The packages in the RORefCat system are structured according to their functionality and for ease of augmentation. It is possible to call any function-method in any of the package modules without having to refer to modules higher in the flowchart. 
 

@@ -30,6 +30,10 @@ found in [awsgnssroutils](http://github.com/gnss-ro/aws-opendata/tree/master/aws
 Tutorial demonstrations, which incorporate use of the awsgnssroutils package, can be found in
 [tutorials](http://github.com/gnss-ro/aws-opendata/tree/master/tutorials).
 
+Finally, the Python software used to ingest RO data, catalogue the metadata, and 
+produce the data files that are contained in the AWS Registry of Open Data 
+RO repository can be found in 
+[reformatting_system](http://github.com/gnss-ro/aws-opendata/tree/master/reformatting_system).  
 
 ## Background
 
