@@ -1,7 +1,7 @@
 """database.py
 
 Authors: Amy McVey (amcvey@aer.com) and Stephen Leroy (sleroy@aer.com)
-Date: 3 October 2023
+Date: 10 January 2024
 
 ================================================================================
 
@@ -657,8 +657,12 @@ class OccList():
                 keep &= ( item['transmitter'] in f_transmitters )
 
             if f_datetimerange is not None:
-                dt = datetime.datetime( *[ int(s) for s in item['date-time'].split("-") ] )
-                keep &= ( f_datetimerange[0] <= dt and dt <= f_datetimerange[1] )
+                ms = re.search( "^(\d{4})-(\d{2})-(\d{2})-(\d{2})-(\d{2})$", item['date-time'] )
+                if ms: 
+                    dt = datetime.datetime( *[ int(s) for s in ms.groups() ] )
+                    keep &= ( f_datetimerange[0] <= dt and dt <= f_datetimerange[1] )
+                else: 
+                    keep = False 
 
             if f_longituderange is not None:
                 if item['longitude'] == float_fill_value:
