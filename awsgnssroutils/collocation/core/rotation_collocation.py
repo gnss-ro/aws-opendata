@@ -58,8 +58,8 @@ def rotation_collocation( nadir_sat, occs, time_tolerance, spatial_tolerance,
 
         occ -> OccList 
             An OccList instance of size 1 defining the collocated occultation
-        nadir_time -> TimeStandards.Time
-            An instance of TimeStandards.Time defining the approximate time of 
+        nadir_time -> timestandards.Time
+            An instance of timestandards.Time defining the approximate time of 
             the collocated nadir sounding
         nadir_scan_angle -> float
             A float defining the approximate scan angle of the collocated nadir

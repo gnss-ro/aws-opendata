@@ -13,7 +13,7 @@ class.
 from collocation.core.nadir_satellite import NadirSatelliteInstrument, ScanMetadata
 from netCDF4 import Dataset
 import numpy as np
-from awsgnssroutils.collocation.core.TimeStandards import Time
+from awsgnssroutils.collocation.core.timestandards import Time
 from awsgnssroutils.collocation.core.eumetsat import eumetsat_time_convention
 from awsgnssroutils.collocation.core.constants_and_utils import masked_dataarray
 from datetime import datetime
@@ -103,7 +103,7 @@ class instrument(NadirSatelliteInstrument):
     def populate( self, timerange ): 
         """Populate (download) all Metop AMSU-A data for this satellite in a 
         time range defined by timerange. timerange can be a 2-tuple/list of 
-        instances of TimeStandards.Time or datetime.datetime with the 
+        instances of timestandards.Time or datetime.datetime with the 
         understanding that the latter is defined as UTC times."""
 
         self.eumetsat_access.populate_metop_amsua( self.name, timerange )
@@ -152,7 +152,7 @@ class instrument(NadirSatelliteInstrument):
     def get_geolocations( self, timerange ):
         """Load AMSU-A data from a Metop satellite as obtained from the EUMETSAT Data Store
         using collocation.core.eumetsat.EUMETSATDataStore.satellite.populate_metop_amsua. The 
-        timerange is a two-element tuple/list containing instances of TimeStandards.Time 
+        timerange is a two-element tuple/list containing instances of timestandards.Time 
         that prescribe the time range over which to obtain AMSU-A geolocations. An instance 
         of class ScanMetadata containing the footprint geolocations is returned upon successful 
         completion."""
@@ -214,7 +214,7 @@ class instrument(NadirSatelliteInstrument):
         data location within the file should correspond to scans 
         data[scan_index,footprint_index].
 
-        Longitude (degrees), latitude (degrees), and time (TimeStandards.Time) will 
+        Longitude (degrees), latitude (degrees), and time (timestandards.Time) will 
         be included in the returned xarray.Dataset if provided."""
 
         #  Check input. 

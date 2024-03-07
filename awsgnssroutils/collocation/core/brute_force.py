@@ -10,7 +10,7 @@ Last updated: 9/8/2023 by Alex Meredith
 from awsgnssroutils.collocation.core.collocation import Collocation 
 from awsgnssroutils.collocation.core.constants_and_utils import calculate_radius_of_earth
 from awsgnssroutils.collocation.core.awsro import get_occ_times
-from awsgnssroutils.collocation.core.TimeStandards import Time
+from awsgnssroutils.collocation.core.timestandards import Time
 from datetime import datetime
 import numpy as np
 from tqdm import tqdm 

@@ -15,7 +15,7 @@ import os, re, stat, json, subprocess
 from eumdac.token import AccessToken
 from eumdac.datastore import DataStore
 from datetime import datetime, timedelta
-from awsgnssroutils.collocation.core.TimeStandards import Time
+from awsgnssroutils.collocation.core.timestandards import Time
 from awsgnssroutils.collocation.core.constants_and_utils import defaults_file
 
 
@@ -133,11 +133,11 @@ class EUMETSATDataStore():
     def get_metop_amsua_paths( self, satellite, timerange ): 
         """Return a listing of the paths to Metop AMSU-A data files given a 
         satellite name and a time range. The timerange is a two-element 
-        tuple/list with instances of TimeStandards.Time or datetime.datetime. 
+        tuple/list with instances of timestandards.Time or datetime.datetime. 
         If it is the latter, then the datetime elements are understood to be 
         UTC."""
 
-        #  Check input. Interpret datetime.datetime as TimeStandards.Time instances 
+        #  Check input. Interpret datetime.datetime as timestandards.Time instances 
         #  if necessary. 
 
         if len( timerange ) != 2: 
@@ -149,7 +149,7 @@ class EUMETSATDataStore():
             _timerange = timerange
         else: 
             raise eumetsatError( "InvalidArgument", "The elements of timerange must both be " + \
-                    "datetime.datetime or TimeStandards.Time" )
+                    "datetime.datetime or timestandards.Time" )
 
         ret = sorted( [ rec['path'] for rec in self.inventory[satellite] if \
                 rec['timerange'][0] <= _timerange[1] and rec['timerange'][1] >= _timerange[0] ] )
@@ -160,12 +160,12 @@ class EUMETSATDataStore():
         """Download a Metop AMSU-A data that falls within a timerange. 
 
         * satellite must be one of Metop-A, Metop-B, Metop-C. 
-        * timerange is a 2-element tuple/list of instances of TimeStandards.Time 
+        * timerange is a 2-element tuple/list of instances of timestandards.Time 
           or instances of datetime.datetime defining the range of times over which 
           to retrieve data. If they are instances of datetime.datetime, then the 
           convention is that they are both UTC."""
 
-        #  Check input. Interpret datetime.datetime as TimeStandards.Time instances 
+        #  Check input. Interpret datetime.datetime as timestandards.Time instances 
         #  if necessary. 
 
         if len( timerange ) != 2: 
@@ -177,7 +177,7 @@ class EUMETSATDataStore():
             _timerange = timerange
         else: 
             raise eumetsatError( "InvalidArgument", "The elements of timerange must both be " + \
-                    "datetime.datetime or TimeStandards.Time" )
+                    "datetime.datetime or timestandards.Time" )
 
         #  Load the data collection interface. 
 

@@ -138,7 +138,7 @@ class NadirSatelliteInstrument(ABC):
 
         Arguments
         ---------
-            timerange: tuple/list of TimeStandards.Time objects
+            timerange: tuple/list of timestandards.Time objects
                 This defines the time range of nadir-scanner geolocations 
                 to be retrieved. 
 
@@ -177,7 +177,7 @@ class NadirSatelliteInstrument(ABC):
 
         Parameters
         ------------
-            occultation_time: TimeStandards.Time
+            occultation_time: timestandards.Time
                 Time of RO sounding 
 
         Returns
@@ -222,7 +222,7 @@ class NadirSatelliteInstrument(ABC):
 
         Arguments
         ------------
-            sounding_time: TimeStandards.Time
+            sounding_time: timestandards.Time
                 time to calculate max scan angle
             sounding_lat: float
                 sounding latitude for calculation, in radians
@@ -429,7 +429,7 @@ class ScanMetadata():
     def __init__( self, get_data, longitudes, latitudes, mid_times, 
                  files, file_indices, scan_indices ): 
         """Longitudes and latitudes must be list-like objects in units of radians. 
-        mid_times must be a list of TimeStandards.Time instances. files is a list of 
+        mid_times must be a list of timestandards.Time instances. files is a list of 
         strings; file_indices a list-like object of integers, as is scan_indices."""
 
         self.get_data = get_data

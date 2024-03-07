@@ -460,7 +460,7 @@ class Time():
                 self.tai = cal.t1900
             else: 
                 raise TimeError( "InvalidArguments", "tai must be an instance of class t1900, " + \
-                        "TimeStandards.Calendar, datetime.datetime, or numpy.datetime64" )
+                        "timestandards.Calendar, datetime.datetime, or numpy.datetime64" )
 
             self.gps = self.tai - 19.0
             for leapseconddatum in self.leapseconddata:
@@ -491,7 +491,7 @@ class Time():
                     self.gps = self.gps0 + float( gps )
                 except: 
                     raise TimeError( "InvalidArguments", "gps must be an instance of class t1900, " + \
-                        "TimeStandards.Calendar, datetime.datetime, numpy.datetime64, or a " + \
+                        "timestandards.Calendar, datetime.datetime, numpy.datetime64, or a " + \
                         "floatable object." )
 
             self.tai = self.gps + 19.0
@@ -520,7 +520,7 @@ class Time():
                 self.utc = cal.t1900
             else: 
                 raise TimeError( "InvalidArguments", "utc must be an instance of class t1900, " + \
-                        "TimeStandards.Calendar, datetime.datetime, or numpy.datetime64" )
+                        "timestandards.Calendar, datetime.datetime, or numpy.datetime64" )
 
             for leapseconddatum in self.leapseconddata:
                 if self.utc >= leapseconddatum['t1900']:

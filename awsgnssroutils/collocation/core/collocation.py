@@ -3,7 +3,7 @@ import numpy as np
 import xarray
 from netCDF4 import Dataset 
 from awsgnssroutils.database import OccList
-from awsgnssroutils.collocation.core.TimeStandards import Time
+from awsgnssroutils.collocation.core.timestandards import Time
 from awsgnssroutils.collocation.core.nadir_satellite import NadirSatelliteInstrument, ScanMetadata
 from awsgnssroutils.collocation.core.constants_and_utils import write_dataset_to_netcdf, masked_dataarray
 
@@ -39,7 +39,7 @@ class Collocation():
 
     latitude -> Latitude (degrees north) of the collocated nadir-scanner sounding. 
 
-    time -> An instance of TimeStandards.Time of the collocated nadir-scanner 
+    time -> An instance of timestandards.Time of the collocated nadir-scanner 
             sounding; this can be approximate value if iscan, ifootprint, or 
             scan_metadata is not provided.
 
@@ -90,7 +90,7 @@ class Collocation():
         x = time
         if x is not None: 
             if not isinstance(x,Time): 
-                raise collocationError( "InvalidArgument", "time must be an instance of TimeStandards.Time" )
+                raise collocationError( "InvalidArgument", "time must be an instance of timestandards.Time" )
 
         x = scan_metadata
         if x is not None: 

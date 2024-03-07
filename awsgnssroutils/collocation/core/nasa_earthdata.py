@@ -14,7 +14,7 @@ import earthaccess
 import requests, netrc, boto3
 from platform import system
 from datetime import datetime, timedelta, timezone
-from awsgnssroutils.collocation.core.TimeStandards import Time
+from awsgnssroutils.collocation.core.timestandards import Time
 from awsgnssroutils.collocation.core.constants_and_utils import defaults_file
 
 #  Definitions. 
@@ -210,11 +210,11 @@ class NASAEarthdata():
     def get_paths( self, satellite, instrument, timerange ): 
         """Return a listing of the paths to JPSS ATMS data files given a 
         satellite name and a time range. The timerange is a two-element 
-        tuple/list with instances of TimeStandards.Time or datetime.datetime. 
+        tuple/list with instances of timestandards.Time or datetime.datetime. 
         If it is the latter, then the datetime elements are understood to be 
         UTC."""
 
-        #  Check input. Interpret datetime.datetime as TimeStandards.Time instances 
+        #  Check input. Interpret datetime.datetime as timestandards.Time instances 
         #  if necessary. 
 
         if satellite not in Satellites.keys(): 
@@ -237,7 +237,7 @@ class NASAEarthdata():
             _timerange = timerange
         else: 
             raise earthdataError( "InvalidArgument", "The elements of timerange must both be " + \
-                    "datetime.datetime or TimeStandards.Time" )
+                    "datetime.datetime or timestandards.Time" )
 
         ret = []
         if instrument in self.inventory.keys(): 
@@ -252,12 +252,12 @@ class NASAEarthdata():
 
         * satellite must be one of Satellites.keys(). 
         * instrument is one of 'atms', 'cris'. 
-        * timerange is a 2-element tuple/list of instances of TimeStandards.Time 
+        * timerange is a 2-element tuple/list of instances of timestandards.Time 
           or instances of datetime.datetime defining the range of times over which 
           to retrieve data. If they are instances of datetime.datetime, then the 
           convention is that they are both UTC."""
 
-        #  Check input. Interpret datetime.datetime as TimeStandards.Time instances 
+        #  Check input. Interpret datetime.datetime as timestandards.Time instances 
         #  if necessary. 
 
         if satellite not in Satellites.keys(): 
@@ -280,7 +280,7 @@ class NASAEarthdata():
             _timerange = timerange
         else: 
             raise earthdataError( "InvalidArgument", "The elements of timerange must both be " + \
-                    "datetime.datetime or TimeStandards.Time" )
+                    "datetime.datetime or timestandards.Time" )
 
         #  Query the local and remote inventories. 
 

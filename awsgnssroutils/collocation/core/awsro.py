@@ -1,5 +1,5 @@
 from awsgnssroutils.database import OccList
-from collocation.core.TimeStandards import Time
+from collocation.core.timestandards import Time
 from datetime import datetime 
 
 awsro_time_convention = "utc"
@@ -16,7 +16,7 @@ class awsroError( Error ):
 
 
 def get_occ_times( occs ): 
-    """Generate a list of instance of TimeStandards.Time of the occultations in occs. 
+    """Generate a list of instance of timestandards.Time of the occultations in occs. 
     occs must be an instance of OccList."""
 
     if not isinstance(occs,OccList): 

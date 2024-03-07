@@ -27,7 +27,7 @@ the last record for July, 2009, and the first for September, 2009.
 
 import os, re, json, stat
 import numpy as np
-from awsgnssroutils.collocation.core.TimeStandards import Time, Calendar
+from awsgnssroutils.collocation.core.timestandards import Time, Calendar
 from awsgnssroutils.collocation.core.constants_and_utils import defaults_file
 
 #  Definitions. 
@@ -148,7 +148,7 @@ class CelestrakSatellite():
 
         Arguments: 
 
-        timerange       A two-element tuple/list containing two instances of TimeStandards.Time. 
+        timerange       A two-element tuple/list containing two instances of timestandards.Time. 
                         The first element defines the start time of the TLE list to be 
                         generated; the second defines the end time of the TLE list. 
 
@@ -158,8 +158,8 @@ class CelestrakSatellite():
         Example: 
 
         data = CelestrakSatellite.select( 
-                timerange = [ TimeStandards.Time( utc=TimeStandards.Calendar(2023,6,7) ), 
-                                TimeStandards.Time( utc=TimeStandards.Calendar(2023,6,8) ) ], 
+                timerange = [ timestandards.Time( utc=timestandards.Calendar(2023,6,7) ), 
+                                timestandards.Time( utc=timestandards.Calendar(2023,6,8) ) ], 
                 extend = [0,1] )
 
         The statement generates a list of TLEs for the satellite defined by CelestrakSatllite
@@ -173,7 +173,7 @@ class CelestrakSatellite():
             raise celestrakError( "InvalidArgument", 'timerange must containing two elements' )
 
         if not isinstance(timerange[0],Time) or not isinstance(timerange[1],Time): 
-            raise celestrakError( "InvalidArgument", 'timerange must consist of TimeStandards.Time instances' )
+            raise celestrakError( "InvalidArgument", 'timerange must consist of timestandards.Time instances' )
 
         if extend is not None: 
 
@@ -211,11 +211,11 @@ class CelestrakSatellite():
 
 
     def nearest( self, time ): 
-        """Get the TLE that is nearest in time (instance of TimeStandards.Time). The two lines of the 
+        """Get the TLE that is nearest in time (instance of timestandards.Time). The two lines of the 
         TLE are returned as a 2-tuple if successful. If unsuccessful, None is returned."""
 
         if not isinstance( time, Time ): 
-            raise celestrakError( "InvalidArgument", "The argument must be an instance of TimeStandards.Time" )
+            raise celestrakError( "InvalidArgument", "The argument must be an instance of timestandards.Time" )
 
         datetimes_gps = np.array( [ dt-gps0 for dt in self.datetimes ] )
         time_gps = time - gps0
