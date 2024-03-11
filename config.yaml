@@ -1,0 +1,17 @@
+name: "dev-collocation"
+channels: 
+  - local 
+  - nodefaults
+  - anaconda
+  - conda-forge
+dependencies: 
+  - jupyter
+  - numpy 
+  - awscli 
+  - botocore
+  - boto3 
+  - tqdm 
+# - pip
+# - pip: 
+# - ./awsgnssroutils
+

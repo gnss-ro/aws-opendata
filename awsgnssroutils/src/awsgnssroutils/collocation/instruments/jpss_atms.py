@@ -1,29 +1,29 @@
 """metop_amsua.py
 
-Authors: Alex Meredith, Stephen Leroy
+Authors: Meredith, Stephen Leroy
 Contact: Stephen Leroy (sleroy@aer.com)
-Date: February 27, 2024
+Date: March 5, 2024
 
-This contains the definition of an AMSU-A instrument class on board 
-a Metop satellite with data hosted at the EUMETSAT Data Store. The class 
+This contains the definition of an ATMS instrument class on board 
+a JPSS satellite --- including Suomi-NPP, JPSS-1 (NOAA-20), JPSS-2 
+(NOAA-21), etc. --- with data hosted in NASA Earthdata DAACs. The class 
 provided is named by class_name, which inherits the NadirSatelliteInstrument
 class. 
 """
 
-from collocation.core.nadir_satellite import NadirSatelliteInstrument, ScanMetadata
+from awsgnssroutils.collocation.core.nadir_satellite import NadirSatelliteInstrument, ScanMetadata
 from netCDF4 import Dataset
 import numpy as np
-from awsgnssroutils.collocation.core.timestandards import Time
+from awsgnssroutils.collocation.core.timestandards import Time, Calendar
 from awsgnssroutils.collocation.core.eumetsat import eumetsat_time_convention
-from awsgnssroutils.collocation.core.constants_and_utils import masked_dataarray
+from awsgnssroutils.collocation.core.constants_and_utils import masked_dataarray, \
+        planck_blackbody, speed_of_light 
 from datetime import datetime
 import xarray 
 
-
 #  REQUIRED attribute
 
-instrument_name = "MetopAMSUA"
-instrument_aliases = [ "AMSU-A", "Metop AMSU-A" ]
+instrument_aliases = [ "ATMS", "atms", "JPSS ATMS" ]
 
 #  REQUIRED methods of the class: 
 #   - get_geolocations
@@ -39,7 +39,7 @@ fill_value = -1.0e20
 class Error( Exception ): 
     pass
 
-class metop_amsua_error( Error ): 
+class nasa_jpss_error( Error ): 
     def __init__( self, message, comment ): 
         self.message = message
         self.comment = comment
@@ -50,16 +50,17 @@ class metop_amsua_error( Error ):
 open_data_file = { 'path': None, 'pointer': None }
 
 
-class instrument(NadirSatelliteInstrument):
-    """Metop AMSU-A satellite instrument object, inheriting from NadirSatelliteInstrument. This
-    represents an AMSU-A scanner aboard a Metop satellite.
+class JPSS_ATMS(NadirSatelliteInstrument):
+    """JPSS/Suomi-NPP ATMS satellite instrument object, inheriting from 
+    NadirSatelliteInstrument. This represents an ATMS scanner aboard a 
+    Suomi-NPP/JPSS satellite.
 
     Parameters
     ------------
         name: str
             Name of the nadir satellite, drawn from collocation.core.celestrak.Satellites[:]['name']
-        eumetsat_access: collocation.core.eumetsat.EUMETSATDataStore
-            An object that interfaces with the EUMETSAT Data Store. 
+        nasa_earthdata_access: collocation.core.nasa_earthdata.NASAEarthdata
+            An object that interfaces with the NASA Earthdata DAACs. 
         celestrak: collocation.core.celestrak.Celestrak
             Portal to the Celestrak TLE data
 
@@ -85,28 +86,28 @@ class instrument(NadirSatelliteInstrument):
             TLE data for the satellite
     """
 
-    def __init__(self, name, eumetsat_access, celestrak=None ):
+    def __init__(self, name, nasa_earthdata_access, celestrak=None ):
         """Constructor for MetopAMSUA class."""
 
-        max_scan_angle = 48.285             # degrees
-        time_between_scans = 8.0            # seconds
-        scan_points_per_line = 30           # footprints in a scan
-        scan_angle_spacing = 3.33           # degrees
+        max_scan_angle = 52.63              # degrees
+        time_between_scans = 8.0/3          # seconds
+        scan_points_per_line = 96           # footprints in a scan
+        scan_angle_spacing = 1.108          # degrees
 
         super().__init__( name, max_scan_angle, time_between_scans,
                 scan_points_per_line, scan_angle_spacing, celestrak=celestrak )
 
-        self.eumetsat_access = eumetsat_access
+        self.nasa_earthdata_access = nasa_earthdata_access
 
         pass
 
     def populate( self, timerange ): 
-        """Populate (download) all Metop AMSU-A data for this satellite in a 
+        """Populate (download) all JPSS ATMS data for this satellite in a 
         time range defined by timerange. timerange can be a 2-tuple/list of 
         instances of timestandards.Time or datetime.datetime with the 
         understanding that the latter is defined as UTC times."""
 
-        self.eumetsat_access.populate_metop_amsua( self.name, timerange )
+        self.nasa_earthdata_access.populate( self.name, 'atms', timerange )
         return
 
     def get_geolocations_from_file( self, filename ):
@@ -121,8 +122,8 @@ class instrument(NadirSatelliteInstrument):
 
         #  Get dimensions. 
 
-        nx = d.dimensions['x'].size
-        ny = d.dimensions['y'].size
+        nx = d.dimensions['xtrack'].size
+        ny = d.dimensions['atrack'].size
 
         #  Get longitudes and latitudes. Convert to radians. 
 
@@ -131,21 +132,12 @@ class instrument(NadirSatelliteInstrument):
 
         #  Get start and stop time of scans in file. 
 
-        dt = datetime.strptime( d.getncattr("start_sensing_time"), "%Y%m%dT%H%M%S.%fZ" )
-        cal = datetime( dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second )
-        args = { eumetsat_time_convention: cal }
-        start_sensing_time = Time( **{ eumetsat_time_convention: cal } ) + dt.microsecond * 1.0e-6
-
-        dt = datetime.strptime( d.getncattr("stop_sensing_time"), "%Y%m%dT%H%M%S.%fZ" )
-        cal = datetime( dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second )
-        stop_sensing_time = Time( **{ eumetsat_time_convention: cal } ) + dt.microsecond * 1.0e-6
+        xtuples = d.variables['obs_time_utc'][:,int(nx/2),:]
+        mid_times = [ Time( utc=Calendar( *( xtuples[iscan,0:6] ) ) ) \
+                + xtuples[iscan,6]*1.0e-3 + xtuples[iscan,7]*1.0e-6 \
+                for iscan in range(ny) ]
 
         d.close()
-
-        seconds_between_scans = int( stop_sensing_time - start_sensing_time + 0.5 ) / ny
-        break_between_scans = seconds_between_scans * ny - ( stop_sensing_time - start_sensing_time ) 
-
-        mid_times = [ start_sensing_time + (iy+0.5) * seconds_between_scans for iy in range(ny) ] 
 
         return { 'longitudes': longitudes, 'latitudes': latitudes, 'mid_times': mid_times }
 
@@ -161,7 +153,7 @@ class instrument(NadirSatelliteInstrument):
         #  soundings, be sure to subtract one orbital period from the first time and 
         #  add one orbital period to the last time. 
 
-        data_files = self.eumetsat_access.get_metop_amsua_paths( self.name, timerange )
+        data_files = self.nasa_earthdata_access.get_paths( self.name, 'atms', timerange )
         gps0 = Time(gps=0)
         dt = ( timerange[0]-gps0, timerange[1]-gps0 )
 
@@ -222,13 +214,13 @@ class instrument(NadirSatelliteInstrument):
         integer_types = [ int, np.int8, np.int16, np.int32, np.int64 ]
 
         if not isinstance(file,str): 
-            raise metop_amsua_error( "InvalidArgument", "file argument must be type str" )
+            raise nasa_jpss_error( "InvalidArgument", "file argument must be type str" )
 
         if not any( [ isinstance(scan_index,t) for t in integer_types ] ): 
-            raise metop_amsua_error( "InvalidArgument", "scan_index argument must be an integer type" )
+            raise nasa_jpss_error( "InvalidArgument", "scan_index argument must be an integer type" )
 
         if not any( [ isinstance(footprint_index,t) for t in integer_types ] ): 
-            raise metop_amsua_error( "InvalidArgument", "footprint_index argument must be an integer type" )
+            raise nasa_jpss_error( "InvalidArgument", "footprint_index argument must be an integer type" )
 
         #  Open data file. 
 
@@ -250,24 +242,29 @@ class instrument(NadirSatelliteInstrument):
             open_data_file['pointer'] = Dataset( file, 'r' )
             d = open_data_file['pointer']
 
-        dim_nscans, dim_nfootprints = d.dimensions['y'].size, d.dimensions['x'].size
-        nchannels = 15
+        dim_nscans, dim_nfootprints = d.dimensions['atrack'].size, d.dimensions['xtrack'].size
+        nchannels = d.dimensions['channel'].size  
 
         #  Get data values. 
 
-        data = np.array( [ d.variables["channel_"+str(ichannel+1) ][scan_index,footprint_index] \
-                    for ichannel in range(nchannels) ] )
-        data = np.ma.masked_where( data <= 0, data )
+        brightness_temperature = d.variables['antenna_temp'][scan_index,footprint_index,:].flatten()
 
-        zenith = d.variables['satellite_zenith'][scan_index,footprint_index]
+        #  Convert brightness tempereature to radiance. Convert radiances from 
+        #  W m**-2 Hz**-1 ster**-1 to mW m**-2 (cm**-1)**-1 ster**-1. 
+
+        frequencies = d.variables['center_freq'][:] * 1.0e6     #  Convert to Hz. 
+        radiances = planck_blackbody( frequencies, brightness_temperature ) \
+                * 1.0e3 * speed_of_light * 100.0 
+
+        zenith = d.variables['sat_zen'][scan_index,footprint_index]
 
         #  Convert to np.ndarrays. 
 
-        radiance_dataarray = masked_dataarray( data, fill_value, 
+        radiance_dataarray = masked_dataarray( radiances, fill_value, 
                 dims=("channel",), 
                 coords = { 'channel': np.arange(nchannels,dtype=np.int32)+1 } )
         radiance_dataarray.attrs.update( {
-            'description': "Microwave radiance from Metop AMSU-A instrument", 
+            'description': "Microwave radiance from ATMS instrument", 
             'units': "mW m**-2 (cm**-1)**-1 steradian**-1" } )
 
         zenith_dataarray = masked_dataarray( zenith, fill_value )
@@ -281,7 +278,7 @@ class instrument(NadirSatelliteInstrument):
 
         ds_attrs_dict = { 
             'satellite': self.name, 
-            'instrument': "AMSU-A", 
+            'instrument': "ATMS", 
             'data_file_path': file, 
             'scan_index': np.int16( scan_index ), 
             'footprint_index': np.int16( footprint_index ) } 

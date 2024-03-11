@@ -1,10 +1,11 @@
 [build-system]
-requires = [ "hatchling", "s3fs", "numpy", "tqdm" ]
+# requires = [ "hatchling", "s3fs", "numpy", "tqdm" ]
+requires = [ "hatchling", "boto3", "numpy", "tqdm" ]
 build-backend = "hatchling.build"
 
 [project]
 name = "awsgnssroutils"
-version = "1.0.7"
+version = "1.1.0"
 authors = [
 	{ name="Stephen Leroy", email="sleroy@aer.com" },
 	{ name="Amy McVey", email="amcvey@aer.com" }
@@ -12,11 +13,15 @@ authors = [
 description = "Utilities for access and manipulation of GNSS radio occultation in the AWS Registry of Open Data"
 readme = "README.md"
 requires-python = ">=3.8"
-dependencies = [ "hatchling", "awscli", "s3fs", "numpy", "tqdm" ]
+dependencies = [ "hatchling", "numpy", "pyerfa", "tqdm", 
+	"astropy>=5.3", "sgp4", "netCDF4", 
+	"eumdac", "earthaccess", "xarray", 
+	"boto3", "botocore"
+	]
 classifiers = [
 	"Programming Language :: Python :: 3",
 	"License :: OSI Approved :: BSD License",
-	"Operating System :: OS Independent",
+	"Operating System :: OS Independent"
 	]
 
 [project.urls]
