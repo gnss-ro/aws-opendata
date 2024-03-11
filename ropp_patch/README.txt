@@ -54,6 +54,5 @@ b)tools/
 c)preprocess/
 	-ropp_pp_preprocess, added AWS as a processing center and directed to call the correct ropp_pp_preprocess function based on the LEO ID.
 d)tests/
-	-comparisons.py and intercomparison.py***** I don’t think you need either of these but need to be sure!
 	-it_pp_01.py, it_pp_spectra_dt.py, it_pp_spectra_ep.py, it_pp_wopt_01.py, it_pp_wopt_02.py; created Python versions of IDL test scripts
 	
