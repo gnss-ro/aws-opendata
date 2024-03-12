@@ -46,9 +46,9 @@ WORKDIR ${ROPP_ROOT}
 # Download ROPP deps and build software
 ##########################################################
 
-ADD installer/ROPP/ropp-11.0.tar.gz /app/ropp
-ADD installer/ROPP/zlib-1.2.11.tar.gz ./
-ADD installer/ROPP/eccodes-2.22.0-Source.tar.gz ./
+ADD ropp-11.0.tar.gz /app/ropp
+ADD zlib-1.2.11.tar.gz ./
+ADD eccodes-2.22.0-Source.tar.gz ./
 
 RUN yum install -y zlib-devel
 
@@ -56,9 +56,9 @@ RUN yum install -y zlib-devel
 #  ROPP standard build code. 
 ##########################################################
 
-ADD installer/ROPP/bufr-24.0.2a.tar.gz ./
-ADD installer/ROPP/bufr_000387a.tar.gz ./
-ADD installer/ROPP/grib_api-1.14.5-Source.tar.gz ./
+ADD bufr-24.0.2a.tar.gz ./
+ADD bufr_000387a.tar.gz ./
+ADD grib_api-1.14.5-Source.tar.gz ./
 
 RUN ./build_deps ${FC} ecbufr
 RUN ./build_deps ${FC} eccodes
@@ -69,7 +69,7 @@ RUN ./build_deps ${FC} eccodes
 
 #  Build HDF5, a prerequisite of NetCDF-4. 
 
-ADD hdf5-1.14.1-2.tar.gz .
+ADD hdf5-1.14.3.tar.gz .
 RUN cd ${ROPP_ROOT}/hdf5-* && ./configure --prefix=${ROPP_ROOT}/gfortran --with-zlib=/usr --disable-shared 
 RUN cd ${ROPP_ROOT}/hdf5-* && make && make install
 RUN rm -fr hdf5-*
@@ -123,7 +123,7 @@ RUN conda install scipy -y
 ######################################################
 #     Add data files
 ######################################################
-ADD data.tar.gz ./
+#ADD data.tar.gz ./
 
 
 

@@ -1,7 +1,8 @@
 
 Patch to allow ROPP-11.0 to accept calibratedPhase files from aws-opendata project. 
 
-The tarball contains files that must be moved to the correct location to replace the corresponding files in the ROPP-11.0, which can be downloaded and built following instructions from ROMSAF at https://rom-saf.eumetsat.int/ropp/files.php
+The tarball contains files that must be moved to the correct location to replace the corresponding files in the ROPP-11.0, which can be downloaded and built following instructions from ROMSAF at https://rom-saf.eumetsat.int/ropp/index.php 
+Be sure to download the "99.0 Complete package distribution"
 The files and their locations are listed below. 
 
 1. In ropp_io/
@@ -20,18 +21,27 @@ The files and their locations are listed below.
 
 For the Python tests to work, the following packages are required: netcdf4, matplotlib, scipy, matplotlib, math, argparse
 
+###############################################################################
+#
+#    Additional instructions to build with the included Dockerfiles
+#
+###############################################################################
 
-To build with the included Dockerfiles:
-1. Download the original ROPP and dependencies according to ROMSAF directions (https://rom-saf.eumetsat.int/ropp/files.php) and move, as tarballs, to a base directory folder. Download Miniconda (https://docs.anaconda.com/free/miniconda/miniconda-other-installer-links/) for Python 3.10. The Dockerfile will look for the aarch and x86 versions shell scripts.
-2. Move Dockerfile_base to the base directory containing the original ROPP and the Miniconda scripts. Use this Dockerfile to build the base image. 
-3. In the main directory, unpack a copy of the original ROPP. Follow the instructions above to add/replace the relevant ROPP patch files to the correct locations in the original ROPP. 
-4. Use the main Dockerfile to build the ROPP with the patch in the main directory, which will build from the base image you built in steps 1-2. 
-5. Run the Docker image. Once inside the image, use build-devel.sh to build the remaining ROPP patch files. You should now have a working version of ROPP-11.0 with the AWS-opendata patch running inside a Docker image. 
+1. Download the original ROPP package and all dependences according to ROMSAF directions (https://rom-saf.eumetsat.int/ropp/index.php) and move, as tarballs, to a base directory folder. Unpack only the ROPP tarball.
+2. To be compatible with our base Linux version (Amazon Linux 2023), installing the ROPP required different versions of several of the dependency packages than the versions included in the ROPP. Download tarballs of each of the dependencies below and add them to the base image directory. 
+	a) netCDF-C 4.9.2 (https://downloads.unidata.ucar.edu/netcdf/)
+	b) netCDF-Fortran 4.6.1 (mirror with tarballs here https://distfiles.macports.org/netcdf-fortran/ or download the correct release from GitHub and convert to tarball https://github.com/Unidata/netcdf-fortran)
+	c) HDF5 1.14.3 (https://portal.hdfgroup.org/downloads/index.html)
+3. Download Miniconda (https://docs.anaconda.com/free/miniconda/miniconda-other-installer-links/) for Python 3.10. The Dockerfile will look for the macOS installers for Apple M1 and x86, in shell scripts ("64-bit bash"). Windows and Linux users should download the appropriate Miniconda installer and edit Dockerfile_base to use that shell script.
+4. Move Dockerfile_base to the base directory and rename to "Dockerfile". Use this Dockerfile to build the base image (in bash, type "docker build -t ropp11-base .").
+4. In the main directory, unpack a copy of the original ROPP. Follow the instructions above to add/replace the relevant ROPP patch files to the correct locations in the original ROPP. 
+5. Use the main Dockerfile to build the ROPP with the patch in the main directory, which will build from the base image you built in steps 1-2. 
+6. Run the Docker image. Once inside the image, use build-devel.sh to build the remaining ROPP patch files. You should now have a working version of ROPP-11.0 with the AWS-opendata patch running inside a Docker image. 
 
 
 ###############################################################################
 #
-#     The purpose of each of the file changes are included below.
+#   The purpose of each of the file changes in the patch are included below.
 #
 ###############################################################################
 Modified directories: ropp_io, ropp_pp
