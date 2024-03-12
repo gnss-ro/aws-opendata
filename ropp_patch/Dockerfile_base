@@ -101,13 +101,13 @@ ENV MANPATH="${ROPP_ROOT}/gfortran/man"
 
 ENV MINICONDA="/app/miniconda3.10"
 
-ADD Miniconda3-py310_23.5.2-0-Linux-*.sh ./
+ADD Miniconda3-py310_*-Linux-*.sh ./
 RUN if [ `arch` == "aarch64" ] ; then \
-	    bash Miniconda3-py310_23.5.2-0-Linux-aarch64.sh -b -p ${MINICONDA} ; \
+	    bash Miniconda3-py310_*-Linux-aarch64.sh -b -p ${MINICONDA} ; \
 	else \
-	    bash Miniconda3-py310_23.5.2-0-Linux-x86_64.sh -b -p ${MINICONDA} ; \
+	    bash Miniconda3-py310_*-Linux-x86_64.sh -b -p ${MINICONDA} ; \
 	fi 
-RUN rm Miniconda3-py310_23.5.2-0-Linux-*.sh 
+RUN rm Miniconda3-py310_*-Linux-*.sh 
 ENV PATH="${MINICONDA}/bin:$PATH"
 
 ######################################################
