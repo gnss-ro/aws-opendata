@@ -27,7 +27,7 @@ For the Python tests to work, the following packages are required: netcdf4, matp
 #
 ###############################################################################
 
-1. Download the original ROPP package and all dependences according to ROMSAF directions (https://rom-saf.eumetsat.int/ropp/index.php) and move, as tarballs, to a base directory folder. Unpack only the ROPP tarball.
+1. Download the original ROPP package and all dependencies (EXCEPT for netCDF-C, netCDF-Fortran, and HDF5) according to ROMSAF directions (https://rom-saf.eumetsat.int/ropp/index.php). Create a base image directory and move these tarballs into the base directory. Unpack only the ROPP tarball.
 2. To be compatible with our base Linux version (Amazon Linux 2023), installing the ROPP required different versions of several of the dependency packages than the versions included in the ROPP. Download tarballs of each of the dependencies below and add them to the base image directory. 
 	a) netCDF-C 4.9.2 (https://downloads.unidata.ucar.edu/netcdf/)
 	b) netCDF-Fortran 4.6.1 (mirror with tarballs here https://distfiles.macports.org/netcdf-fortran/ or download the correct release from GitHub and convert to tarball https://github.com/Unidata/netcdf-fortran)
