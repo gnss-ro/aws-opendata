@@ -70,9 +70,9 @@ RUN ./build_deps ${FC} eccodes
 #  Build HDF5, a prerequisite of NetCDF-4. 
 
 ADD hdf5-1.14.3.tar.gz .
-RUN cd ${ROPP_ROOT}/hdf5-* && ./configure --prefix=${ROPP_ROOT}/gfortran --with-zlib=/usr --disable-shared 
-RUN cd ${ROPP_ROOT}/hdf5-* && make && make install
-RUN rm -fr hdf5-*
+RUN cd ${ROPP_ROOT}/hdf5-1.14.3 && ./configure --prefix=${ROPP_ROOT}/gfortran --with-zlib=/usr --disable-shared 
+RUN cd ${ROPP_ROOT}/hdf5-1.14.3 && make && make install
+RUN rm -fr hdf5-1.14.3
 
 #  Build NetCDF-4. 
 
@@ -81,16 +81,16 @@ ENV CPPFLAGS="-I${ROPP_ROOT}/gfortran/include -I/usr/include" LIBS="-L${ROPP_ROO
 #  NetCDF C collection. 
 
 ADD netcdf-c-4.9.2.tar.gz .
-RUN cd ${ROPP_ROOT}/netcdf-c-* && ./configure --prefix=${ROPP_ROOT}/gfortran --disable-dap --enable-netcdf4 --disable-shared --disable-byterange
-RUN cd ${ROPP_ROOT}/netcdf-c-* && make && make install
-RUN rm -fr netcdf-c-*
+RUN cd ${ROPP_ROOT}/netcdf-c-4.9.2 && ./configure --prefix=${ROPP_ROOT}/gfortran --disable-dap --enable-netcdf4 --disable-shared --disable-byterange
+RUN cd ${ROPP_ROOT}/netcdf-c-4.9.2 && make && make install
+RUN rm -fr netcdf-c-4.9.2
 
 #  NetCDF Fortran collection. 
 
 ADD netcdf-fortran-4.6.1.tar.gz .
-RUN cd netcdf-fortran-* && ./configure --prefix=${ROPP_ROOT}/gfortran --disable-shared 
-RUN cd netcdf-fortran-* && make && make install
-RUN rm -fr netcdf-fortran-*
+RUN cd netcdf-fortran-4.6.1 && ./configure --prefix=${ROPP_ROOT}/gfortran --disable-shared 
+RUN cd netcdf-fortran-4.6.1 && make && make install
+RUN rm -fr netcdf-fortran-4.6.1
 
 ENV PATH="${ROPP_ROOT}/gfortran/bin:$PATH"
 ENV MANPATH="${ROPP_ROOT}/gfortran/man"
