@@ -5,13 +5,9 @@ channels:
   - anaconda
   - conda-forge
 dependencies: 
-  - jupyter
-  - numpy 
-  - awscli 
-  - botocore
-  - boto3 
-  - tqdm 
-# - pip
-# - pip: 
-# - ./awsgnssroutils
-
+  # - jupyter
+  - python<3.11
+  - pip
+  - pip: 
+    - ./awsgnssroutils
+    - jupyter

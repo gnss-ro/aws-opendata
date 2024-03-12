@@ -439,7 +439,7 @@ def write_dataset_to_netcdf( dataset, nc ):
 
     #  Create dimensions. 
 
-    for name, size in dataset.dims.items(): 
+    for name, size in dataset.sizes.items(): 
         nc.createDimension( name, size )
 
     #  Create variables and their attributes. 

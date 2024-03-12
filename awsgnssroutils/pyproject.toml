@@ -1,6 +1,6 @@
 [build-system]
 # requires = [ "hatchling", "s3fs", "numpy", "tqdm" ]
-requires = [ "hatchling", "boto3", "numpy", "tqdm" ]
+requires = [ "hatchling" ]
 build-backend = "hatchling.build"
 
 [project]
@@ -13,11 +13,9 @@ authors = [
 description = "Utilities for access and manipulation of GNSS radio occultation in the AWS Registry of Open Data"
 readme = "README.md"
 requires-python = ">=3.8"
-dependencies = [ "hatchling", "numpy", "pyerfa", "tqdm", 
-	"astropy>=5.3", "sgp4", "netCDF4", 
-	"eumdac", "earthaccess", "xarray", 
-	"boto3", "botocore"
-	]
+dependencies = [ "hatchling", "awscli", "boto3", "tqdm", 
+	"numpy", "xarray", "astropy>=5.3", "pyerfa", "sgp4", "netCDF4", 
+	"eumdac", "earthaccess", "aiobotocore[awscli,boto3]" ]
 classifiers = [
 	"Programming Language :: Python :: 3",
 	"License :: OSI Approved :: BSD License",
@@ -27,3 +25,4 @@ classifiers = [
 [project.urls]
 "Homepage" = "https://github.com/gnss-ro/aws-opendata"
 "Bug Tracker" = "https://github.com/gnss-ro/aws-opendata/issues"
+

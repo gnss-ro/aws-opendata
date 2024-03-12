@@ -58,7 +58,7 @@ class JPSS_ATMS(NadirSatelliteInstrument):
     Parameters
     ------------
         name: str
-            Name of the nadir satellite, drawn from collocation.core.celestrak.Satellites[:]['name']
+            Name of the nadir satellite, drawn from awsgnssroutils.collocation.core.celestrak.Satellites[:]['name']
         nasa_earthdata_access: collocation.core.nasa_earthdata.NASAEarthdata
             An object that interfaces with the NASA Earthdata DAACs. 
         celestrak: collocation.core.celestrak.Celestrak
@@ -67,7 +67,7 @@ class JPSS_ATMS(NadirSatelliteInstrument):
     Attributes
     ------------
         name: str
-            Name of the nadir satellite, drawn from collocation.core.celestrak.Satellites[:]['name']
+            Name of the nadir satellite, drawn from awsgnssroutils.collocation.core.celestrak.Satellites[:]['name']
         celestrak_satellite: instance of celestrak.CelestrakSatellite
             Define the satellite, for access to TLEs
         xi: float

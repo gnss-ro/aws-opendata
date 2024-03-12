@@ -10,7 +10,7 @@ provided is named by class_name, which inherits the NadirSatelliteInstrument
 class. 
 """
 
-from collocation.core.nadir_satellite import NadirSatelliteInstrument, ScanMetadata
+from awsgnssroutils.collocation.core.nadir_satellite import NadirSatelliteInstrument, ScanMetadata
 from netCDF4 import Dataset
 import numpy as np
 from awsgnssroutils.collocation.core.timestandards import Time
@@ -56,7 +56,7 @@ class Metop_AMSUA(NadirSatelliteInstrument):
     Parameters
     ------------
         name: str
-            Name of the nadir satellite, drawn from collocation.core.celestrak.Satellites[:]['name']
+            Name of the nadir satellite, drawn from awsgnssroutils.collocation.core.celestrak.Satellites[:]['name']
         eumetsat_access: collocation.core.eumetsat.EUMETSATDataStore
             An object that interfaces with the EUMETSAT Data Store. 
         celestrak: collocation.core.celestrak.Celestrak
@@ -65,7 +65,7 @@ class Metop_AMSUA(NadirSatelliteInstrument):
     Attributes
     ------------
         name: str
-            Name of the nadir satellite, drawn from collocation.core.celestrak.Satellites[:]['name']
+            Name of the nadir satellite, drawn from awsgnssroutils.collocation.core.celestrak.Satellites[:]['name']
         celestrak_satellite: instance of celestrak.CelestrakSatellite
             Define the satellite, for access to TLEs
         xi: float
