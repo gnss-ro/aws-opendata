@@ -21,6 +21,13 @@ The files and their locations are listed below.
 For the Python tests to work, the following packages are required: netcdf4, matplotlib, scipy, matplotlib, math, argparse
 
 
+To build with the included Dockerfiles:
+1. Download the original ROPP and dependencies according to ROMSAF directions (https://rom-saf.eumetsat.int/ropp/files.php) and move, as tarballs, to a base directory folder. Download Miniconda (https://docs.anaconda.com/free/miniconda/miniconda-other-installer-links/) for Python 3.10. The Dockerfile will look for the aarch and x86 versions shell scripts.
+2. Move Dockerfile_base to the base directory containing the original ROPP and the Miniconda scripts. Use this Dockerfile to build the base image. 
+3. In the main directory, unpack a copy of the original ROPP. Follow the instructions above to add/replace the relevant ROPP patch files to the correct locations in the original ROPP. 
+4. Use the main Dockerfile to build the ROPP with the patch in the main directory, which will build from the base image you built in steps 1-2. 
+5. Run the Docker image. Once inside the image, use build-devel.sh to build the remaining ROPP patch files. You should now have a working version of ROPP-11.0 with the AWS-opendata patch running inside a Docker image. 
+
 
 ###############################################################################
 #
