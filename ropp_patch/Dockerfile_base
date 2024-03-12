@@ -114,8 +114,7 @@ ENV PATH="${MINICONDA}/bin:$PATH"
 #    Install python packages
 ######################################################
 
-RUN conda install -c anaconda boto3
-RUN pip3 install s3fs awscli 
+RUN conda config --set solver classic
 RUN conda install -c conda-forge netcdf4
 RUN conda install matplotlib -y
 RUN conda install scipy -y
