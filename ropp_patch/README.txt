@@ -27,17 +27,19 @@ For the Python tests to work, the following packages are required: netcdf4, matp
 #
 ###############################################################################
 
-1. Download the original ROPP package and all dependencies according to ROMSAF directions (https://rom-saf.eumetsat.int/ropp/index.php). Create a base image directory and move these tarballs into the base directory. Unpack only the ROPP tarball.
+1. Download the original ROPP package and all dependencies according to ROMSAF directions (https://rom-saf.eumetsat.int/ropp/index.php). Create a base image directory and move these tarballs into the base directory.
 2. To be compatible with our base Linux version (Amazon Linux 2023), installing the ROPP required different versions of several of the dependency packages than the versions included in the ROPP. Download tarballs of each of the dependencies below and add them to the base image directory. 
 	a) netCDF-C 4.9.2 (https://downloads.unidata.ucar.edu/netcdf/)
 	b) netCDF-Fortran 4.6.1 (https://github.com/Unidata/netcdf-fortran/releases/tag/v4.6.1)
 	c) HDF5 1.14.3 (https://portal.hdfgroup.org/downloads/index.html)
 Note that you may also choose to remove the (older) ROPP versions of these dependencies if you wish. The Dockerfile is hard-coded to search for versions (a)-(c) of these particular dependencies.
 3. Download Miniconda (https://docs.anaconda.com/free/miniconda/miniconda-other-installer-links/) for Python 3.10. The Dockerfile will look for the macOS installers for Apple M1 and x86, in shell scripts ("64-bit bash"). Windows and Linux users should download the appropriate Miniconda installer and edit Dockerfile_base to use that shell script.
-4. Move Dockerfile_base to the base directory and rename to "Dockerfile". Use this Dockerfile to build the base image (in bash, type "docker build -t ropp11-base .").
-4. In the main directory, unpack a copy of the original ROPP. Follow the instructions above to add/replace the relevant ROPP patch files to the correct locations in the original ROPP. 
-5. Use the main Dockerfile to build the ROPP with the patch in the main directory, which will build from the base image you built in steps 1-2. 
-6. Run the Docker image. Once inside the image, use build-devel.sh to build the remaining ROPP patch files. You should now have a working version of ROPP-11.0 with the AWS-opendata patch running inside a Docker image. 
+4. Move Dockerfile_base to the base directory and rename to "Dockerfile". Move "build-devel" into the base directory. Use this Dockerfile to build the base image (in bash, type "docker build -t ropp11-base .").
+
+
+5. In the main directory, unpack a copy of the original ROPP. Follow the instructions above to add/replace the relevant ROPP patch files to the correct locations in the original ROPP. 
+6. Use the main Dockerfile to build the ROPP with the patch in the main directory, which will build from the base image you built in steps 1-4. 
+7. Run the Docker image. Once inside the image, use build-devel.sh to build the remaining ROPP patch files. You should now have a working version of ROPP-11.0 with the AWS-opendata patch running inside a Docker image. 
 
 
 ###############################################################################
