@@ -1,7 +1,8 @@
 
 Patch to allow ROPP-11.0 to accept calibratedPhase files from aws-opendata project. 
 
-The tarball contains files that must be moved to the correct location to replace the normal ROPP files. The modified ROPP file then function as normal. The files and their locations are listed below.
+The tarball contains files that must be moved to the correct location to replace the corresponding files in the ROPP-11.0, which can be downloaded and built following instructions from ROMSAF at https://rom-saf.eumetsat.int/ropp/files.php
+The files and their locations are listed below. 
 
 1. In ropp_io/
 	a) build/ Makefile.am (take care not to confuse with Makefiles in other locations)
@@ -13,7 +14,7 @@ The tarball contains files that must be moved to the correct location to replace
 	b) tools/ ropp_pp_occ_tool.f90
 	c) preprocess/ ropp_pp_preprocess.f90
 	d) tests/ it_pp_01.py*, it_pp_spectra_dt.py*, , it_pp_spectra_ep.py* it_pp_wopt_01.py*, it_pp_wopt_02.py*
-*These files new, rather than replacing previous ROPP files. They are added to allow tests to be run with Python rather than IDL. 
+*These files are new, rather than replacing previous ROPP files. They are added to allow tests to be run with Python rather than IDL. 
 **This file is new rather than replacing a previous ROPP file. It converts calibratedPhase (AWS-format) NCDF files to ROPP-format NCDF files.
 
 
