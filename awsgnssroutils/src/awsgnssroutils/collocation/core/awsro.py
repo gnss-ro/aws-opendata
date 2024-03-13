@@ -1,6 +1,6 @@
 from awsgnssroutils.database import OccList
-from awsgnssroutils.collocation.core.timestandards import Time
 from datetime import datetime 
+from .timestandards import Time
 
 awsro_time_convention = "utc"
 

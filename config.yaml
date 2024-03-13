@@ -5,9 +5,8 @@ channels:
   - anaconda
   - conda-forge
 dependencies: 
-  # - jupyter
-  - python<3.11
+  - python==3.9.18
+  - jupyter
   - pip
   - pip: 
     - ./awsgnssroutils
-    - jupyter

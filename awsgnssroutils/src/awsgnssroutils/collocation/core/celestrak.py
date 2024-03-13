@@ -27,8 +27,8 @@ the last record for July, 2009, and the first for September, 2009.
 
 import os, re, json, stat
 import numpy as np
-from awsgnssroutils.collocation.core.timestandards import Time, Calendar
-from awsgnssroutils.collocation.core.constants_and_utils import defaults_file
+from .timestandards import Time, Calendar
+from .constants_and_utils import defaults_file
 
 #  Definitions. 
 
@@ -96,6 +96,11 @@ class CelestrakSatellite():
         self.celestrak = Celestrak_instance
         norad_number_string = f'{norad_number:05d}'
         data = {}
+
+        if norad_number_string not in self.celestrak.catalogue.keys(): 
+            print( f'NORAD number {norad_number_string} not in Celestrak local database' )
+            self.status = "fail"
+            return
 
         for file in self.celestrak.catalogue[norad_number_string]: 
 

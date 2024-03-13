@@ -7,10 +7,10 @@ rotation-collocation methods can be compared.
 Last updated: 9/8/2023 by Alex Meredith
 """
 
-from awsgnssroutils.collocation.core.collocation import Collocation 
-from awsgnssroutils.collocation.core.constants_and_utils import calculate_radius_of_earth
-from awsgnssroutils.collocation.core.awsro import get_occ_times
-from awsgnssroutils.collocation.core.timestandards import Time
+from .collocation import Collocation, CollocationList
+from .constants_and_utils import calculate_radius_of_earth
+from .awsro import get_occ_times
+from .timestandards import Time
 from datetime import datetime
 import numpy as np
 from tqdm import tqdm 
@@ -88,7 +88,7 @@ def brute_force( nadir_satellite_instrument, occs, time_tolerance, spatial_toler
 
             colocs.append( coloc )
 
-    return colocs
+    return CollocationList( colocs )
 
 
 def brute_force_sorted( nadir_scanner_geolocations, occ, 

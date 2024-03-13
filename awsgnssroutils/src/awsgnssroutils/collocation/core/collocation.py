@@ -1,11 +1,37 @@
+"""collocation.py
+
+Author: Stephen Leroy (sleroy@aer.com)
+Version: 
+Date: March 13, 2024
+
+This module establishes two classes to handle radio occultation--nadir scanner 
+collocation data: class Collocation and class CollocationList. In addition it 
+provides a method to be used internally that generates xarray DataArrays that 
+handle fill values properly.
+
+class Collocation:
+    Define a radio occultation - scanner data collocation. It contains all 
+    of the metadata necessary to identify the individual soundings. It also 
+    contains methods to fill extract the actual data/observations associated 
+    with the occultation and nadir scanner soundings.
+
+class CollocationList: 
+    Define a list of instances of Collocation. It inherits the list class and 
+    adds methods to form unions and intersections of instances of 
+    CollocationList. It also includes methods to sort the list and write its 
+    contents to an output NetCDF file."""
+
+
+#  Imports. 
+
 import os, json
 import numpy as np
 import xarray
-from netCDF4 import Dataset 
+import netCDF4 
 from awsgnssroutils.database import OccList
-from awsgnssroutils.collocation.core.timestandards import Time
-from awsgnssroutils.collocation.core.nadir_satellite import NadirSatelliteInstrument, ScanMetadata
-from awsgnssroutils.collocation.core.constants_and_utils import write_dataset_to_netcdf, masked_dataarray
+from .timestandards import Time
+from .nadir_satellite import NadirSatelliteInstrument, ScanMetadata
+from .constants_and_utils import masked_dataarray
 
 #  Exception handling. 
 
@@ -17,6 +43,9 @@ class collocationError( Error ):
         self.message = message
         self.comment = comment
 
+#  Internal. 
+
+__version__ = "1.0.0"
 
 #  Parameters. 
 
@@ -214,7 +243,7 @@ class Collocation():
 
         #  Extract occultation data. 
 
-        d = Dataset( occ_file, 'r' )
+        d = netCDF4.Dataset( occ_file, 'r' )
 
         longitude_dataarray = xarray.DataArray( self.occultation.values("longitude")[0] )
         longitude_dataarray.attrs.update( { 
@@ -303,73 +332,6 @@ class Collocation():
 
         return ds
 
-
-def collocation_union( collocations1, collocations2 ): 
-    """Produce of list of collocations that is the union of two lists of instances 
-    of collocations."""
-
-    #  Check input. 
-
-    if not isinstance( collocations1, list ) or not isinstance( collocations2, list ): 
-        raise collocationError( "InvalidArgument", "Both arguments must be lists" )
-
-    if not isinstance( collocations1[0], Collocation ): 
-        raise collocationError( "InvalidArgument", "First argument must be a list of instances of Collocation" )
-
-    if not isinstance( collocations2[0], Collocation ): 
-        raise collocationError( "InvalidArgument", "First argument must be a list of instances of Collocation" )
-
-    #  Create a dictionary corresponding to both lists. 
-
-    dict1 = { c.occultation._data[0]['occid']: c for c in collocations1 }
-    dict2 = { c.occultation._data[0]['occid']: c for c in collocations2 }
-
-    #  Get union of "occid" keys. 
-
-    keys = sorted( list( set( dict1.keys() ).union( set( dict2.keys() ) ) ) )
-
-    #  Generate the result. 
-
-    ret = [ dict1[k] for k in keys ]
-
-    #  Done. 
-
-    return ret
-
-
-def collocation_intersection( collocations1, collocations2 ): 
-    """Produce of list of collocations that is the intersection of two lists of instances 
-    of collocations."""
-
-    #  Check input. 
-
-    if not isinstance( collocations1, list ) or not isinstance( collocations2, list ): 
-        raise collocationError( "InvalidArgument", "Both arguments must be lists" )
-
-    if not isinstance( collocations1[0], Collocation ): 
-        raise collocationError( "InvalidArgument", "First argument must be a list of instances of Collocation" )
-
-    if not isinstance( collocations2[0], Collocation ): 
-        raise collocationError( "InvalidArgument", "First argument must be a list of instances of Collocation" )
-
-    #  Create a dictionary corresponding to both lists. 
-
-    dict1 = { c.occultation._data[0]['occid']: c for c in collocations1 }
-    dict2 = { c.occultation._data[0]['occid']: c for c in collocations2 }
-
-    #  Get intersection of "occid" keys. 
-
-    keys = sorted( list( set( dict1.keys() ).intersection( set( dict2.keys() ) ) ) )
-
-    #  Generate the result. 
-
-    ret = [ dict1[k] for k in keys ]
-
-    #  Done. 
-
-    return ret
-
-
 def collocation_confusion( occs, collocations_bruteforce, collocations_rotation ): 
     """Produce a confusion matrix for the rotation-collocation algorithm. The first 
     argument must be an OccList of the occultations used for finding collocated nadir 
@@ -393,7 +355,7 @@ def collocation_confusion( occs, collocations_bruteforce, collocations_rotation 
     n_total = occs.size
     n_in_bruteforce = len( collocations_bruteforce )
     n_in_rotation = len( collocations_rotation )
-    n_in_both = len( collocation_intersection( collocations_bruteforce, collocations_rotation ) ) 
+    n_in_both = len( collocations_bruteforce.intersection( collocations_rotation ) ) 
 
     ret = { 'true_positive': n_in_both, 
            'false_negative': n_in_bruteforce - n_in_both, 
@@ -403,60 +365,197 @@ def collocation_confusion( occs, collocations_bruteforce, collocations_rotation 
     return ret
 
 
-def write_collocations( collocations, file, author=None ): 
-    """Write a list of collocations to an output NetCDF-4 file. The collocations 
-    must be a list of instances of Collocation, and the file is the path of the 
-    output file. Giving the author's name is optional."""
+class CollocationList( list ): 
+    """A list of collocations. While inheriting the list class, it adds methods to 
+    perform unions, intersections, and writing to output."""
+
+    def __init__( self, input_list:list ): 
+        """The input should be a list of instances of class Collocation."""
+
+        if not isinstance( input_list, list ): 
+                raise collocationError( "InvalidArgument", "Argument of CollocationList must be a list" )
+
+        for element in input_list: 
+            if not isinstance( element, Collocation ): 
+                raise collocationError( "InvalidArgument", 
+                        "All elements of the input list to CollocationList must be instances of Collocation" )
+
+        super().__init__( input_list )
+
+        return
+
+
+    def union( self, union_list ): 
+        """Return the union with the argument (instance of CollocationList)."""
+
+        #  Check input. 
+
+        if not isinstance( union_list, CollocationList ): 
+            raise collocationError( "InvalidArgument", "Argument to CollocationList.union must be a CollocationList" )
+
+        #  Create a dictionary corresponding to both lists. 
+
+        dict1 = { c.occultation._data[0]['occid']: c for c in self }
+        dict2 = { c.occultation._data[0]['occid']: c for c in union_list }
+
+        #  Get union of "occid" keys. 
+
+        keys = sorted( list( set( dict1.keys() ).union( set( dict2.keys() ) ) ) )
+
+        #  Generate the result. 
+
+        ret = CollocationList( [ dict1[k] for k in keys ] )
+
+        #  Done. 
+
+        return ret
+
+    def intersection( self, union_list ): 
+        """Return the intersection with the argument (instance of CollocationList)."""
+
+        #  Check input. 
+
+        if not isinstance( union_list, CollocationList ): 
+            raise collocationError( "InvalidArgument", "Argument to CollocationList.intersection must be a CollocationList" )
+
+        #  Create a dictionary corresponding to both lists. 
+
+        dict1 = { c.occultation._data[0]['occid']: c for c in self }
+        dict2 = { c.occultation._data[0]['occid']: c for c in union_list }
+
+        #  Get intersection of "occid" keys. 
+
+        keys = sorted( list( set( dict1.keys() ).intersection( set( dict2.keys() ) ) ) )
+
+        #  Generate the result. 
+
+        ret = CollocationList( [ dict1[k] for k in keys ] )
+
+        #  Done. 
+
+        return ret
+
+    def write_to_netcdf( self, outputfile, author=None ): 
+        """Write a list of collocations to an output NetCDF-4 file. The collocations 
+        must be a list of instances of Collocation, and the file is the path of the 
+        output file. Giving the author's name is optional."""
+
+        #  Check input. 
+
+        if not isinstance( outputfile, str ): 
+            raise collocationError( "InvalidArgument", "The second argument must be a str, designating the path of the output file" )
+
+        #  Create output file. 
+
+        d = netCDF4.Dataset( outputfile, 'w' )
+
+        #  Global attributes. 
+
+        d.setncatts( { 
+            'creation_time': Time().calendar("utc").isoformat(timespec="seconds")+"Z", 
+            'file_type': "gnssro-nadirsounder-collocations" 
+            } )
+
+        if author is not None: 
+            d.setncattr( "author", author )
+
+        #  Loop over collocations. 
+
+        for collocation in self: 
+
+            if collocation.data is None: 
+                ret = collocation.get_data()
+
+            #  Write occultation and sounder data. 
+
+            occid = collocation.data['occid'] 
+            collocation_name = occid + "+" + \
+                    collocation.data['sounder'].attrs['satellite'] + "-" + \
+                    collocation.data['sounder'].attrs['instrument']
+
+            occultation_group = d.createGroup( f'{collocation_name}/occultation' )
+            write_dataset_to_netcdf( collocation.data['occultation'], occultation_group )
+
+            sounder_group = d.createGroup( f'{collocation_name}/sounder' )
+            write_dataset_to_netcdf( collocation.data['sounder'], sounder_group )
+
+        #  Done. 
+
+        d.close()
+
+        return
+
+    ############################################################
+    #  Magic methods. 
+    ############################################################
+
+    def __getitem__( self, ss ): 
+        items = list( self ).__getitem__(ss)
+        if isinstance( items, Collocation ): 
+            ret = items
+        else: 
+            ret = CollocationList( items )
+
+        return ret
+
+    def __sort__( self, method="occtime" ): 
+
+        if method == "occid": 
+            sdict = { c.data['occid']: c for c in self } 
+
+        elif method == "occtime": 
+            sdict = {}
+            for element in self: 
+                time = c.data['occultation'].attrs['time']
+                for ikeychar in range(26): 
+                    key = time + chr( ord("a") + ikeychar )
+                    if key not in sdict.keys(): 
+                        break
+                sdict.update( { key: element } )
+
+        else: 
+            raise collocationError( "InvalidArgument", f'Unrecognized method {method} to sort a CollocationList' )
+
+        keys = sorted( list( sdict.keys() ) )
+        ret = CollocationList( [ sdict[key] for key in keys ] )
+
+        return ret
+
+
+def write_dataset_to_netcdf( dataset, nc ): 
+    """Write an xarray Dataset (dataset) to an open NetCDF file or group (nc)."""
 
     #  Check input. 
 
-    if not isinstance( collocations, list ): 
-        raise collocationError( "InvalidArgument", "The first argument must be a list of Collocation instances" )
+    if not isinstance( dataset, xarray.Dataset ): 
+        raise collocationError( "InvalidArgument", "First argument must be an instance of xarray.Dataset" )
 
-    if not isinstance( collocations[0], Collocation ): 
-        raise collocationError( "InvalidArgument", "The first argument must be a list of Collocation instances" )
+    if not isinstance( nc, netCDF4.Dataset ): 
+        raise collocationError( "InvalidArgument", "Second argument must be an instance or child of netCDF4.Dataset" )
 
-    if not isinstance( file, str ): 
-        raise collocationError( "InvalidArgument", "The second argument must be a str, designating the path of the output file" )
+    #  Create dimensions. 
 
-    #  Create output file. 
+    for name, size in dataset.sizes.items(): 
+        nc.createDimension( name, size )
 
-    # os.makedirs( os.path.dirname(file), exist_ok=True )
-    d = Dataset( file, 'w' )
+    #  Create variables and their attributes. 
 
-    #  Global attributes. 
+    variables = {}
+    for vname, vobj in dataset.variables.items(): 
+        v = nc.createVariable( vname, vobj.dtype, vobj.dims )
+        v.setncatts( vobj.attrs )
+        variables.update( { vname: v } )
 
-    d.setncatts( { 
-            'creation_time': Time().calendar("utc").isoformat(timespec="seconds")+"Z", 
-            'file_type': "gnssro-nadirsounder-collocations" 
-        } )
+    #  Create global attributes. 
 
-    if author is not None: 
-        d.setncattr( "author", author )
+    nc.setncatts( dataset.attrs )
 
-    #  Loop over collocations. 
+    #  Write data values. 
 
-    for collocation in collocations: 
-
-        if collocation.data is None: 
-            ret = collocation.get_data()
-
-        #  Write occultation and sounder data. 
-
-        occid = collocation.data['occid'] 
-        collocation_name = occid + "+" + \
-                collocation.data['sounder'].attrs['satellite'] + "-" + \
-                collocation.data['sounder'].attrs['instrument']
-
-        occultation_group = d.createGroup( f'{collocation_name}/occultation' )
-        write_dataset_to_netcdf( collocation.data['occultation'], occultation_group )
-
-        sounder_group = d.createGroup( f'{collocation_name}/sounder' )
-        write_dataset_to_netcdf( collocation.data['sounder'], sounder_group )
+    for vname, vobj in variables.items(): 
+        vobj[:] = dataset.variables[vname].values
 
     #  Done. 
-
-    d.close()
 
     return
 

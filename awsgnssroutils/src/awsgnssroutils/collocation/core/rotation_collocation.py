@@ -10,13 +10,10 @@ Last updated: 9/8/2023 by Alex Meredith
 import bisect
 import numpy as np
 from sgp4.api import Satrec
-from awsgnssroutils.collocation.core.nadir_satellite import NadirSatelliteInstrument
-from awsgnssroutils.collocation.core.awsro import get_occ_times
-from awsgnssroutils.collocation.core.collocation import Collocation 
-from awsgnssroutils.collocation.core.constants_and_utils import tai_to_utc, km_to_degree
-from awsgnssroutils.collocation.core.constants_and_utils import hours_to_sec, min_to_sec
-from awsgnssroutils.collocation.core.constants_and_utils import constrain_to_pi_range
-from awsgnssroutils.collocation.core.constants_and_utils import get_distance, constrain_angle_pair
+from .nadir_satellite import NadirSatelliteInstrument
+from .awsro import get_occ_times
+from .collocation import Collocation, CollocationList
+from .constants_and_utils import km_to_degree, constrain_to_pi_range, constrain_angle_pair
 
 
 #  Exception handling. 
@@ -147,7 +144,7 @@ def rotation_collocation( nadir_sat, occs, time_tolerance, spatial_tolerance,
                 colocs.append( coloc )
                 break
 
-    return colocs 
+    return CollocationList( colocs )
 
 
 def compare_points_in_nadir_frame(x_prev, y_prev, z_prev, x_j, y_j, z_j,

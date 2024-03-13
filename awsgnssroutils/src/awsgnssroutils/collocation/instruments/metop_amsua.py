@@ -10,19 +10,22 @@ provided is named by class_name, which inherits the NadirSatelliteInstrument
 class. 
 """
 
-from awsgnssroutils.collocation.core.nadir_satellite import NadirSatelliteInstrument, ScanMetadata
 from netCDF4 import Dataset
 import numpy as np
-from awsgnssroutils.collocation.core.timestandards import Time
-from awsgnssroutils.collocation.core.eumetsat import eumetsat_time_convention
-from awsgnssroutils.collocation.core.constants_and_utils import masked_dataarray
 from datetime import datetime
 import xarray 
 
+from ..core.nadir_satellite import NadirSatelliteInstrument, ScanMetadata
+from ..core.timestandards import Time
+from ..core.eumetsat import eumetsat_time_convention
+from ..core.constants_and_utils import masked_dataarray
 
-#  REQUIRED attribute
 
+#  REQUIRED attributes
+
+instrument = "AMSU-A"
 instrument_aliases = [ "AMSU-A", "Metop AMSU-A" ]
+valid_satellites = [ "Metop-A", "Metop-B", "Metop-C" ]
 
 #  REQUIRED methods of the class: 
 #   - get_geolocations
@@ -87,15 +90,21 @@ class Metop_AMSUA(NadirSatelliteInstrument):
     def __init__(self, name, eumetsat_access, celestrak=None ):
         """Constructor for MetopAMSUA class."""
 
-        max_scan_angle = 48.285             # degrees
-        time_between_scans = 8.0            # seconds
-        scan_points_per_line = 30           # footprints in a scan
-        scan_angle_spacing = 3.33           # degrees
+        if name not in valid_satellites: 
+            print( f'No {instrument} on satellite {name}. Valid satellites are ' + ", ".join( valid_satellites ) )
+            self.status = "fail"
 
-        super().__init__( name, max_scan_angle, time_between_scans,
-                scan_points_per_line, scan_angle_spacing, celestrak=celestrak )
+        else: 
+            max_scan_angle = 48.285             # degrees
+            time_between_scans = 8.0            # seconds
+            scan_points_per_line = 30           # footprints in a scan
+            scan_angle_spacing = 3.33           # degrees
 
-        self.eumetsat_access = eumetsat_access
+            super().__init__( name, max_scan_angle, time_between_scans,
+                    scan_points_per_line, scan_angle_spacing, celestrak=celestrak )
+
+            self.eumetsat_access = eumetsat_access
+            self.status = "success"
 
         pass
 

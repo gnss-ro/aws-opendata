@@ -11,19 +11,21 @@ provided is named by class_name, which inherits the NadirSatelliteInstrument
 class. 
 """
 
-from awsgnssroutils.collocation.core.nadir_satellite import NadirSatelliteInstrument, ScanMetadata
 from netCDF4 import Dataset
 import numpy as np
-from awsgnssroutils.collocation.core.timestandards import Time, Calendar
-from awsgnssroutils.collocation.core.eumetsat import eumetsat_time_convention
-from awsgnssroutils.collocation.core.constants_and_utils import masked_dataarray, \
-        planck_blackbody, speed_of_light 
 from datetime import datetime
 import xarray 
 
-#  REQUIRED attribute
+from ..core.nadir_satellite import NadirSatelliteInstrument, ScanMetadata
+from ..core.timestandards import Time, Calendar
+from ..core.eumetsat import eumetsat_time_convention
+from ..core.constants_and_utils import masked_dataarray, planck_blackbody, speed_of_light 
 
+#  REQUIRED attributes 
+
+instrument = "JPSS_ATMS"
 instrument_aliases = [ "ATMS", "atms", "JPSS ATMS" ]
+valid_satellites = [ "Suomi-NPP", "JPSS-1" ]
 
 #  REQUIRED methods of the class: 
 #   - get_geolocations
@@ -89,15 +91,21 @@ class JPSS_ATMS(NadirSatelliteInstrument):
     def __init__(self, name, nasa_earthdata_access, celestrak=None ):
         """Constructor for MetopAMSUA class."""
 
-        max_scan_angle = 52.63              # degrees
-        time_between_scans = 8.0/3          # seconds
-        scan_points_per_line = 96           # footprints in a scan
-        scan_angle_spacing = 1.108          # degrees
+        if name not in valid_satellites: 
+            print( f'No {instrument} on satellite {name}. Valid satellites are ' + ", ".join( valid_satellites ) )
+            self.status = "fail"
 
-        super().__init__( name, max_scan_angle, time_between_scans,
-                scan_points_per_line, scan_angle_spacing, celestrak=celestrak )
+        else: 
+            max_scan_angle = 52.63              # degrees
+            time_between_scans = 8.0/3          # seconds
+            scan_points_per_line = 96           # footprints in a scan
+            scan_angle_spacing = 1.108          # degrees
 
-        self.nasa_earthdata_access = nasa_earthdata_access
+            super().__init__( name, max_scan_angle, time_between_scans,
+                    scan_points_per_line, scan_angle_spacing, celestrak=celestrak )
+
+            self.nasa_earthdata_access = nasa_earthdata_access
+            self.status = "success"
 
         pass
 

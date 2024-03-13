@@ -51,10 +51,9 @@ from sgp4.ext import rv2coe
 from sgp4.api import Satrec
 from astropy.coordinates.builtin_frames.utils import get_polar_motion
 
-from awsgnssroutils.collocation.core.awsro import get_occ_times
-from awsgnssroutils.collocation.core.constants_and_utils import sec_to_sidereal_day, \
-        calculate_km_to_degree, mu, calculate_radius_of_earth
-from awsgnssroutils.collocation.core.celestrak import Celestrak
+from .awsro import get_occ_times
+from .constants_and_utils import sec_to_sidereal_day, calculate_km_to_degree, mu, calculate_radius_of_earth
+from .celestrak import Celestrak
 
 #  Exception handling. 
 

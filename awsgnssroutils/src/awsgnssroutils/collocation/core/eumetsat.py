@@ -15,8 +15,8 @@ import os, re, stat, json, subprocess
 from eumdac.token import AccessToken
 from eumdac.datastore import DataStore
 from datetime import datetime, timedelta
-from awsgnssroutils.collocation.core.timestandards import Time
-from awsgnssroutils.collocation.core.constants_and_utils import defaults_file
+from .timestandards import Time
+from .constants_and_utils import defaults_file
 
 
 #  Definitions. 

@@ -14,8 +14,8 @@ import earthaccess
 import requests, netrc, boto3
 from platform import system
 from datetime import datetime, timedelta, timezone
-from awsgnssroutils.collocation.core.timestandards import Time
-from awsgnssroutils.collocation.core.constants_and_utils import defaults_file
+from .timestandards import Time
+from .constants_and_utils import defaults_file
 
 #  Definitions. 
 
