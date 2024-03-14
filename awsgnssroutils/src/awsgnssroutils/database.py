@@ -165,35 +165,63 @@ use_S3Client = unsigned_S3Client
 
 
 #  Useful parameters. Scan the AWS RO data repository for valid versions 
-#  (valid_versions), valid processing centers (valid_processing_centers), and 
-#  valid file types (valid_file_types). 
+#  (valid_versions), valid processing centers (valid_processing_centers), 
+#  valid file types (valid_file_types), and valid missions (valid_missions). 
+#
+#  valid_versions -> a list of version identifiers
+#
+#  valid_processing_centers[version] -> a list of processing centers for a 
+#           specified version
+#
+#  valid_file_types[version] -> a list of existing file types for a 
+#           specified version
+#
+#  valid_missions[version] -> a list of missions for a specified version
+#
+#  validity_table -> a list of dictionaries defining the versions, processing 
+#           centers, file types, and missions available. 
+#
 
 s3client = use_S3Client()
 kwargs = { 'Bucket': databaseS3bucket, 'Delimiter': "/" }
 
+#  Create valid versions. 
+
 prefixes = s3client.list_objects_v2( Prefix=f'contributed/', **kwargs )['CommonPrefixes'] 
 valid_versions = [ entry['Prefix'].split("/")[-2] for entry in prefixes ]
 
+#  Initialize bookkeeping for loops over versions, centers, and missions. 
+
 valid_processing_centers = {}
 valid_file_types = {}
+valid_missions = {}
+valid_table = []
 
 for version in valid_versions: 
 
     prefixes = s3client.list_objects_v2( Prefix=f'contributed/{version}/', **kwargs )['CommonPrefixes'] 
     valid_processing_centers.update( { version: list( { entry['Prefix'].split("/")[-2] for entry in prefixes } ) } )
-    fts = []
+    valid_missions.update( { version: [] } )
+
+    all_filetypes = []
 
     for center in valid_processing_centers[version]: 
 
         prefixes = s3client.list_objects_v2( Prefix=f'contributed/{version}/{center}/', **kwargs )['CommonPrefixes'] 
         missions = [ entry['Prefix'].split("/")[-2] for entry in prefixes ]
+        valid_missions[version] += missions
 
         for mission in missions: 
 
             prefixes = s3client.list_objects_v2( Prefix=f'contributed/{version}/{center}/{mission}/', **kwargs )['CommonPrefixes'] 
-            fts += [ entry['Prefix'].split("/")[-2] for entry in prefixes ]
+            filetypes = [ entry['Prefix'].split("/")[-2] for entry in prefixes ]
 
-    valid_file_types.update( { version: list( set( fts ) ) } )
+            all_filetypes += [ entry['Prefix'].split("/")[-2] for entry in prefixes ]
+            valid_table += [ { 'version': version, 'center': center, 'mission': mission, 'filetype': ft } for ft in filetypes ] 
+
+    valid_file_types.update( { version: list( set( all_filetypes ) ) } )
+
+valid_missions = { version: sorted( list( set( missions ) ) ) for version, missions in valid_missions.items() }
 
 
 ################################################################################
