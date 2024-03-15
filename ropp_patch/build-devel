@@ -10,7 +10,7 @@ export GEOPOT_COEF=$ROPP_ROOT/ropp_pp/data/egm96.dat
 export GEOPOT_CORR=$ROPP_ROOT/ropp_pp/data/corrcoeff.dat
 
 #  Build ropp_io
-cp -a /mnt/installer/ROPP/ropp-11.0/ropp_io ${ROPP_ROOT}
+cp -a /mnt/ropp-11.0/ropp_io ${ROPP_ROOT}
 cd ${ROPP_ROOT}/ropp_io
 # Redo automakes to include aws2ropp
 aclocal -I m4 --force
@@ -22,7 +22,7 @@ make install
 
 
 #  Build ropp_pp
-cp -a /mnt/installer/ROPP/ropp-11.0/ropp_pp ${ROPP_ROOT}
+cp -a /mntropp-11.0/ropp_pp ${ROPP_ROOT}
 cd ${ROPP_ROOT}/ropp_pp 
 aclocal -I m4 --force
 automake -a -c
