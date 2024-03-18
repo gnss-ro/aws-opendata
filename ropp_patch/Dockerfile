@@ -136,15 +136,8 @@ RUN cd /app/ropp/ropp-11.0/ropp_utils && make && make install
 
 
 ######################################################
-#    Move ropp_patch files into ROPP
+#    Point ROPP to data file locations
 ######################################################
-
-#RUN mkdir -p /opt/bin
-#COPY build-patch.sh /opt/bin/
-#RUN chmod a+x /opt/bin/build-patch.sh
-#ENV PATH="/opt/bin:$PATH"
-#CMD ["/opt/bin/build-patch.sh"]
-
 
 WORKDIR /mnt
 
