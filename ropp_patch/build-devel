@@ -3,9 +3,7 @@
 export FFLAGS="-I/-I${ROPP_ROOT}/gfortran/include -I/usr/include -I/opt/include -g"
 
 # Use included EGM96 geoid, WGS84 ellipsoid, and MSIS files
-#tar -xzf $ROPP_ROOT/ropp_pp/data/corrcoef.dat.gz
-#tar -xzf $ROPP_ROOT/ropp_pp/data/egm96.dat.gz
-#cp -a /mnt/data $ROPP_ROOT/data
+cp $ROPP_ROOT/ropp_pp/data/MSIS_coeff.nc $ROPP_ROOT/MSIS_coeff.nc
 export GEOPOT_COEF=$ROPP_ROOT/ropp_pp/data/egm96.dat
 export GEOPOT_CORR=$ROPP_ROOT/ropp_pp/data/corrcoeff.dat
 
