@@ -17,10 +17,10 @@ The tarball contains files that must be moved to the correct location to replace
 
 The files and their locations are listed below. 
 
-1. In ropp_io/
-	a) build/ Makefile.am (take care not to confuse with Makefiles in other locations)
-	b) ncdf/ ncdf_getvar.f90
-	c) ropp/ ropp_io_assign.f90, ropp_io_free.f90, ropp_io_init.f90, ropp_io_read.f90, ropp_io_read_ncdf_get.f90, ropp_io_types.f90, ropp_io_write_ncdf_def.f90, ropp_io_write_ncdf_put.f90
+1. In ropp_io/ 
+	1. build/ Makefile.am (take care not to confuse with Makefiles in other locations)
+	2. ncdf/ ncdf_getvar.f90
+	3. ropp/ ropp_io_assign.f90, ropp_io_free.f90, ropp_io_init.f90, ropp_io_read.f90, ropp_io_read_ncdf_get.f90, ropp_io_types.f90, ropp_io_write_ncdf_def.f90, ropp_io_write_ncdf_put.f90
 	d) tools/ Makefile.am, ropp2ropp.1, aws2ropp.f90**, aws2ropp.1**	
 2. In ropp_pp/
 	a) data/ ropp_pp_wopt_tool.nc*
