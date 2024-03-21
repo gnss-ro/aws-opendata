@@ -1,9 +1,19 @@
-
 Patch to allow ROPP-11.0 to accept calibratedPhase files from aws-opendata project. 
+============================================
 
+**AWS Location**: s3://gnss-ro-data
+
+**AWS Region**: us-east-1  
+
+**Managing Organization**: Atmospheric and Environmental Research, Inc.
+
+*Correspondence:* Stephen Leroy (sleroy@aer.com) or Amy McVey (amcvey@aer.com)
+
+
+
+## Introduction
 
 The tarball contains files that must be moved to the correct location to replace the corresponding files in the ROPP-11.0, which can be downloaded and built following instructions from ROMSAF at https://rom-saf.eumetsat.int/ropp/index.php 
-Be sure to download the "99.0 Complete package distribution." With the ROPP installed, the patch can be installed by unpacking patch.tar.gz then running the build-patch.sh executable, which will move the relevant files in the patch to the correct locations in the ROPP. After rerunning the configure and make commands (as instructed in the ROPP), the patch can then be used as normal. 
 
 The files and their locations are listed below. 
 
@@ -20,14 +30,15 @@ The files and their locations are listed below.
 *These files are new, rather than replacing previous ROPP files. They are added to allow tests to be run with Python rather than IDL. 
 **These files are new rather than replacing a previous ROPP file. They converts calibratedPhase (AWS-format) NCDF files to ROPP-format NCDF files.
 
-For the Python tests to work, the following packages are required: netcdf4, matplotlib, scipy, matplotlib, math, argparse
+## Instructions for default installation
 
+Download the ROPP from ROMSAF at https://rom-saf.eumetsat.int/ropp/index.php with all dependencies and install according to the included instructions. Be sure to select "99.0 Complete package distribution." 
 
-###############################################################################
-#
-#    Additional instructions to build with the included Dockerfiles
-#
-###############################################################################
+With the ROPP installed, the patch can be installed by unpacking patch.tar.gz then running the build-patch.sh executable, which will move the relevant files in the patch to the correct locations in the ROPP. After rerunning the configure and make commands (as instructed in the ROPP), the patch can then be used as normal. 
+
+For the Python tests to work, the following packages are also required: netcdf4, matplotlib, scipy, matplotlib, math, argparse
+
+## Instructions to build with the included Dockerfile
 
 1. Download the original ROPP package and all dependencies except for netCDF-C, netCDF-Fortran, and HDF5, from https://rom-saf.eumetsat.int/ropp/index.php. Place these into the ropp_patch directory.
 2. To be compatible with our base Linux version (Amazon Linux 2023), installing the ROPP required different versions of several of the dependency packages than the versions included in the ROPP. Download tarballs of each of the dependencies below to the ropp_patch directory. 
@@ -37,12 +48,8 @@ For the Python tests to work, the following packages are required: netcdf4, matp
 3. Build the Docker image with "docker build -t ropp11-patch .". This step may take about 20 minutes the first time, as building some of the dependencies (especially HDF5) is time-consuming.
 4. Run the Docker image with "docker run -it --rm -v "$PWD":/mnt ropp11-patch bash". You should now have a working version of ROPP-11.0 with the AWS-opendata patch running inside a Docker image. 
 
+## Purpose of each file change in the patch
 
-###############################################################################
-#
-#   The purpose of each of the file changes in the patch are included below.
-#
-###############################################################################
 Modified directories: ropp_io, ropp_pp
 
 1. ropp_io/ 
@@ -72,4 +79,6 @@ c)preprocess/
 	-ropp_pp_preprocess, added AWS as a processing center and directed to call the correct ropp_pp_preprocess function based on the LEO ID.
 d)tests/
 	-it_pp_01.py, it_pp_spectra_dt.py, it_pp_spectra_ep.py, it_pp_wopt_01.py, it_pp_wopt_02.py; created Python versions of IDL test scripts
-	
+
+
+*Last update: 21 March 2024*
