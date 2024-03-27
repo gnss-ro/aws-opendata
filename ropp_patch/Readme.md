@@ -32,9 +32,11 @@ The files and their locations are listed below.
 
 ## Instructions for default installation
 
-Download the ROPP from ROMSAF at https://rom-saf.eumetsat.int/ropp/index.php with all dependencies and install according to the included instructions. Be sure to select "99.0 Complete package distribution." 
+Download the ROPP from ROMSAF at https://rom-saf.eumetsat.int/ropp/index.php. Be sure to select "99.0 Complete package distribution" under "ROPP-11.0/Essentials", as well as all of the dependency packages.
 
-With the ROPP installed, the patch can be installed by unpacking patch.tar.gz then running the build-patch.sh executable, which will move the relevant files in the patch to the correct locations in the ROPP. After rerunning the configure and make commands (as instructed in the ROPP), the patch can then be used as normal. 
+With the ROPP installed, the patch can be installed by unpacking patch.tar.gz then running the 
+`./build-patch.sh`
+ executable, which will move the relevant files in the patch to the correct locations in the ROPP. After rerunning the configure and make commands (as instructed in the ROPP), the patch can then be used as normal. 
 
 For the Python tests to work, the following packages are also required: netcdf4, matplotlib, scipy, matplotlib, math, argparse
 
@@ -46,9 +48,14 @@ For the Python tests to work, the following packages are also required: netcdf4,
 	2. netCDF-Fortran 4.6.1 (https://github.com/Unidata/netcdf-fortran/releases/tag/v4.6.1)
 	3. HDF5 1.14.3 (https://portal.hdfgroup.org/downloads/index.html)
 3. Download the Linux installers for Miniconda 3.10 from https://docs.anaconda.com/free/miniconda/miniconda-other-installer-links/. The Dockerfile will search for either the 64-bit of the aarch 64-bit versions, depending on your internal archictecture (**not** on the architecture of the Docker base image). If you are unsure of your system architecture, download both.
-4. Build the Docker image with "docker build -t ropp11-patch .". This step may take about 20 minutes the first time, as building some of the dependencies (especially HDF5) is time-consuming.
-5. Run the Docker image with "docker run -it --rm -v "$PWD":/mnt ropp11-patch bash". 
-6. Once once inside the Docker image, complete the build of the patch using the shell script by entering "bash docker-build-patch.sh". You should now have a working version of ROPP-11.0 with the AWS-opendata patch running inside a Docker image. 
+4. Build the Docker image with
+ `docker build -t ropp11-patch .`
+ This step may take about 20 minutes the first time, as building some of the dependencies (especially HDF5) is time-consuming.
+5. Run the Docker image with 
+`docker run -it --rm -v "$PWD":/mnt ropp11-patch bash`
+6. Once once inside the Docker image, complete the build of the patch using the shell script by entering 
+`. ./docker-build-patch.sh`
+ You should now have a working version of ROPP-11.0 with the AWS-opendata patch running inside a Docker image. 
 
 ## Purpose of each file change in the patch
 
@@ -82,4 +89,4 @@ Modified directories: ropp_io, ropp_pp
 		1. it_pp_01.py, it_pp_spectra_dt.py, it_pp_spectra_ep.py, it_pp_wopt_01.py, it_pp_wopt_02.py; created Python versions of IDL test scripts
 
 
-*Last update: 21 March 2024*
+*Last update: 27 March 2024*

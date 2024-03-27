@@ -9,6 +9,7 @@ cp  $ROPP_ROOT/ropp_pp/data/MSIS_coeff.nc ./MSIS_coeff.nc
 export GEOPOT_COEF=$ROPP_ROOT/ropp_pp/data/egm96.dat
 export GEOPOT_CORR=$ROPP_ROOT/ropp_pp/data/corrcoeff.dat
 
+
 ######################################################
 #    Build section of ROPP that is changed by patch
 ######################################################
@@ -30,3 +31,5 @@ cd /app/ropp/ropp-11.0/ropp_pp && automake -a -c
 cd /app/ropp/ropp-11.0/ropp_pp && autoconf
 cd /app/ropp/ropp-11.0/ropp_pp && ./configure --without-sofa
 cd /app/ropp/ropp-11.0/ropp_pp && make && make install
+
+
