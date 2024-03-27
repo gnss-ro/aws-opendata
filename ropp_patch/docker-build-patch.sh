@@ -32,4 +32,5 @@ cd /app/ropp/ropp-11.0/ropp_pp && autoconf
 cd /app/ropp/ropp-11.0/ropp_pp && ./configure --without-sofa
 cd /app/ropp/ropp-11.0/ropp_pp && make && make install
 
-
+# Return home 
+cd /mnt
