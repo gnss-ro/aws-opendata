@@ -34,9 +34,11 @@ The files and their locations are listed below.
 
 Download the ROPP from ROMSAF at https://rom-saf.eumetsat.int/ropp/index.php. Be sure to select "99.0 Complete package distribution" under "ROPP-11.0/Essentials", as well as all of the dependency packages.
 
-With the ROPP installed, the patch can be installed by unpacking patch.tar.gz then running the 
+Add the patch to the ROPP by unpacking patch.tar.gz then running the 
 `./build-patch.sh`
- executable, which will move the relevant files in the patch to the correct locations in the ROPP. After rerunning the configure and make commands (as instructed in the ROPP), the patch can then be used as normal. 
+ executable, which will move the relevant files in the patch to the correct locations in the ROPP. 
+
+Install the ROPP as normal, following the instructions the ROPP Release Notes and Installation Guide. 
 
 For the Python tests to work, the following packages are also required: netcdf4, matplotlib, scipy, matplotlib, math, argparse
 
