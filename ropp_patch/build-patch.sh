@@ -1,17 +1,32 @@
-#!/bin/bash
+#!/usr/bin/bash
 # Shell script to add patch files to their correct location in the ROPP
 
-# Untar ROPP
-tar -xzf ropp-11.0.tar.gz ropp-11.0
-
 # Copy ropp_io files from patch 
-cp -a patch/ropp_io/build/ ropp-11.0/ropp_io/build
-cp -a patch/ropp_io/ncdf/ ropp-11.0/ropp_io/ncdf
-cp -a patch/ropp_io/ropp/ ropp-11.0/ropp_io/ropp
-cp -a patch/ropp_io/tools/ ropp-11.0/ropp_io/tools
+cp -a patch/ropp_io ropp-11.0
 
 # Copy ropp_pp files from patch 
-cp -a patch/ropp_pp/data/  ropp-11.0/ropp_pp/data
-cp -a patch/ropp_pp/tools/  ropp-11.0/ropp_pp/tools
-cp -a patch/ropp_pp/preprocess/  ropp-11.0/ropp_pp/preprocess
-cp -a patch/ropp_pp/tests/  ropp-11.0/ropp_pp/tests
+cp -a patch/ropp_pp  ropp-11.0
+
+#  Rebuild ropp_io with patch
+cd ropp-11.0//ropp_io
+# Redo automakes 
+aclocal -I m4 --force
+automake -a -c
+autoconf
+echo "Rebuilding ropp_io..."
+# Run actual build 
+./configure #--prefix=${1-$ROPP_ROOT/gfortran} 
+make 
+make install
+echo "ropp_io rebuild complete."
+
+# Rebuild ropp_pp
+cd ropp-11.0//ropp_pp 
+aclocal -I m4 --force
+automake -a -c
+autoconf
+echo "Rebuilding ropp_pp..."
+./configure 
+make 
+make install
+echo "ropp_pp rebuild complete."
