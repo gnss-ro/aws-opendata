@@ -50,31 +50,35 @@ def rotation_collocation( nadir_sat, occs, time_tolerance, spatial_tolerance,
 
     Returns
     ---------
-        A list of dictionaries, each element corresponding to a collocation. The 
-        keyword-value pairs of each dictionary are...
+        A dictionary with keyword value pairs as follows: 
 
-        occ -> OccList 
-            An OccList instance of size 1 defining the collocated occultation
-        nadir_time -> timestandards.Time
-            An instance of timestandards.Time defining the approximate time of 
-            the collocated nadir sounding
-        nadir_scan_angle -> float
-            A float defining the approximate scan angle of the collocated nadir
-            sounding
+        status -> "success" or "fail"
+        messages -> a list of mnemonic messages regarding performance
+        comments -> a list of commentary messages regarding performance
+        data -> an instance of CollocationList containing found collocations
     """
+
+    #  Initialize return dictionary. 
+
+    ret = { 'status': None, 'messages': [], 'comments': [], 'data': None }
 
     #  Check input. 
 
     if not isinstance( nadir_sat, NadirSatelliteInstrument ): 
-        raise rotationCollocationError( "InvalidArgument", 
-            "nadir_sat must be a subclass of NadirSatelliteInstrument" )
+        ret['messages'].append( "InvalidArgument" )
+        ret['comments'].append( "nadir_sat must be a subclass of NadirSatelliteInstrument" )
+        ret['status'] = "fail"
+        return ret
 
     if nsuboccs < 2:
-        raise rotationCollocationError( "InvalidArgument", 
+        ret['messages'].append( "InvalidArgument" )
+        ret['comments'].append( 
             """Rotation-collocation method needs at least 2 
             points for interpolation. Use nsuboccs=2 for the linearized 
             rotation-collocation method and use nsuboccs>2 for the 
             rotation-collocation method with sub-occultations""" )
+        ret['status'] = "fail"
+        return ret
 
     nadir_frame_positions = nadir_sat.rotate_to_nadir_frame( occs, time_tolerance, nsuboccs )
 
@@ -85,7 +89,16 @@ def rotation_collocation( nadir_sat, occs, time_tolerance, spatial_tolerance,
     #  Get satellite period (assume it doesn't change much over the day)
 
     time = get_occ_times( occs[0] )[0]
-    tle = nadir_sat.get_current_tle( time )
+    resp = nadir_sat.get_current_tle( time )
+
+    if resp['status'] == "fail": 
+        ret['status'] == "fail"
+        ret['messages'] += resp['messages']
+        ret['comments'] += resp['comments']
+        return ret
+    else: 
+        tle = resp['data']
+
     sat = Satrec.twoline2rv( *tle )
     sat_period = 2*np.pi/sat.nm * 60        #  Convert to seconds from minutes
 
@@ -144,7 +157,10 @@ def rotation_collocation( nadir_sat, occs, time_tolerance, spatial_tolerance,
                 colocs.append( coloc )
                 break
 
-    return CollocationList( colocs )
+    ret['status'] = "success"
+    ret['data'] = CollocationList( colocs )
+    
+    return ret
 
 
 def compare_points_in_nadir_frame(x_prev, y_prev, z_prev, x_j, y_j, z_j,

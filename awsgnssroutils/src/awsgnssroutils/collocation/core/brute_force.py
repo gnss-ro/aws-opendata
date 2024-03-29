@@ -41,9 +41,17 @@ def brute_force( nadir_satellite_instrument, occs, time_tolerance, spatial_toler
 
     Returns
     -----------
-        colocs: list of Collocation instances. 
-            A list of Collocation objects containing information on the 
-            collocated RO and nadir-scan soundings."""
+        A dictionary with the following keyword, value information: 
+
+        status -> "success" or "fail"
+        messages -> A list of mnemonic messages regarding performance
+        comments -> A list of comments regarding performance
+        data -> An instance of CollocationList containing collocations found
+    """
+
+    #  Initialize return dictionary. 
+
+    ret = { 'status': None, 'messages': [], 'comments': [], 'data': None }
 
     #  Set parameters. 
 
@@ -71,12 +79,18 @@ def brute_force( nadir_satellite_instrument, occs, time_tolerance, spatial_toler
     for iocc in iterator: 
 
         occ = occs[iocc]
-        ret = brute_force_sorted( nadir_scanner_geolocations, occ, 
+        resp = brute_force_sorted( nadir_scanner_geolocations, occ, 
                     time_tolerance, spatial_tolerance )
 
-        if ret is not None:
+        if resp['status'] == "fail": 
+            ret['status'] == "fail"
+            ret['messages'] += resp['messages']
+            ret['comments'] += resp['comments']
+            return ret
 
-            iscan, ifootprint = ret['iscan'], ret['ifootprint']
+        if resp['data'] is not None:
+
+            iscan, ifootprint = resp['data']['iscan'], resp['data']['ifootprint']
 
             coloc = Collocation( occ, nadir_satellite_instrument, 
                           longitude = np.rad2deg( nadir_scanner_geolocations.longitudes[iscan,ifootprint] ), 
@@ -88,7 +102,12 @@ def brute_force( nadir_satellite_instrument, occs, time_tolerance, spatial_toler
 
             colocs.append( coloc )
 
-    return CollocationList( colocs )
+    #  Finalize. 
+
+    ret['status'] = "success"
+    ret['data'] = CollocationList( colocs )
+
+    return ret
 
 
 def brute_force_sorted( nadir_scanner_geolocations, occ, 
@@ -115,15 +134,18 @@ def brute_force_sorted( nadir_scanner_geolocations, occ,
 
     Returns
     -----------
-        If no collocation is found, return None. If a collocation is found, a 
-        dictionary containing the following keyword-value pairs is returned: 
+        A dictionary with the following keyword, value information: 
 
-        iscan -> the scan index in nadir_scanner_geolocations corresponding to 
-                the collocated nadir-scanner sounding
-
-        ifootprint -> the footprint index in nadir_scanner_geolocations 
-                corresponding to the collocated nadir-scanner sounding
+        status -> "success" or "fail"
+        messages -> A list of mnemonic messages regarding performance
+        comments -> A list of comments regarding performance
+        data -> None if no collocation found; a dictionary containing the 
+                'iscan' and 'ifootprint' of the collocated sounding
     """
+
+    #  Initialize return dictionary. 
+
+    ret = { 'status': None, 'messages': [], 'comments': [], 'data': None }
 
     #  Get nadir-scanner scans that fall within time tolerance. 
 
@@ -175,10 +197,14 @@ def brute_force_sorted( nadir_scanner_geolocations, occ,
 
     r_e = calculate_radius_of_earth( 0.5 * ( occ_latitude + nadir_scanner_geolocations.latitudes[iscan,ifootprint] ) )
 
+    #  Finalize. 
+
+    ret['status'] = "success"
+
     if dist_ang[iiscan,ifootprint] <= spatial_tolerance/r_e * 1.0e-3: 
-        ret = { 'iscan': iscan, 'ifootprint': ifootprint }
+        ret['data'] = { 'iscan': iscan, 'ifootprint': ifootprint }
     else: 
-        ret = None
+        ret['data'] = None
 
     return ret
 

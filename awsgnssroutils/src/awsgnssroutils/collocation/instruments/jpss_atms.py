@@ -60,17 +60,17 @@ class JPSS_ATMS(NadirSatelliteInstrument):
     Parameters
     ------------
         name: str
-            Name of the nadir satellite, drawn from awsgnssroutils.collocation.core.celestrak.Satellites[:]['name']
+            Name of the nadir satellite, drawn from awsgnssroutils.collocation.core.spacetrack.Satellites[:]['name']
         nasa_earthdata_access: collocation.core.nasa_earthdata.NASAEarthdata
             An object that interfaces with the NASA Earthdata DAACs. 
-        celestrak: collocation.core.celestrak.Celestrak
-            Portal to the Celestrak TLE data
+        spacetrack: collocation.core.spacetrack.Spacetrack
+            Portal to the Spacetrack TLE data
 
     Attributes
     ------------
         name: str
-            Name of the nadir satellite, drawn from awsgnssroutils.collocation.core.celestrak.Satellites[:]['name']
-        celestrak_satellite: instance of celestrak.CelestrakSatellite
+            Name of the nadir satellite, drawn from awsgnssroutils.collocation.core.spacetrack.Satellites[:]['name']
+        spacetrack_satellite: instance of spacetrack.SpacetrackSatellite
             Define the satellite, for access to TLEs
         xi: float
             MWR instrument maximum scan angle [radians]
@@ -84,11 +84,11 @@ class JPSS_ATMS(NadirSatelliteInstrument):
             Angle between scan footprints [radians]
         eumetsat_access: collocation.core.eumetsat.EUMETSATDataStore
             An object that interfaces with the EUMETSAT Data Store. 
-        celestrak_satellite: collocation.core.celestrak.CelestrakSatellite
+        spacetrack_satellite: collocation.core.spacetrack.SpacetrackSatellite
             TLE data for the satellite
     """
 
-    def __init__(self, name, nasa_earthdata_access, celestrak=None ):
+    def __init__(self, name, nasa_earthdata_access, spacetrack=None ):
         """Constructor for MetopAMSUA class."""
 
         if name not in valid_satellites: 
@@ -102,7 +102,7 @@ class JPSS_ATMS(NadirSatelliteInstrument):
             scan_angle_spacing = 1.108          # degrees
 
             super().__init__( name, max_scan_angle, time_between_scans,
-                    scan_points_per_line, scan_angle_spacing, celestrak=celestrak )
+                    scan_points_per_line, scan_angle_spacing, spacetrack=spacetrack )
 
             self.nasa_earthdata_access = nasa_earthdata_access
             self.status = "success"

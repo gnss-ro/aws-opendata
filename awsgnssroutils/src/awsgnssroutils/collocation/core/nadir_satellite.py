@@ -19,7 +19,7 @@ methods are...
             time range; it populates an instance of ScanMetadata
     - get_current_tle: Gets two-line element for the host satellite 
             that is nearest to a specified time; it accesses 
-            Celestrak
+            Spacetrack
     - calculate_ds_from_xi: Calculate approximate maximum scan width 
             given a geodetic latitude; it only computes the local 
             radius of the Earth to estimate the scan width ds 
@@ -53,7 +53,7 @@ from astropy.coordinates.builtin_frames.utils import get_polar_motion
 
 from .awsro import get_occ_times
 from .constants_and_utils import sec_to_sidereal_day, calculate_km_to_degree, mu, calculate_radius_of_earth
-from .celestrak import Celestrak
+from .spacetrack import Spacetrack
 
 #  Exception handling. 
 
@@ -85,15 +85,15 @@ class NadirSatelliteInstrument(ABC):
             Number of scan points in each cross-track scan
         scan_angle_spacing: float
             Angle between scan points in each cross-track scan [degrees]
-        celestrak: celestrak.Celestrak
-            Portal to Celestrak TLE data on the local file system
+        spacetrack: spacetrack.Spacetrack
+            Portal to Spacetrack TLE data on the local file system
 
     Attributes
     ------------
         name: string
             Name of satellite (ex. NOAA-20)
-        celestrak_satellite: instance of celestrak.CelestrakSatellite
-            An instance of celestrak.CelestrakSatellite for access to TLEs
+        spacetrack_satellite: instance of spacetrack.SpacetrackSatellite
+            An instance of spacetrack.SpacetrackSatellite for access to TLEs
         xi: float
             Nadir-scanning instrument maximum scan angle [radians]
         time_between_scans: float
@@ -107,7 +107,7 @@ class NadirSatelliteInstrument(ABC):
 
     def __init__(self, name, max_scan_angle, 
                  time_between_scans, scan_points_per_line, scan_angle_spacing, 
-                 celestrak=None):
+                 spacetrack=None):
         """
         Constructor for NadirSatelliteInstrument.
         """
@@ -119,10 +119,10 @@ class NadirSatelliteInstrument(ABC):
         self.scan_angle_spacing = np.deg2rad(scan_angle_spacing)
         self.max_scan_angle = np.deg2rad(max_scan_angle)
 
-        if isinstance( celestrak, Celestrak ): 
-            self.celestrak_satellite = celestrak.satellite( name )
+        if isinstance( spacetrack, Spacetrack ): 
+            self.spacetrack_satellite = spacetrack.satellite( name )
         else: 
-            self.celestrak_satellite = None
+            self.spacetrack_satellite = None
 
     #====================================================================
     #  Abstract methods. These must be defined by the child class that 
@@ -186,7 +186,7 @@ class NadirSatelliteInstrument(ABC):
             tle_2: string
                 second line of TLE"""
 
-        ret = self.celestrak_satellite.nearest( occultation_time )
+        ret = self.spacetrack_satellite.nearest( occultation_time )
         return ret
 
     def calculate_ds_with_xi(self, lat_geodetic, alt ):

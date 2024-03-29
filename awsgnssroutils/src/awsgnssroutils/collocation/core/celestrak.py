@@ -219,8 +219,13 @@ class CelestrakSatellite():
         """Get the TLE that is nearest in time (instance of timestandards.Time). The two lines of the 
         TLE are returned as a 2-tuple if successful. If unsuccessful, None is returned."""
 
+        ret = { 'status': None, 'messages': [], 'comments': [] }
+
         if not isinstance( time, Time ): 
-            raise celestrakError( "InvalidArgument", "The argument must be an instance of timestandards.Time" )
+            ret['messages'].append( "InvalidArgument" )
+            ret['comments'].append( f'The argument to Celestrak.nearest must be an instance of timestandards.Time' )
+            ret['status'] = "fail"
+            return ret
 
         datetimes_gps = np.array( [ dt-gps0 for dt in self.datetimes ] )
         time_gps = time - gps0
@@ -230,9 +235,10 @@ class CelestrakSatellite():
         #  Check for valid return value. The nearest time must be better than 12 hours. 
 
         if np.abs( datetimes_gps[i] - time_gps ) < 12 * 3600: 
-            ret = self.tles[i]
+            ret.update( { 'data': self.tles[i] } )
+            ret['status'] = "success"
         else: 
-            ret = None
+            ret['status'] = "fail"
 
         return ret
 
