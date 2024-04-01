@@ -85,13 +85,22 @@ def setdefaults( root_path, earthdatalogin=None ):
     if os.path.exists( defaults_file ): 
         with open( defaults_file, 'r' ) as f: 
             defaults = json.load( f )
-        defaults.update( { root_path_variable: root_path } )
     else: 
         defaults = {}
+
+    #  Set root data path. Create the directory. 
+
+    defaults.update( { root_path_variable: root_path } )
+    os.makedirs( root_path, exist_ok=True )
+
+    #  Write to defaults file. 
 
     with open( defaults_file, 'w' ) as f: 
         json.dump( defaults, f, indent="  " )
     os.chmod( defaults_file, stat.S_IRUSR | stat.S_IWUSR )
+
+    #  Write Earthdata login username and password to .netrc file if 
+    #  provided. 
 
     if earthdatalogin is not None: 
         if isinstance(earthdatalogin,tuple) or isinstance(earthdatalogin,list): 

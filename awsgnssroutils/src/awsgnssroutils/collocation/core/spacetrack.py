@@ -55,23 +55,36 @@ class spacetrackError( Error ):
         self.comment = comment
 
 
-def setdefaults( root_path, username, password ):
-    """This method sets the default root path for Spacetrack TLE data."""
+def setdefaults( root_path, spacetracklogin=None ):
+    """This method sets the default root path for Spacetrack TLE data. If the 
+    keyword spacetracklogin is given, it must be a 2-element tuple/list 
+    containing the user's username and password for the user's Space-Track 
+    account."""
 
     if os.path.exists( defaults_file ):
         with open( defaults_file, 'r' ) as f:
             defaults = json.load( f )
-        defaults.update( { root_path_variable: root_path, 
-                          username_variable: username, 
-                          password_variable: password } ) 
     else: 
         defaults = {}
+
+    #  Update data root path and create the directory. 
+
+    defaults.update( { root_path_variable: root_path } )
+    os.makedirs( root_path, exist_ok=True )
+
+    #  Update username and password. 
+
+    if spacetracklogin is not None: 
+        if isinstance(spacetracklogin,tuple) or isinstance(spacetracklogin,list): 
+            if len(spacetracklogin) == 2: 
+                defaults.update( { username_variable: spacetracklogin[0], 
+                          password_variable: spacetracklogin[1] } ) 
+
+    #  Write to defaults file. 
 
     with open( defaults_file, 'w' ) as f:  
         json.dump( defaults, f, indent="  " ) 
     os.chmod( defaults_file, stat.S_IRUSR | stat.S_IWUSR )
-
-    os.makedirs( root_path, exist_ok=True )
 
     #  Done. 
 

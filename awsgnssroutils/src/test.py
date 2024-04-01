@@ -12,7 +12,7 @@ nasa_earthdata_access = NASAEarthdata()
 
 from awsgnssroutils.collocation.instruments import instruments
 
-JPSS1_ATMS = instruments['JPSS_ATMS']['class']( "JPSS-1", nasa_earthdata_access, spacetrack=st )
+JPSS1_ATMS = instruments['ATMS']['class']( "JPSS-1", nasa_earthdata_access, spacetrack=st )
 
 #  Time interval for collocation finding. 
 
