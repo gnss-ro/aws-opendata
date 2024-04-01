@@ -327,8 +327,6 @@ class Celestrak():
 
 
 if __name__ == "__main__": 
-    import pdb
-    pdb.set_trace()
 
     data_dir = "../../Data/TLEs"
     cs = Celestrak( data_dir )

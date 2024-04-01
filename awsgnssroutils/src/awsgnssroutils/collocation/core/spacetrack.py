@@ -5,6 +5,7 @@
 import os, re, json, stat
 import numpy as np
 import requests
+from datetime import datetime, timedelta
 from .timestandards import Time, Calendar
 from .constants_and_utils import defaults_file
 
@@ -105,16 +106,19 @@ class SpacetrackSatellite():
         self.norad_number_string = f'{norad_number:05d}'
 
         if self.norad_number_string not in self.spacetrack.catalogue.keys(): 
-            print( f'NORAD number {norad_number_string} not in Spacetrack local database' )
-            self.status = "fail"
-            return
-
-        self.build_instance()
+            self.status = "success"
+            self.nrecs = 0
+            self.datetimes = []
+            self.tles = []
+        else: 
+            self.build_instance()
 
         pass
 
     def build_instance( self ): 
         """Reconstruct the data in this instance."""
+
+        data = {}
 
         for file in self.spacetrack.catalogue[self.norad_number_string]: 
 
@@ -235,15 +239,23 @@ class SpacetrackSatellite():
         """Get the TLE that is nearest in time (instance of timestandards.Time). The two lines of the 
         TLE are returned as a 2-tuple if successful. If unsuccessful, None is returned."""
 
+        ret = { 'status': None, 'messages': [], 'comments': [] }
+
         if not isinstance( time, Time ): 
             raise spacetrackError( "InvalidArgument", "The argument must be an instance of timestandards.Time" )
 
         #  Iterate to assure update of local TLE data (if necessary). 
 
-        for i in range(2): 
+        for iteration in range(2): 
 
             datetimes_gps = np.array( [ dt-gps0 for dt in self.datetimes ] )
             time_gps = time - gps0
+
+            if datetimes_gps.size == 0: 
+                ret_tles = None
+                ret_spacetrack = self.spacetrack.download_data( self.norad_number_string, time.calendar("utc").datetime() )
+                self.build_instance()
+                continue
 
             i = np.argmin( np.abs( datetimes_gps - time_gps ) ) 
 
@@ -252,15 +264,15 @@ class SpacetrackSatellite():
             if np.abs( datetimes_gps[i] - time_gps ) < 12 * 3600: 
                 ret_tles = self.tles[i]
                 break 
-            elif i==0: 
+            elif iteration==0: 
                 ret_tles = None
                 ret_spacetrack = self.spacetrack.download_data( self.norad_number, time.datetime() )
+                ret['messages'] += ret_spacetrack['messages']
+                ret['comments'] += ret_spacetrack['comments']
                 self.build_data()
             else: 
                 ret_tles = None
 
-        ret['messages'] += ret_spacetrack['messages']
-        ret['comments'] += ret_spacetrack['comments']
 
         if ret_tles is None: 
             ret['status'] = "fail"
@@ -311,7 +323,7 @@ class Spacetrack():
             dirs.sort()
 
             for file in files: 
-                m = re.search( "^sat(\d{9}).*\.txt$", file )
+                m = re.search( "^sat(\d{5}).*\.txt$", file )
                 if not m: continue
 
                 #  Read first line of the file to get the satellite NORAD number. 
@@ -363,7 +375,7 @@ class Spacetrack():
 
         return ret
 
-    def download_data( norad_number, time ): 
+    def download_data( self, norad_number, time ): 
         """Download TLEs for a satellite defined by its NORAD number 
         (norad_number) and a time. The default is to obtain one month's 
         worth of data. 
@@ -416,17 +428,13 @@ class Spacetrack():
             ret['comments'].append( f'failed request_uri = "{request_uri}"' )
             return ret
 
-        #  Parse the download. 
-
-        lines = resp.text.split("\n")
-
         #  Write to output file. 
 
         path = os.path.join( self.data_root, f'sat{satID}', f'sat{satID}_'+time.strftime("%Y-%m")+".txt" )
-        os.makedirs( os.path.dirname, exist_ok=True )
+        os.makedirs( os.path.dirname(path), exist_ok=True )
         with open(path,'w') as f: 
-            for line in lines: 
-                f.write( line )
+            for line in resp.iter_lines(): 
+                f.write( line.decode() + "\n" )
 
         #  Rebuild catalogue. 
 
@@ -440,8 +448,6 @@ class Spacetrack():
 
 
 if __name__ == "__main__": 
-    import pdb
-    pdb.set_trace()
 
     data_dir = "../../Data/TLEs"
     cs = Spacetrack( data_dir )

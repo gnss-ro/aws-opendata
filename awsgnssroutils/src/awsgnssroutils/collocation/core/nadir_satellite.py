@@ -313,6 +313,8 @@ class NadirSatelliteInstrument(ABC):
                 vector in the nadir-scanner frame for the nth
                 sub-occultation of the mth occultation."""
 
+        ret = { 'status': None, 'messages': [], 'comments': [], 'data': None }
+
         #  Get spacing between sub-occultations in sec
 
         if nsuboccs == 1:
@@ -338,7 +340,13 @@ class NadirSatelliteInstrument(ABC):
             if iocc == 0:
                 xp, yp = get_polar_motion( time.juliandate() )
                 polarmat = erfa.pom00( xp, yp, 0 )
-                tle = self.get_current_tle( time )
+                ret_tle = self.get_current_tle( time )
+                if ret_tle['status'] == "fail": 
+                    ret['status'] = "fail"
+                    ret['messages'] += ret_tle['messages']
+                    ret['comments'] += ret_tle['comments']
+                    return ret
+                tle = ret_tle['data']
                 sat = Satrec.twoline2rv( *tle )
 
             # Find inertial longitude & latitude for occultation
@@ -385,7 +393,10 @@ class NadirSatelliteInstrument(ABC):
 
                 nadir_positions[iocc, isubocc, :, :] = pos_subocc
 
-        return nadir_positions
+        ret['status'] = "success"
+        ret['data'] = nadir_positions
+
+        return ret
 
 
 

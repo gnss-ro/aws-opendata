@@ -80,7 +80,13 @@ def rotation_collocation( nadir_sat, occs, time_tolerance, spatial_tolerance,
         ret['status'] = "fail"
         return ret
 
-    nadir_frame_positions = nadir_sat.rotate_to_nadir_frame( occs, time_tolerance, nsuboccs )
+    ret_rotate = nadir_sat.rotate_to_nadir_frame( occs, time_tolerance, nsuboccs )
+    if ret_rotate['status'] == "fail": 
+        ret['status'] = "fail"
+        ret['messages'] += ret_rotate['messages']
+        ret['comments'] += ret_rotate['comments']
+        return ret
+    nadir_frame_positions = ret_rotate['data']
 
     dt = 2 * time_tolerance/(nsuboccs-1)
 
@@ -130,14 +136,14 @@ def rotation_collocation( nadir_sat, occs, time_tolerance, spatial_tolerance,
             #  the time tolerance is quite long.
 
             num_revs = ( sub_occ_time - sub_occ_time_prev ) / sat_period
-            ret = compare_points_in_nadir_frame(x_prev, y_prev, z_prev,
+            ret_compare = compare_points_in_nadir_frame(x_prev, y_prev, z_prev,
                     x, y, z, max_scan_angle, num_revs, spatial_tolerance)
 
-            if ret is None: 
+            if ret_compare is None: 
                 continue
 
-            frac = ( ret['estimated_scan_angle'] - ret['start_scan_angle'] ) \
-                        / ( ret['end_scan_angle'] - ret['start_scan_angle'] )
+            frac = ( ret_compare['estimated_scan_angle'] - ret_compare['start_scan_angle'] ) \
+                        / ( ret_compare['end_scan_angle'] - ret_compare['start_scan_angle'] )
 
             est_coloc_time = sub_occ_time_prev
             est_coloc_time += frac * ( sub_occ_time - sub_occ_time_prev )
@@ -148,18 +154,18 @@ def rotation_collocation( nadir_sat, occs, time_tolerance, spatial_tolerance,
             # Double check to make sure max scan angle is exactly right
             # at estimated collocation time
 
-            if ret['estimated_scan_angle'] <= max_scan_angle:
+            if ret_compare['estimated_scan_angle'] <= max_scan_angle:
                 coloc = Collocation( occ, nadir_sat, 
                                     longitude=np.rad2deg(longitude), 
                                     latitude=np.rad2deg(latitude), 
-                                    scan_angle=np.rad2deg(ret['estimated_scan_angle']), 
+                                    scan_angle=np.rad2deg(ret_compare['estimated_scan_angle']), 
                                     time=est_coloc_time )
                 colocs.append( coloc )
                 break
 
     ret['status'] = "success"
     ret['data'] = CollocationList( colocs )
-    
+
     return ret
 
 

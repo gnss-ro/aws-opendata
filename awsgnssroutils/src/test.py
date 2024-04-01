@@ -51,8 +51,8 @@ from awsgnssroutils.collocation.core.rotation_collocation import rotation_colloc
 print( "Executing rotation-collocation" )
 
 tbegin = time()
-collocations_rotation = rotation_collocation( JPSS1_ATMS, occs, 
-        time_tolerance, spatial_tolerance, 2 )
+ret_rotation = rotation_collocation( JPSS1_ATMS, occs, time_tolerance, spatial_tolerance, 2 )
+collocations_rotation = ret_rotation['data']
 tend = time()
 
 print( "  - number found = {:}".format( len( collocations_rotation ) ) )
