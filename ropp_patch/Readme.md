@@ -34,11 +34,11 @@ The files and their locations are listed below.
 
 Download the ROPP from ROMSAF at https://rom-saf.eumetsat.int/ropp/index.php. Be sure to select "99.0 Complete package distribution" under "ROPP-11.0/Essentials", as well as all of the dependency packages.
 
+Install the ROPP as normal, following the instructions the ROPP Release Notes and Installation Guide. 
+
 Add the patch to the ROPP by unpacking patch.tar.gz then running the 
 `./build-patch.sh`
- executable, which will move the relevant files in the patch to the correct locations in the ROPP. 
-
-Install the ROPP as normal, following the instructions the ROPP Release Notes and Installation Guide. 
+ executable, which will move the relevant files in the patch to the correct locations in the ROPP and rebuild the relevant portions of the ROPP (ropp_io and ropp_pp) witht the new files.
 
 For the Python tests to work, the following packages are also required: netcdf4, matplotlib, scipy, matplotlib, math, argparse
 
@@ -58,6 +58,14 @@ For the Python tests to work, the following packages are also required: netcdf4,
 6. Once once inside the Docker image, complete the build of the patch using the shell script by entering 
 `. ./docker-build-patch.sh`
  You should now have a working version of ROPP-11.0 with the AWS-opendata patch running inside a Docker image. 
+ 
+ 
+## Usage
+The ROPP patch contains a new tool, aws2ropp, which can be used like ucar2ropp, bufr2ropp, etc. to convert calibratedPhase files from AWS into ROPP-formatted NetCDF files. The syntax of aws2ropp is identical to that of the ucar2ropp, bufr2ropp, etc.
+We have also included some sample Python versions of IDL test codes. These can be run by entering 
+`python [script name] [optional: --op_format ["PNG", "EPS", "GIF", or "JPEG" (default is "EPS")] `
+These scripts will generate an output figure that will pop up in a separate window.
+ 
 
 ## Purpose of each file change in the patch
 
@@ -91,4 +99,4 @@ Modified directories: ropp_io, ropp_pp
 		1. it_pp_01.py, it_pp_spectra_dt.py, it_pp_spectra_ep.py, it_pp_wopt_01.py, it_pp_wopt_02.py; created Python versions of IDL test scripts
 
 
-*Last update: 27 March 2024*
+*Last update: 1 April 2024*
