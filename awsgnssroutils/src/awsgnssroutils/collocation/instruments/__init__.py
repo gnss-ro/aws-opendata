@@ -1,10 +1,10 @@
 instruments = {}
 
-from .jpss_atms import JPSS_ATMS, instrument, valid_satellites
-instruments.update( { instrument: { 'class': JPSS_ATMS, 'valid_satellites': valid_satellites } } )
+from .atms import ATMS, instrument, valid_satellites
+instruments.update( { instrument: { 'class': ATMS, 'valid_satellites': valid_satellites } } )
 
-from .metop_amsua import Metop_AMSUA, instrument, valid_satellites
-instruments.update( { instrument: { 'class': Metop_AMSUA, 'valid_satellites': valid_satellites } } )
+from .amsua import AMSUA, instrument, valid_satellites
+instruments.update( { instrument: { 'class': AMSUA, 'valid_satellites': valid_satellites } } )
 
 satellites = {}
 for instrument, value in instruments.items(): 
