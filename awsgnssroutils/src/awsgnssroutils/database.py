@@ -5,9 +5,9 @@ Date: 10 January 2024
 
 ================================================================================
 
-This module contains utilities to query the AWS Registry of Open Data repository
+This module contains utilities to query the AWS Registry of Open Data metadata_root
 of GNSS radio occultation data. It does so using database files posted in the
-AWS repository.
+AWS metadata_root.
 
 Functionality
 =============
@@ -17,8 +17,8 @@ of a list of radio occultations (ROs). Each are described below.
 
 RODatabaseClient:
     Create an instance of a portal to a metadata on all RO data in the AWS
-    Registry of Open Data. It provides an option to create a repository of
-    the RO metadata on the local file system as keyword "repository".
+    Registry of Open Data. It provides an option to create a metadata_root of
+    the RO metadata on the local file system as keyword "metadata_root".
 
 OccList:
     An instance of the class OccList is contains the metadata on a list of RO
@@ -36,8 +36,8 @@ Very useful utilities...
 setdefaults: 
     A function that sets defaults for use of RODatabaseClient and OccList. 
     It allows the user to specify defaults for storage of RO metadata 
-    database files ("repository") and for downloads of RO data files 
-    ("rodata"). In doing so, the user won't have to specify the repository 
+    database files ("metadata_root") and for downloads of RO data files 
+    ("data_root"). In doing so, the user won't have to specify the metadata_root 
     every time an instance of RODatabaseClient is created nor specify a 
     data download path every time the OccList.download method is called. 
 
@@ -164,7 +164,7 @@ use_S3Client = unsigned_S3Client
 ################################################################################
 
 
-#  Useful parameters. Scan the AWS RO data repository for valid versions 
+#  Useful parameters. Scan the AWS RO data metadata_root for valid versions 
 #  (valid_versions), valid processing centers (valid_processing_centers), 
 #  valid file types (valid_file_types), and valid missions (valid_missions). 
 #
@@ -228,45 +228,45 @@ valid_missions = { version: sorted( list( set( missions ) ) ) for version, missi
 #  Resources utilities: Create a defaults file, populate metadata database. 
 ################################################################################
 
-def setdefaults( repository:str=None, rodata:str=None, version:str=None ) -> dict: 
-    """Create a local repository for a history database queries. 
+def setdefaults( metadata_root:str=None, data_root:str=None, version:str=None ) -> dict: 
+    """Create a local metadata_root for a history database queries. 
 
-    Create a local repository of prior database queries and record the 
+    Create a local metadata_root of prior database queries and record the 
     directory path in a defaults file that can be found in the user's home 
     directory. Also, one can specify a default path for RO data downloads. 
 
-    repository          An absolute path to a directory containing 
-                        information from all previous searches. 
+    metadata_root       An absolute path to a directory containing 
+                        RO metadata information from all previous searches. 
 
-    rodata              The default path for downloading RO data. If 
+    data_root           The default path for downloading RO data. If 
                         it is not provided here, then it must be provided 
-                        when the method OccList.download is called. "rodata" 
+                        when the method OccList.download is called. "data_root" 
                         must be an absolute path.
 
     version             The default RO format version. The available versions 
                         can be found in s3://gnss-ro-data/dynamo. 
     """
 
-    defaults = { 'repository': "", 'rodata': "", 'version': "" }
+    defaults = { 'metadata_root': "", 'data_root': "", 'version': "" }
 
     #  Be sure the paths are absolute paths. Also, create paths if they 
     #  don't already exist. 
 
-    if repository is not None: 
-        if repository != os.path.abspath( repository ): 
+    if metadata_root is not None: 
+        if metadata_root != os.path.abspath( metadata_root ): 
             raise AWSgnssroutilsError( "BadPathName", 
-                    f'Path to repository ({repository}) must be an absolute path' )
+                    f'Path to metadata_root ({metadata_root}) must be an absolute path' )
         else: 
-            defaults['repository'] = repository
-            os.makedirs( repository, exist_ok=True )
+            defaults['metadata_root'] = metadata_root
+            os.makedirs( metadata_root, exist_ok=True )
 
-    if rodata is not None: 
-        if rodata != os.path.abspath( rodata ): 
+    if data_root is not None: 
+        if data_root != os.path.abspath( data_root ): 
             raise AWSgnssroutilsError( "BadPathName", 
-                    f'Path to rodata ({rodata}) must be an absolute path' )
+                    f'Path to data_root ({data_root}) must be an absolute path' )
         else: 
-            defaults['rodata'] = rodata
-            os.makedirs( rodata, exist_ok=True )
+            defaults['data_root'] = data_root
+            os.makedirs( data_root, exist_ok=True )
 
 
     #  Check for a valid version. 
@@ -279,10 +279,10 @@ def setdefaults( repository:str=None, rodata:str=None, version:str=None ) -> dic
 
         defaults['version'] = version
 
-        if repository is not None: 
-            os.makedirs( os.path.join( repository, version ), exist_ok=True )
+        if metadata_root is not None: 
+            os.makedirs( os.path.join( metadata_root, version ), exist_ok=True )
 
-    #  Record repository and rodata paths and version to resource file. 
+    #  Record metadata_root and data_root paths and version to resource file. 
 
     HOME = os.path.expanduser( "~" )
     defaults_file_path = os.path.join( HOME, defaults_filename )
@@ -299,13 +299,13 @@ def populate() -> subprocess.CompletedProcess :
     """Populate the metadata database in the path established by 
     setdefaults. 
 
-    This function will synchronize the default repository path 
+    This function will synchronize the default metadata_root path 
     "{respository}/{version}" with the contents in the AWS S3 path 
     s3://gnss-ro-data/dynamo/{version}/export_subsets. 
     """
 
     defaults = get_defaults()
-    repository, version = defaults['repository'], defaults['version']
+    metadata_root, version = defaults['metadata_root'], defaults['version']
 
     if version is None: 
         raise AWSgnssroutilsError( "InvalidVersion", 'A default version must ' + \
@@ -321,7 +321,7 @@ def populate() -> subprocess.CompletedProcess :
 
     command = [ 'aws', 's3', 'sync', 
                f's3://{databaseS3bucket}/dynamo/{version}/export_subsets/', 
-               os.path.join(repository,version), '--no-sign-request', '--delete' ]
+               os.path.join(metadata_root,version), '--no-sign-request', '--delete' ]
 
     #  Synchronize using subprocess.
 
@@ -386,9 +386,9 @@ class OccList():
         data        A list of items/RO soundings from the RO database. 
 
         s3wrapper   An instance of S3Wrapper that provides access to the AWS 
-                    repository of RO data.
+                    metadata_root of RO data.
 
-        version     The AWS repository version.
+        version     The AWS metadata_root version.
         """
 
         if isinstance( data, list ):
@@ -816,14 +816,14 @@ class OccList():
 
         return display
 
-    def download(self, filetype:str, rodata:str=None, 
+    def download(self, filetype:str, data_root:str=None, 
                  keep_aws_structure:bool=True, silent:bool=False ) -> list :
-        """Download RO data files from AWS Registry of Open Data repository of RO 
+        """Download RO data files from AWS Registry of Open Data metadata_root of RO 
         data. 
 
         Download RO data of file type "filetype" from the AWS Registry of Open
-        Data. The data are downloaded into the directory "rodata" as specified in 
-        the defaults (created by setdefaults) rodata is specified by the keyword. 
+        Data. The data are downloaded into the directory "data_root" as specified in 
+        the defaults (created by setdefaults) data_root is specified by the keyword. 
 
         Arguments
         =========
@@ -833,27 +833,27 @@ class OccList():
                             * is one of the valid contributed RO retrieval centers 
                             "ucar", "romsaf", "jpl", etc. 
 
-        rodata              The path to the directory for downloaded RO data files. 
+        data_root              The path to the directory for downloaded RO data files. 
                             It overrides the default download path created by 
                             setdefaults. It can be a relative or absolute path. 
 
         keep_aws_structure  If true, create a directory hierarchy in the same way 
-                            as exists in the RO repository in the AWS Registry of 
+                            as exists in the RO metadata_root in the AWS Registry of 
                             Open Data. If false, all files are downloaded into the 
                             same directory. Note that all RO files are downloaded 
-                            using the AWS hierarchy structure if rodata is not 
+                            using the AWS hierarchy structure if data_root is not 
                             specified as an argument here. 
 
         silent              By setting to True, no progress bars are displayed. 
                             Progress bars are shown by default. 
         """
 
-        if rodata is not None: 
-            rootdir = rodata
+        if data_root is not None: 
+            rootdir = data_root
 
         else: 
             defaults = get_defaults()
-            rootdir = defaults['rodata']
+            rootdir = defaults['data_root']
             if not keep_aws_structure: 
                 raise AWSgnssroutilsError( "BadArgument", 'keep_aws_structure must be ' + \
                         'true if RO data are downloaded into the default directory' )
@@ -983,22 +983,22 @@ class RODatabaseClient:
     An instance of this class initiates a gateway to the database of GNSS radio
     occultation data in the AWS Registry of Open Data. '''
 
-    def __init__( self, repository:str=None, version:str=None, update:bool=False ):
+    def __init__( self, metadata_root:str=None, version:str=None, update:bool=False ):
         '''Create an instance of RODatabaseClient. This object serves as a portal
-        to the database contents of the AWS Registry of Open Data repository of
+        to the database contents of the AWS Registry of Open Data metadata_root of
         GNSS radio occultation data.
 
-        repository  If set, it is the path to the directory on the local file
+        metadata_root  If set, it is the path to the directory on the local file
                     system where the contents of the RO database are stored
-                    locally. If not set, the repository path is read from a 
+                    locally. If not set, the metadata_root path is read from a 
                     defaults file created by the function setdefaults. 
 
         version     The version of the contents of the AWS Registry of Open Data
                     that should be accessed. The various versions that are
                     accessible can be found in s3://gnss-ro-data/dynamo/.
 
-        update      If requested, update the contents of the local repository
-                    to what currently exists in the AWS repository.
+        update      If requested, update the contents of the local metadata_root
+                    to what currently exists in the AWS metadata_root.
         '''
 
         #  Instantiate the s3 client in AWS region AWSregion and with unsigned certificate
@@ -1024,17 +1024,17 @@ class RODatabaseClient:
 
         self._version = uversion
 
-        #  Get location of local database repository of previous searches. 
+        #  Get location of local database metadata_root of previous searches. 
 
-        if repository is None: 
+        if metadata_root is None: 
             defaults = get_defaults()
-            self._repository = defaults['repository']
+            self._metadata_root = defaults['metadata_root']
         else: 
-            self._repository = repository
+            self._metadata_root = metadata_root
 
-        os.makedirs( os.path.join( self._repository, self._version ), exist_ok=True )
+        os.makedirs( os.path.join( self._metadata_root, self._version ), exist_ok=True )
 
-        #  Update the existing repository if requested.
+        #  Update the existing metadata_root if requested.
 
         self._update = update
         if update: 
@@ -1045,23 +1045,23 @@ class RODatabaseClient:
         If there has been an update in files that are part of your local repo, they will be
         updated.'''
 
-        if not os.path.exists( self._repository ):
+        if not os.path.exists( self._metadata_root ):
             return
 
         sTime = time.time()
         altzone = int( time.altzone / 3600 )     #  Correct for the time zone.
-        allfiles = sorted( os.listdir( self._repository ) )
+        allfiles = sorted( os.listdir( self._metadata_root ) )
 
         for filename in allfiles:
 
-            linux_time = os.path.getmtime( os.path.join( self._repository, filename ) )
+            linux_time = os.path.getmtime( os.path.join( self._metadata_root, filename ) )
             local_LastModified = linux_epoch + datetime.timedelta( seconds=linux_time )
 
             s3_info = self._s3.info( f'dynamo/{self._version}/export_subsets/{filename}' )
             s3_LastModified = s3_info['LastModified']
 
             if s3_LastModified > local_LastModified + datetime.timedelta(seconds=60):
-                self._s3.download( s3_uri, os.path.join(self._repository,self._version,filename) )
+                self._s3.download( s3_uri, os.path.join(self._metadata_root,self._version,filename) )
 
     def query(self, missions:{str,tuple,list}=None, 
               datetimerange:{tuple,list}=None, 
@@ -1069,7 +1069,7 @@ class RODatabaseClient:
         """Execute an query on the RO database for RO soundings. 
 
         This method obtains database JSON files from the AWS S3 bucket if the 
-        requested files are not already available in the local repository. 
+        requested files are not already available in the local metadata_root. 
         At least one of the keywords "missions" or "datetimerange" must be 
         specified. All other keywords will serve as filters on the query. 
         Return an instance of class OccList. 
@@ -1131,7 +1131,7 @@ class RODatabaseClient:
 
 
         local_file_array = []
-        os.makedirs(self._repository, exist_ok=True)
+        os.makedirs(self._metadata_root, exist_ok=True)
 
         #  Progress bar? 
 
@@ -1141,7 +1141,7 @@ class RODatabaseClient:
             iterator = tqdm( file_array, desc="Downloading metadata" )
 
         for file in iterator: 
-            local_path = os.path.join(self._repository,self._version,os.path.basename(file))
+            local_path = os.path.join(self._metadata_root,self._version,os.path.basename(file))
             if not os.path.exists(local_path):
                 self._s3.download( file, local_path )
             local_file_array.append(local_path)
@@ -1190,7 +1190,7 @@ class RODatabaseClient:
 
         output_list = []
 
-        output_list.append( f'repository="{self._repository}"' )
+        output_list.append( f'metadata_root="{self._metadata_root}"' )
         output_list.append( f'version="{self._version}"' )
 
         if self._update:

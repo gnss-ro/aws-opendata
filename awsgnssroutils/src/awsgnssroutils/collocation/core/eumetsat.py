@@ -37,7 +37,7 @@ class eumetsatError( Error ):
         self.comment = comment 
 
 
-def setdefaults( root_path, eumetsattokens=None ): 
+def setdefaults( root_path=None, eumetsattokens=None ): 
     """This method sets the default root path for EUMETSAT Data Store downloads.
     It also can set the consumer key and consumer secret as created on the 
     EUMETSAT Data Store website/account. If the keyword eumetsattokens is given, 
@@ -48,13 +48,12 @@ def setdefaults( root_path, eumetsattokens=None ):
     if os.path.exists( defaults_file ): 
         with open( defaults_file, 'r' ) as f: 
             defaults = json.load( f )
-        defaults.update( { root_path_variable: root_path } )
     else: 
         defaults = {}
 
-    with open( defaults_file, 'w' ) as f: 
-        json.dump( defaults, f, indent="  " )
-    os.chmod( defaults_file, stat.S_IRUSR | stat.S_IWUSR )
+    if isinstance(root_path,str): 
+        defaults.update( { root_path_variable: root_path } )
+        os.makedirs( root_path, exist_ok=True )
 
     #  Define consumer key, consumer secret. 
 
@@ -63,6 +62,12 @@ def setdefaults( root_path, eumetsattokens=None ):
             if len(eumetsattokens) == 2: 
                 command = [ "eumdac", "set-credentials", eumetsattokens[0], eumetsattokens[1] ]
                 ret = subprocess.run( command, capture_output=True )
+
+    #  Write to defaults file. 
+
+    with open( defaults_file, 'w' ) as f: 
+        json.dump( defaults, f, indent="  " )
+    os.chmod( defaults_file, stat.S_IRUSR | stat.S_IWUSR )
 
     #  Done. 
 

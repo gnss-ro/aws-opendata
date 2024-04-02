@@ -55,7 +55,7 @@ class spacetrackError( Error ):
         self.comment = comment
 
 
-def setdefaults( root_path, spacetracklogin=None ):
+def setdefaults( root_path=None, spacetracklogin=None ):
     """This method sets the default root path for Spacetrack TLE data. If the 
     keyword spacetracklogin is given, it must be a 2-element tuple/list 
     containing the user's username and password for the user's Space-Track 
@@ -69,8 +69,9 @@ def setdefaults( root_path, spacetracklogin=None ):
 
     #  Update data root path and create the directory. 
 
-    defaults.update( { root_path_variable: root_path } )
-    os.makedirs( root_path, exist_ok=True )
+    if isinstance(root_path,str): 
+        defaults.update( { root_path_variable: root_path } )
+        os.makedirs( root_path, exist_ok=True )
 
     #  Update username and password. 
 

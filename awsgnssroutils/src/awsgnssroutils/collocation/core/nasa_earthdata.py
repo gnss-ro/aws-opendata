@@ -74,7 +74,7 @@ class earthdataError( Error ):
         self.comment = comment 
 
 
-def setdefaults( root_path, earthdatalogin=None ): 
+def setdefaults( root_path=None, earthdatalogin=None ): 
     """This method sets the default root path for NASA GDAAC downloads.
     Optionally, it also allows you to register your Earthdata username and 
     password in your home .netrc (if you haven't done so already).
@@ -90,8 +90,9 @@ def setdefaults( root_path, earthdatalogin=None ):
 
     #  Set root data path. Create the directory. 
 
-    defaults.update( { root_path_variable: root_path } )
-    os.makedirs( root_path, exist_ok=True )
+    if isinstance(root_path,str): 
+        defaults.update( { root_path_variable: root_path } )
+        os.makedirs( root_path, exist_ok=True )
 
     #  Write to defaults file. 
 
