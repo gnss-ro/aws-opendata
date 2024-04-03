@@ -7,7 +7,7 @@ Patch to allow ROPP-11.0 to accept calibratedPhase files from aws-opendata proje
 
 **Managing Organization**: Atmospheric and Environmental Research, Inc.
 
-*Correspondence:* Stephen Leroy (sleroy@aer.com) or Amy McVey (amcvey@aer.com)
+*Correspondence:* Sara Vannah (svannah@aer.com) or Amy McVey (amcvey@aer.com)
 
 
 
