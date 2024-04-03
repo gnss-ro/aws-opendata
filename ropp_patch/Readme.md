@@ -18,10 +18,9 @@ The tarball contains files that must be moved to the correct location to replace
 The files and their locations are listed below. 
 
 1. In ropp_io/ 
-	1. build/ Makefile.am (take care not to confuse with Makefiles in other locations)
-	2. ncdf/ ncdf_getvar.f90
-	3. ropp/ ropp_io_assign.f90, ropp_io_free.f90, ropp_io_init.f90, ropp_io_read.f90, ropp_io_read_ncdf_get.f90, ropp_io_types.f90, ropp_io_write_ncdf_def.f90, ropp_io_write_ncdf_put.f90
-	4. tools/ Makefile.am, ropp2ropp.1, aws2ropp.f90**, aws2ropp.1**	
+	1. ncdf/ ncdf_getvar.f90
+	2. ropp/ ropp_io_assign.f90, ropp_io_free.f90, ropp_io_init.f90, ropp_io_read.f90, ropp_io_read_ncdf_get.f90, ropp_io_types.f90, ropp_io_write_ncdf_def.f90, ropp_io_write_ncdf_put.f90
+	3. tools/ Makefile.am, ropp2ropp.1, aws2ropp.f90**, aws2ropp.1**	
 2. In ropp_pp/
 	1. data/ ropp_pp_wopt_tool.nc*
 	2. tools/ ropp_pp_occ_tool.f90
@@ -72,11 +71,9 @@ These scripts will generate an output figure that will pop up in a separate wind
 Modified directories: ropp_io, ropp_pp
 
 1. ropp_io/ 
-	1. build/ 
-		1. Makefile.am has been updated to build aws2ropp
-	2. ncdf/
+	1. ncdf/
 		1. edited ncdf_getvar.f90 to interpret variables when the input file has 2 or more phase codes present
-	3. ropp/ 
+	2. ropp/ 
 		1. ropp_io_assign, add our additional variables (L1_navbits, l2_navbits, L1_freq, L2_freq) for memory assignment
 		2. ropp_io_free, add our additional variables  (L1_navbits, l2_navbits, L1_freq, L2_freq) for freeing up memory space
 		3. ropp_io_init, allocate our additional variables  (L1_navbits, l2_navbits, L1_freq, L2_freq)
@@ -85,9 +82,10 @@ Modified directories: ropp_io, ropp_pp
 		6. ropp_io_types, added additional variables to L1a types  (L1_navbits, l2_navbits, L1_freq, L2_freq)
 		7. ropp_io_write_ncdf_def, add definitions for our new variables
 		8. ropp_io_write_ncdf_put,  added additional variables  (L1_navbits, l2_navbits, L1_freq, L2_freq)
-	4. tools/
+	3. tools/
 		1. ropp2ropp.1, added aws2ropp to list of conversion scripts
 		2. created aws2ropp.f90 (and, correspondingly, aws2ropp.1) to transform AWS-formated calibratedPhase files to ROPP-formatted NCDF files (note this is an intermediate step before actually running the ROPP to compute higher level data)
+		3. Makefile.am updated to build aws2ropp
 2. ropp_pp
 	1.  data/
 		1. added ropp_pp_wopt_tool.nc from a sample occultation to allow ropp_pp_wopt_01.py to run for testing. Has to be run with the correct corresponding file, but can also be recreated with ropp_pp_wopt_tool
