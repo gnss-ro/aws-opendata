@@ -61,25 +61,49 @@ def setdefaults( root_path=None, spacetracklogin=None ):
     containing the user's username and password for the user's Space-Track 
     account."""
 
+    ret = { 'status': None, 'messages': [], 'comments': [] }
+
+    new_defaults = {}
+
+    #  Update data root path and create the directory. 
+
+    if isinstance(root_path,str): 
+        path = os.path.abspath( os.path.expanduser( root_path ) ) 
+        new_defaults.update( { root_path_variable: path } )
+        os.makedirs( path, exist_ok=True )
+
+    #  Update username and password. 
+
+    if spacetracklogin is not None: 
+
+        if isinstance(spacetracklogin,tuple) or isinstance(spacetracklogin,list): 
+            if len(spacetracklogin) == 2: 
+                new_defaults.update( { username_variable: spacetracklogin[0], 
+                          password_variable: spacetracklogin[1] } ) 
+
+            else:
+                ret['status'] = "fail"
+                ret['messages'].append( "InvalidArgument" )
+                ret['comments'].append( "spacetracklogin must have length 2" )
+                return ret
+
+        else:
+            ret['status'] = "fail"
+            ret['messages'].append( "InvalidArgument" )
+            ret['comments'].append( "spacetracklogin must be a tuple or a list" )
+            return ret
+
+    #  Get old defaults. 
+
     if os.path.exists( defaults_file ):
         with open( defaults_file, 'r' ) as f:
             defaults = json.load( f )
     else: 
         defaults = {}
 
-    #  Update data root path and create the directory. 
+    #  Update with new defaults. 
 
-    if isinstance(root_path,str): 
-        defaults.update( { root_path_variable: root_path } )
-        os.makedirs( root_path, exist_ok=True )
-
-    #  Update username and password. 
-
-    if spacetracklogin is not None: 
-        if isinstance(spacetracklogin,tuple) or isinstance(spacetracklogin,list): 
-            if len(spacetracklogin) == 2: 
-                defaults.update( { username_variable: spacetracklogin[0], 
-                          password_variable: spacetracklogin[1] } ) 
+    defaults.update( new_defaults )
 
     #  Write to defaults file. 
 
@@ -89,10 +113,44 @@ def setdefaults( root_path=None, spacetracklogin=None ):
 
     #  Done. 
 
-    return
+    ret['status'] = "success"
+
+    return ret
 
 
+def checkdefaults(): 
+    """Check that all of the defaults needed for execution have been set."""
 
+    ret = { 'status': None, 'messages': [], 'comments': [] }
+
+    #  Read defaults file. 
+
+    with open( defaults_file, 'r' ) as f: 
+        defaults = json.load( f )
+
+    #  Check that the data root path has been set. 
+
+    keys = defaults.keys()
+
+    if root_path_variable not in keys: 
+        ret['status'] = "fail"
+        ret['messages'].append( "MissingEarthdataRoot" )
+        ret['comments'].append( 'Missing data root for Space-Track; be certain to run "rotcol setdefaults spacetrack --dataroot ..."' )
+        return ret
+
+    #  Check that the username and password have been set. 
+
+    if username_variable not in keys and password_variable not in keys: 
+        ret['status'] = "fail"
+        ret['messages'].append( "MissingSpacetrackCredentials" )
+        ret['comments'].append( 'Missing credentials for Space-Track; be certain to run ' + \
+                '"rotcol setdefaults spacetrack --username ... --password ..."' )
+        return ret
+
+    #  Done. 
+
+    ret['status'] = "success"
+    return ret
 
 
 class SpacetrackSatellite(): 

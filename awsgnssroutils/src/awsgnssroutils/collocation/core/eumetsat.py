@@ -45,15 +45,25 @@ def setdefaults( root_path=None, eumetsattokens=None ):
     consumer secret as provided for the user's account on the EUMETSAT Data 
     Store."""
 
-    if os.path.exists( defaults_file ): 
-        with open( defaults_file, 'r' ) as f: 
-            defaults = json.load( f )
-    else: 
-        defaults = {}
+    ret = { 'status': None, 'messages': [], 'comments': [] }
 
     if isinstance(root_path,str): 
-        defaults.update( { root_path_variable: root_path } )
-        os.makedirs( root_path, exist_ok=True )
+
+        if os.path.exists( defaults_file ): 
+            with open( defaults_file, 'r' ) as f: 
+                defaults = json.load( f )
+        else: 
+            defaults = {}
+
+        path = os.path.abspath( os.path.expanduser( root_path ) ) 
+        defaults.update( { root_path_variable: path } )
+        os.makedirs( path, exist_ok=True )
+
+        #  Write to defaults file. 
+
+        with open( defaults_file, 'w' ) as f: 
+            json.dump( defaults, f, indent="  " )
+        os.chmod( defaults_file, stat.S_IRUSR | stat.S_IWUSR )
 
     #  Define consumer key, consumer secret. 
 
@@ -61,17 +71,67 @@ def setdefaults( root_path=None, eumetsattokens=None ):
         if isinstance(eumetsattokens,tuple) or isinstance(eumetsattokens,list): 
             if len(eumetsattokens) == 2: 
                 command = [ "eumdac", "set-credentials", eumetsattokens[0], eumetsattokens[1] ]
-                ret = subprocess.run( command, capture_output=True )
+                resp = subprocess.run( command, capture_output=True )
 
-    #  Write to defaults file. 
+            else:
+                ret['status'] = "fail"
+                ret['messages'].append( "InvalidArgument" )
+                ret['comments'].append( "eumetsattokens must have length 2" )
+                return ret
 
-    with open( defaults_file, 'w' ) as f: 
-        json.dump( defaults, f, indent="  " )
-    os.chmod( defaults_file, stat.S_IRUSR | stat.S_IWUSR )
+        else:
+            ret['status'] = "fail"
+            ret['messages'].append( "InvalidArgument" )
+            ret['comments'].append( "eumetsattokens must be a tuple or a list" )
+            return ret
 
     #  Done. 
 
+    ret['status'] = "success"
+
     return
+
+
+def checkdefaults(): 
+    """Check that all of the defaults needed for execution have been set."""
+
+    ret = { 'status': None, 'messages': [], 'comments': [] }
+
+    #  Check for existence of ~/.eumdac, which is created by the eumdac --set-credentials command. 
+
+    HOME = os.path.expanduser( "~" )
+    credentials_file = os.path.join( HOME, ".eumdac", "credentials" )
+    if not os.path.exists( credentials_file ): 
+        ret['status'] = "fail"
+        ret['messages'].append( "MissingCredentialsFile" )
+        ret['comments'].append( 'Credentials file for the EUMETSAT Data Store is missing; be certain to run "rotcol setdefaults eumetsat ..."' )
+        return ret
+
+    #  Check for existence of package defaults file. 
+
+    if not os.path.exists( defaults_file ): 
+        ret['status'] = "fail"
+        ret['messages'].append( "MissingDefaultsFile" )
+        ret['comments'].append( 'Missing defaults file; be certain to run "rotcol setdefaults ..."' )
+        return ret
+
+    #  Read defaults file. 
+
+    with open( defaults_file, 'r' ) as f: 
+        defaults = json.load( f )
+
+    #  Check that the data root path has been set. 
+
+    if root_path_variable not in defaults.keys(): 
+        ret['status'] = "fail"
+        ret['messages'].append( "MissingEUMETSATDataStoreRoot" )
+        ret['comments'].append( 'Missing data root for EUMETSAT Data Store; be certain to run "rotcol setdefaults eumetsat --dataroot ..."' )
+        return ret
+
+    #  Done. 
+
+    ret['status'] = "success"
+    return ret
 
 
 class EUMETSATDataStore(): 

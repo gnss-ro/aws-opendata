@@ -23,6 +23,8 @@ from .constants_and_utils import defaults_file
 #  CrIS pointers are for "full spectral resolution, version 3" level 1B radiances. 
 
 Satellites = { 
+        'Aqua': { 
+                 'aliases': [] }, 
         'Suomi-NPP': { 
                 'aliases': [ "Suomi-NPP", "SNPP" ], 
                 'atms': "10.5067/FCXKUUE9VCLN", 
@@ -82,23 +84,27 @@ def setdefaults( root_path=None, earthdatalogin=None ):
     The Earthdata username and password can be given as a 2-tuple 
     (username,password) in optional argument earthdatalogin."""
 
-    if os.path.exists( defaults_file ): 
-        with open( defaults_file, 'r' ) as f: 
-            defaults = json.load( f )
-    else: 
-        defaults = {}
+    ret = { 'status': None, 'messages': [], 'comments': [] }
 
     #  Set root data path. Create the directory. 
 
     if isinstance(root_path,str): 
-        defaults.update( { root_path_variable: root_path } )
-        os.makedirs( root_path, exist_ok=True )
 
-    #  Write to defaults file. 
+        if os.path.exists( defaults_file ): 
+            with open( defaults_file, 'r' ) as f: 
+                defaults = json.load( f )
+        else: 
+            defaults = {}
 
-    with open( defaults_file, 'w' ) as f: 
-        json.dump( defaults, f, indent="  " )
-    os.chmod( defaults_file, stat.S_IRUSR | stat.S_IWUSR )
+        path = os.path.abspath( os.path.expanduser( root_path ) ) 
+        defaults.update( { root_path_variable: path } )
+        os.makedirs( path, exist_ok=True )
+
+        #  Write to defaults file. 
+
+        with open( defaults_file, 'w' ) as f: 
+            json.dump( defaults, f, indent="  " )
+        os.chmod( defaults_file, stat.S_IRUSR | stat.S_IWUSR )
 
     #  Write Earthdata login username and password to .netrc file if 
     #  provided. 
@@ -107,7 +113,7 @@ def setdefaults( root_path=None, earthdatalogin=None ):
         if isinstance(earthdatalogin,tuple) or isinstance(earthdatalogin,list): 
             if len(earthdatalogin) == 2: 
 
-                if os.path.exists( file ): 
+                if os.path.exists( netrc_file ): 
                     with open( netrc_file, 'r' ) as f: 
                         lines = f.readlines()
                 else: 
@@ -136,14 +142,87 @@ def setdefaults( root_path=None, earthdatalogin=None ):
                 os.chmod( netrc_file, stat.S_IRUSR | stat.S_IWUSR )
 
             else: 
-                raise earthdataError( "InvalidArgument", "earthdatalogin must have length 2" )
+
+                ret['status'] = "fail"
+                ret['messages'].append( "InvalidArgument" )
+                ret['comments'].append( "earthdatalogin must have length 2" )
+                return ret
 
         else: 
-            raise earthdataError( "InvalidArgument", "earthdatalogin must be a tuple or a list" )
+
+            ret['status'] = "fail"
+            ret['messages'].append( "InvalidArgument" )
+            ret['comments'].append( "earthdatalogin must be a tuple or a list" )
+            return ret
 
     #  Done. 
 
-    return
+    ret['status'] = "success" 
+
+    return ret
+
+
+def checkdefaults(): 
+    """Check that all of the defaults needed for execution have been set."""
+
+    ret = { 'status': None, 'messages': [], 'comments': [] }
+
+    #  Check to see that the Earthdata machine has been defined in .netrc. 
+
+    if not os.path.exists( netrc_file ): 
+        ret['status'] = "fail"
+        ret['messages'].append( "MissingNetrcFile" )
+        ret['comments'].append( 'The .netrc file does not exists; be certain to run ' + \
+                '"rotcol setdefaults earthdata ..."' )
+        return ret
+
+    #  Check to see that the earthdata_machine entry exists in the netrc file. 
+
+    with open( netrc_file, 'r' ) as f: 
+        lines = f.readlines()
+
+    for line in lines: 
+        m = re.search( "^machine\s+(\S+)", line )
+        if m: 
+            machine = m.group(1)
+            if machine == earthdata_machine: 
+                break
+        else: 
+            machine = None
+
+    if machine != earthdata_machine: 
+        ret['status'] = "fail"
+        ret['messages'].append( "MissingEarthdataMachine" )
+        ret['comments'].append( 'The .netrc file does not contain an entry for NASA Earthdata; be ' + \
+                'certain to run "rotcol setdefaults earthdata --username ... --password ..."' )
+        return ret
+
+    #  Check for existence of package defaults file. 
+
+    if not os.path.exists( defaults_file ): 
+        ret['status'] = "fail"
+        ret['messages'].append( "MissingDefaultsFile" )
+        ret['comments'].append( 'Missing defaults file; be certain to run "rotcol setdefaults ..."' )
+        return ret
+
+    #  Read defaults file. 
+
+    with open( defaults_file, 'r' ) as f: 
+        defaults = json.load( f )
+
+    #  Check that the data root path has been set. 
+
+    if root_path_variable not in defaults.keys(): 
+        ret['status'] = "fail"
+        ret['messages'].append( "MissingEarthdataRoot" )
+        ret['comments'].append( 'Missing data root for NASA Earthdata; be certain to run ' + \
+                '"rotcol setdefaults earthdata --dataroot ..."' )
+        return ret
+
+    #  Done. 
+
+    ret['status'] = "success"
+    return ret
 
 
 class NASAEarthdata(): 
