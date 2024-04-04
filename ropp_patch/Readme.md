@@ -96,5 +96,9 @@ Modified directories: ropp_io, ropp_pp
 	4. tests/
 		1. it_pp_01.py, it_pp_spectra_dt.py, it_pp_spectra_ep.py, it_pp_wopt_01.py, it_pp_wopt_02.py; created Python versions of IDL test scripts
 
+## Potential snags and solutions
+1. Processing cannot find egm96.dat and corrcoef.dat files: The paths to these ($ROPP_ROOT/ropp_pp/data) are stored in the environment variables GEOPOT_CORR and GEOPOT_COEF, respecitvely. Try checking that these environment variables are set and point to the correct location. If this does not solve the problem, a workaround is simply to copy the egm96.dat and corrceof.dat files to $ROPP_ROOT. 
+2. ropp_pp_preprocess does not recognize AWS as a processing centre: ropp_pp may not have built correctly. Try remaking the ropp_pp scripts by entering ropp_pp directory and run ``make clean && make && make install``.
+
 
 *Last update: 1 April 2024*
