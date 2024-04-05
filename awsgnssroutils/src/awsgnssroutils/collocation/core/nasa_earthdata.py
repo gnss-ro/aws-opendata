@@ -274,7 +274,7 @@ class NASAEarthdata():
                 satellites = []
 
             if instrument not in self.inventory: 
-                self.inventory.update( { instrument: { sat: [] for sat in satellites } } )
+                self.inventory.update( { instrument: {} } )
 
             #  Loop over satellites. 
 
@@ -283,6 +283,9 @@ class NASAEarthdata():
                 for root, subdirs, files in os.walk( os.path.join( data_root, sat ) ): 
                     subdirs.sort()
                     files.sort()
+
+                    if sat not in self.inventory[instrument]: 
+                        self.inventory[instrument].update( { sat: [] } )
 
                     for file in files: 
                         m = re.search( file_search_string, file )

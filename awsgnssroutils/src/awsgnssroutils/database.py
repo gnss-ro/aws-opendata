@@ -247,7 +247,19 @@ def setdefaults( metadata_root:str=None, data_root:str=None, version:str=None ) 
                         can be found in s3://gnss-ro-data/dynamo. 
     """
 
-    defaults = { 'metadata_root': "", 'data_root': "", 'version': "" }
+    # defaults = { 'metadata_root': "", 'data_root': "", 'version': "" }
+    new_defaults = {}
+
+    #  Check for existence of defaults file. Get existing defaults. 
+
+    HOME = os.path.expanduser( "~" )
+    defaults_file_path = os.path.join( HOME, defaults_filename )
+
+    if os.path.exists( defaults_file_path ): 
+        with open( defaults_file_path, 'r' ) as fp: 
+            defaults = json.load( fp )
+    else: 
+        defaults = {}
 
     #  Be sure the paths are absolute paths. Also, create paths if they 
     #  don't already exist. 
@@ -257,7 +269,7 @@ def setdefaults( metadata_root:str=None, data_root:str=None, version:str=None ) 
             raise AWSgnssroutilsError( "BadPathName", 
                     f'Path to metadata_root ({metadata_root}) must be an absolute path' )
         else: 
-            defaults['metadata_root'] = metadata_root
+            defaults.update( { 'metadata_root': metadata_root } )
             os.makedirs( metadata_root, exist_ok=True )
 
     if data_root is not None: 
@@ -265,7 +277,7 @@ def setdefaults( metadata_root:str=None, data_root:str=None, version:str=None ) 
             raise AWSgnssroutilsError( "BadPathName", 
                     f'Path to data_root ({data_root}) must be an absolute path' )
         else: 
-            defaults['data_root'] = data_root
+            defaults.update( { 'data_root': data_root } )
             os.makedirs( data_root, exist_ok=True )
 
 
@@ -277,15 +289,12 @@ def setdefaults( metadata_root:str=None, data_root:str=None, version:str=None ) 
             raise AWSgnssroutilsError( "InvalidVersion", f'Version "{version}" is invalid; ' + \
                     'valid versions are ' + ", ".join( valid_versions ) )
 
-        defaults['version'] = version
+        defaults.update( { 'version': version } )
 
         if metadata_root is not None: 
             os.makedirs( os.path.join( metadata_root, version ), exist_ok=True )
 
-    #  Record metadata_root and data_root paths and version to resource file. 
-
-    HOME = os.path.expanduser( "~" )
-    defaults_file_path = os.path.join( HOME, defaults_filename )
+    #  Record new set of defaults. 
 
     with open( defaults_file_path, 'w' ) as fp: 
         json.dump( defaults, fp )

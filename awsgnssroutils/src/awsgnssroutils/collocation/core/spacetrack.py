@@ -175,9 +175,10 @@ class SpacetrackSatellite():
         self.tles = None
 
         self.spacetrack = Spacetrack_instance
-        self.norad_number_string = f'{norad_number:05d}'
+        self.norad_number = norad_number
+        norad_number_string = f'{norad_number:05d}'
 
-        if self.norad_number_string not in self.spacetrack.catalogue.keys(): 
+        if norad_number_string not in self.spacetrack.catalogue.keys(): 
             self.status = "success"
             self.nrecs = 0
             self.datetimes = []
@@ -192,7 +193,8 @@ class SpacetrackSatellite():
 
         data = {}
 
-        for file in self.spacetrack.catalogue[self.norad_number_string]: 
+        norad_number_string = f'{self.norad_number:05d}'
+        for file in self.spacetrack.catalogue[norad_number_string]: 
 
             f = open( file, 'r' )
             lines = f.readlines()
@@ -325,7 +327,7 @@ class SpacetrackSatellite():
 
             if datetimes_gps.size == 0: 
                 ret_tles = None
-                ret_spacetrack = self.spacetrack.download_data( self.norad_number_string, time.calendar("utc").datetime() )
+                ret_spacetrack = self.spacetrack.download_data( self.norad_number, time.calendar("utc").datetime() )
                 self.build_instance()
                 continue
 
@@ -474,7 +476,7 @@ class Spacetrack():
 
         if isinstance(norad_number,str): 
             satID = norad_number[-5:]
-        elif isinstance(norad_nubmer,int): 
+        elif isinstance(norad_number,int): 
             satID = f'{norad_number:05d}'
         else: 
             ret['status'] = "fail"

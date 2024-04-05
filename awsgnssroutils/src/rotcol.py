@@ -1,5 +1,5 @@
 import argparse
-import textwrap
+import re
 import json
 from getpass import getpass 
 from datetime import datetime
@@ -8,7 +8,7 @@ from time import time
 from awsgnssroutils.database import valid_table 
 from awsgnssroutils.collocation.instruments import instruments
 
-def execute_rotation_collocation( missions, timerange, ro_processing_center, 
+def execute_rotation_collocation( missions, datetimerange, ro_processing_center, 
         nadir_instrument, nadir_satellite, outputfile ): 
 
     #  Initialize return structure. 
@@ -34,9 +34,10 @@ def execute_rotation_collocation( missions, timerange, ro_processing_center,
 
     #  Instantiate the nadir-scanner instrument. 
 
-    from awsgnssroutils.collocation.core.nasa_earthdata import Satellites
+    from awsgnssroutils.collocation.core.nasa_earthdata import Satellites as NASA_Satellites
+    from awsgnssroutils.collocation.core.eumetsat import metop_satellites as EUMETSAT_Satellites
 
-    if nadir_satellite in Satellites.keys(): 
+    if nadir_satellite in NASA_Satellites.keys(): 
 
         from awsgnssroutils.collocation.core.nasa_earthdata import checkdefaults, NASAEarthdata
         ret = checkdefaults()
@@ -44,10 +45,11 @@ def execute_rotation_collocation( missions, timerange, ro_processing_center,
             print( "Error: \n" + "\n".join( ret['comments'] ) )
             return
 
+        data_center = "NASA Earthdata" 
         nasa_earthdata_access = NASAEarthdata()
         inst = instruments[nadir_instrument]['class']( nadir_satellite, nasa_earthdata_access, spacetrack=strack )
 
-    elif nadir_satellite in [ "Metop-A", "Metop-B", "Metop-C" ]: 
+    elif nadir_satellite in EUMETSAT_Satellites: 
 
         from awsgnssroutils.collocation.core.eumetsat import checkdefaults, EUMETSATDataStore
         ret = checkdefaults()
@@ -55,6 +57,7 @@ def execute_rotation_collocation( missions, timerange, ro_processing_center,
             print( "Error: \n" + "\n".join( ret['comments'] ) )
             return
 
+        data_center = "EUMETSAT Data Store"
         eumetsat_data_store = EUMETSATDataStore()
         inst = instruments[nadir_instrument]['class']( nadir_satellite, eumetsat_data_store, spacetrack=strack )
 
@@ -68,7 +71,7 @@ def execute_rotation_collocation( missions, timerange, ro_processing_center,
     print( "Querying occultation database" )
 
     tbegin = time()
-    occs = db.query( missions=ro_mission, datetimerange=[ dt.isoformat() for dt in datetimerange ], 
+    occs = rodb.query( missions=missions, datetimerange=[ dt.isoformat() for dt in datetimerange ], 
                 availablefiletypes=f'{ro_processing_center}_refractivityRetrieval', silent=True )
     tend = time()
 
@@ -98,17 +101,10 @@ def execute_rotation_collocation( missions, timerange, ro_processing_center,
 
     #  Populate instrument data. 
 
+    print( f'Downloading instrument data from {data_center}' )
     tbegin = time()
-    ret = inst.populate( datetimerange )
+    ret_populate = inst.populate( datetimerange )
     tend = time()
-
-    ret['messages'] += ret_rotation['messages']
-    ret['comments'] += ret_rotation['comments']
-
-    if ret_rotation['status'] == "fail": 
-        ret['status'] = "fail"
-        print()
-        return ret
 
     print( "  - elapsed time = {:10.3f} s".format( tend-tbegin ) )
 
@@ -127,7 +123,7 @@ def execute_rotation_collocation( missions, timerange, ro_processing_center,
 
     tbegin = time()
     print( f"Writing to output file {outputfile}" )
-    collocations_rotation.write_to_netcdf( file )
+    collocations_rotation.write_to_netcdf( outputfile )
     tend = time()
 
     print( "  - elapsed time = {:10.3f} s".format( tend-tbegin ) )
@@ -341,29 +337,33 @@ def main():
         timerange = ( datetime.fromisoformat( ss[0] ), datetime.fromisoformat( ss[1] ) )
 
         nadir_satellite = str( args.nadir_satellite )
-
         nadir_instrument = str( args.nadir_instrument )
-
         ro_processing_center = str( args.ro_processing_center )
+        output_file = str( args.output )
 
         #  Check for valid satellite-instrument combination. 
 
-        if nadir_satellite in instruments[nadir_instrument]['valid_satellites']: 
+        if nadir_instrument not in instruments.keys(): 
+
+            print( f'Instrument "{nadir_instrument}" is unrecognized. Valid satellite ' + \
+                    'instruments are ' + ", ".join( sorted( list( instruments.keys() ) ) ) + '.' )
+
+        elif nadir_satellite not in instruments[nadir_instrument]['valid_satellites']: 
+
+            print( f'Satellite {nadir_satellite} has no instrument {nadir_instrument}, ' + \
+                'or at least it is not registered in this package. The instrument ' + \
+                f'{nadir_instrument} has been incorporated for the following satellites: ' + \
+                ", ".join( instruments[nadir_instrument]['valid_satellites'] ) + "." )
+
+        else: 
 
             ret = execute_rotation_collocation( missions, timerange, ro_processing_center, 
-                    nadir_instrument, nadir_satellite )
+                    nadir_instrument, nadir_satellite, output_file )
 
             if ret['status'] == "fail": 
                 print( "messages = " + ", ".join( ret['messages'] ) + "\n" )
                 for comment in ret['comments']: 
                     print( comment )
-
-        else: 
-
-            print( f"""Satellite {nadir_satellite} has no instrument {nadir_instrument}, 
-                or at least it is not registered in this package. The instrument 
-                {nadir_instrument} has been incorporated for the following satellites: """ + \
-                ", ".join( instruments[nadir_instrument]['valid_satellites'] ) )
 
     else: 
         print( f'Invalid command: "{root_args.command}"' )

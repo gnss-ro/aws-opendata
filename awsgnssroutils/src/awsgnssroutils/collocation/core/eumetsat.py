@@ -268,7 +268,7 @@ class EUMETSATDataStore():
         end = _timerange[1].calendar(eumetsat_time_convention).isoformat()
 
         command = [ "eumdac", "search", "-c", "EO:EUM:DAT:METOP:AMSUL1", "--satellite",  
-                "Metop-B", "-s", start, "-e", end ]
+                satellite, "-s", start, "-e", end ]
 
         if datetime.now() >= self.token.expiration: 
             self.get_token()
@@ -364,8 +364,9 @@ class EUMETSATDataStore():
                     inpath = os.path.join( "tmp", file )
                     m = re.search( "^AMSAL1_(\d{8}T\d{6})Z_(\d{8}T\d{6})Z_epct_.*\.nc$", file )
                     t = datetime.strptime( m.group(1), "%Y%m%dT%H%M%S" )
-                    outpath = os.path.join( self.data_root, satellite, f'{t.year:4d}', f'{t.month:02d}', f'{t.day:02d}',
-                            f"{satellite}_AMSAL1_{m.group(1)}Z_{m.group(2)}Z.nc" )
+                    outpath = os.path.join( self.data_root, "amsua", satellite, 
+                            f'{t.year:4d}', f'{t.month:02d}', f'{t.day:02d}',
+                            f'{satellite}_AMSAL1_{m.group(1)}Z_{m.group(2)}Z.nc' )
                     if not os.path.exists( outpath ):
                         os.makedirs( os.path.dirname(outpath), exist_ok=True )
                         os.link( inpath, outpath )
