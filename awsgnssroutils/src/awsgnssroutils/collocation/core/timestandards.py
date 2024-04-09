@@ -632,6 +632,10 @@ class Time():
         new = Time( tai=self.tai-x, system=self.system )
         return new
 
+    def __repr__(self): 
+        x = f'<timestandard.Time object, "{self.calendar("utc").isoformat(timespec="seconds")} UTC">'
+        return x
+
 
 ################################################################################
 #  Service functions for leap second data.

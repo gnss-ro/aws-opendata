@@ -90,6 +90,8 @@ class AMSUA(NadirSatelliteInstrument):
     def __init__(self, name, eumetsat_access, spacetrack=None ):
         """Constructor for MetopAMSUA class."""
 
+        self.instrument_name = instrument
+
         if name not in valid_satellites: 
             print( f'No {instrument} on satellite {name}. Valid satellites are ' + ", ".join( valid_satellites ) )
             self.status = "fail"
@@ -114,7 +116,7 @@ class AMSUA(NadirSatelliteInstrument):
         instances of timestandards.Time or datetime.datetime with the 
         understanding that the latter is defined as UTC times."""
 
-        self.eumetsat_access.populate_metop_amsua( self.name, timerange )
+        self.eumetsat_access.populate_metop_amsua( self.satellite_name, timerange )
         return
 
     def get_geolocations_from_file( self, filename ):
@@ -169,7 +171,7 @@ class AMSUA(NadirSatelliteInstrument):
         #  soundings, be sure to subtract one orbital period from the first time and 
         #  add one orbital period to the last time. 
 
-        data_files = self.eumetsat_access.get_metop_amsua_paths( self.name, timerange )
+        data_files = self.eumetsat_access.get_metop_amsua_paths( self.satellite_name, timerange )
         gps0 = Time(gps=0)
         dt = ( timerange[0]-gps0, timerange[1]-gps0 )
 
@@ -288,8 +290,8 @@ class AMSUA(NadirSatelliteInstrument):
             'zenith': zenith_dataarray } 
 
         ds_attrs_dict = { 
-            'satellite': self.name, 
-            'instrument': "AMSU-A", 
+            'satellite': self.satellite_name, 
+            'instrument': self.instrument_name, 
             'data_file_path': file, 
             'scan_index': np.int16( scan_index ), 
             'footprint_index': np.int16( footprint_index ) } 

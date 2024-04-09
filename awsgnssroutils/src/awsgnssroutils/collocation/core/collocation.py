@@ -156,6 +156,7 @@ class Collocation():
         
         #  Define attributes. 
 
+        self.status = "nominal"
         self.occultation = occultation
         self.nadir_satellite = nadir_satellite
         self.longitude = longitude
@@ -189,6 +190,10 @@ class Collocation():
                          self.time + 4*self.nadir_satellite.time_between_scans )
 
             self.scan_metadata = self.nadir_satellite.get_geolocations( timerange )
+
+        if len( self.scan_metadata.longitudes ) == 0: 
+            self.status = "no sounder data available"
+            return self
 
         nscans, nfootprints = self.scan_metadata.longitudes.shape
 
@@ -314,12 +319,17 @@ class Collocation():
         if self.iscan is None or self.ifootprint is None: 
             self.refine_scanner_indices()
 
-        self.time = self.scan_metadata.mid_times[self.iscan] 
+        if self.status == "nominal": 
 
-        #  Extract sounder data. 
+            #  Extract sounder data. 
 
-        ds_sounder = self.scan_metadata( self.iscan, self.ifootprint, 
-            longitude=self.longitude, latitude=self.latitude, time=self.time )
+            self.time = self.scan_metadata.mid_times[self.iscan] 
+            ds_sounder = self.scan_metadata( self.iscan, self.ifootprint, 
+                    longitude=self.longitude, latitude=self.latitude, time=self.time )
+
+        else: 
+
+            ds_sounder = None
 
         #  Merge occultation and sounder data. 
 
@@ -470,14 +480,19 @@ class CollocationList( list ):
 
             occid = collocation.data['occid'] 
             collocation_name = occid + "+" + \
-                    collocation.data['sounder'].attrs['satellite'] + "-" + \
-                    collocation.data['sounder'].attrs['instrument']
+                    collocation.nadir_satellite.satellite_name + "-" + \
+                    collocation.nadir_satellite.instrument_name
 
-            occultation_group = d.createGroup( f'{collocation_name}/occultation' )
-            write_dataset_to_netcdf( collocation.data['occultation'], occultation_group )
+            collocation_group = d.createGroup( collocation_name )
+            collocation_group.setncattr( "status", collocation.status )
 
-            sounder_group = d.createGroup( f'{collocation_name}/sounder' )
-            write_dataset_to_netcdf( collocation.data['sounder'], sounder_group )
+            if collocation.status == "nominal": 
+
+                occultation_group = collocation_group.createGroup( "occultation" )
+                write_dataset_to_netcdf( collocation.data['occultation'], occultation_group )
+
+                sounder_group = collocation_group.createGroup( "sounder" )
+                write_dataset_to_netcdf( collocation.data['sounder'], sounder_group )
 
         #  Done. 
 

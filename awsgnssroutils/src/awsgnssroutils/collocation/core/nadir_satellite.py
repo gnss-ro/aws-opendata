@@ -90,7 +90,7 @@ class NadirSatelliteInstrument(ABC):
 
     Attributes
     ------------
-        name: string
+        satellite_name: string
             Name of satellite (ex. NOAA-20)
         spacetrack_satellite: instance of spacetrack.SpacetrackSatellite
             An instance of spacetrack.SpacetrackSatellite for access to TLEs
@@ -105,13 +105,13 @@ class NadirSatelliteInstrument(ABC):
         scan_angle_spacing: float
             Angle between scan footprints [radians]"""
 
-    def __init__(self, name, max_scan_angle, 
+    def __init__(self, satellite_name, max_scan_angle, 
                  time_between_scans, scan_points_per_line, scan_angle_spacing, 
                  spacetrack=None):
         """
         Constructor for NadirSatelliteInstrument.
         """
-        self.name = name
+        self.satellite_name = satellite_name
         self.xi = np.deg2rad(max_scan_angle)
 
         self.time_between_scans = time_between_scans
@@ -120,7 +120,7 @@ class NadirSatelliteInstrument(ABC):
         self.max_scan_angle = np.deg2rad(max_scan_angle)
 
         if isinstance( spacetrack, Spacetrack ): 
-            self.spacetrack_satellite = spacetrack.satellite( name )
+            self.spacetrack_satellite = spacetrack.satellite( satellite_name )
         else: 
             self.spacetrack_satellite = None
 

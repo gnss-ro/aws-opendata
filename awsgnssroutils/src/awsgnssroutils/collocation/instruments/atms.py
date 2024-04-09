@@ -91,6 +91,8 @@ class ATMS(NadirSatelliteInstrument):
     def __init__(self, name, nasa_earthdata_access, spacetrack=None ):
         """Constructor for MetopAMSUA class."""
 
+        self.instrument_name = instrument
+
         if name not in valid_satellites: 
             print( f'No {instrument} on satellite {name}. Valid satellites are ' + ", ".join( valid_satellites ) )
             self.status = "fail"
@@ -115,7 +117,7 @@ class ATMS(NadirSatelliteInstrument):
         instances of timestandards.Time or datetime.datetime with the 
         understanding that the latter is defined as UTC times."""
 
-        self.nasa_earthdata_access.populate( self.name, 'atms', timerange )
+        self.nasa_earthdata_access.populate( self.satellite_name, 'atms', timerange )
         return
 
     def get_geolocations_from_file( self, filename ):
@@ -141,9 +143,19 @@ class ATMS(NadirSatelliteInstrument):
         #  Get start and stop time of scans in file. 
 
         xtuples = d.variables['obs_time_utc'][:,int(nx/2),:]
-        mid_times = [ Time( utc=Calendar( *( xtuples[iscan,0:6] ) ) ) \
-                + xtuples[iscan,6]*1.0e-3 + xtuples[iscan,7]*1.0e-6 \
-                for iscan in range(ny) ]
+
+        mid_times = []
+        for iscan in range(ny): 
+            if np.any( xtuples[iscan,0:8].mask ): 
+                tt = None
+            else: 
+                tt = Time( utc=Calendar( *( xtuples[iscan,0:6] ) ) ) \
+                        + xtuples[iscan,6]*1.0e-3 + xtuples[iscan,7]*1.0e-6 
+            mid_times.append( tt )
+
+        # mid_times = [ Time( utc=Calendar( *( xtuples[iscan,0:6] ) ) ) \
+                # + xtuples[iscan,6]*1.0e-3 + xtuples[iscan,7]*1.0e-6 \
+                # for iscan in range(ny) ]
 
         d.close()
 
@@ -161,7 +173,7 @@ class ATMS(NadirSatelliteInstrument):
         #  soundings, be sure to subtract one orbital period from the first time and 
         #  add one orbital period to the last time. 
 
-        data_files = self.nasa_earthdata_access.get_paths( self.name, 'atms', timerange )
+        data_files = self.nasa_earthdata_access.get_paths( self.satellite_name, 'atms', timerange )
         gps0 = Time(gps=0)
         dt = ( timerange[0]-gps0, timerange[1]-gps0 )
 
@@ -179,7 +191,19 @@ class ATMS(NadirSatelliteInstrument):
             #  Convert mid_times to an np.ndarray of GPS times.  Find times for soundings 
             #  within the prescribed timerange. 
 
-            file_gps_times = np.array( [ t-gps0 for t in ret['mid_times'] ] )
+            xtimes = np.zeros( len(ret['mid_times']), dtype=np.float64 )
+            mask = np.zeros( len(ret['mid_times']), dtype=np.byte )
+
+            for i, t in enumerate( ret['mid_times'] ): 
+                if t is None: 
+                    xtimes[i] = -1001
+                    mask[i] = 1
+                else: 
+                    xtimes[i] = t - gps0
+                    mask[i] = 0
+
+            file_gps_times = np.ma.masked_where( mask, xtimes )
+
             good = np.argwhere( np.logical_and( dt[0] <= file_gps_times, file_gps_times < dt[1] ) ).flatten()
 
             #  Keep only those soundings within the prescribed timerange. 
@@ -285,8 +309,8 @@ class ATMS(NadirSatelliteInstrument):
             'zenith': zenith_dataarray } 
 
         ds_attrs_dict = { 
-            'satellite': self.name, 
-            'instrument': "ATMS", 
+            'satellite': self.satellite_name, 
+            'instrument': self.instrument_name, 
             'data_file_path': file, 
             'scan_index': np.int16( scan_index ), 
             'footprint_index': np.int16( footprint_index ) } 
