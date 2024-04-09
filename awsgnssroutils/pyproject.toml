@@ -23,6 +23,9 @@ classifiers = [
 	]
 
 [project.urls]
-"Homepage" = "https://github.com/gnss-ro/aws-opendata"
+"Homepage" = "https://github.com/gnss-ro/aws-opendata/awsgnssroutils"
 "Bug Tracker" = "https://github.com/gnss-ro/aws-opendata/issues"
+
+[project.scripts]
+rotcol = "awsgnssroutils.collocation.rotcol:main"
 

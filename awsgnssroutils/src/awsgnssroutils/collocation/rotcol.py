@@ -158,7 +158,7 @@ def main():
 
     #  Define the parent (root) parser. 
 
-    parser = argparse.ArgumentParser( prog='rotcol', 
+    parser = argparse.ArgumentParser( prog='rotcol', add_help=True, 
             description="""This program performs a collocation-finding calculation by between 
             GNSS radio occultation data and passive nadir-scanner sounding data by implementing 
             the rotation-collocation algorithm, generating NetCDF output containing the 
@@ -366,7 +366,7 @@ def main():
                     print( comment )
 
     else: 
-        print( f'Invalid command: "{root_args.command}"' )
+        print( 'No command provided. Valid commands are "setdefaults" and "execute".' )
         return
 
 
