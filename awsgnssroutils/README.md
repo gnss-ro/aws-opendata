@@ -1,19 +1,25 @@
 # AWS GNSS-RO Utilities
 
-This package &mdash; **awsgnssroutils** &mdash; contains a utility to 
-query the AWS Registry of Open Data repository of GNSS radio occultation 
-(RO) data and download RO data. It does so using the metadata database 
-files posted in the AWS repository.  
+This package &mdash; **awsgnssroutils** &mdash; contains two utilities 
+intended to serve and take advantage of the GNSS radio occultation data 
+in the AWS Registry of Open Data. The first utility is a database utility, 
+which queries the RO database for occultations that satisfy a variety 
+of search criteria. The second utility is a highly efficient collocation 
+finder, which finds nadir-scanning radiance sounder data that is coincident 
+with GNSS RO data. 
 
 A jupyter notebook is provided for introduction to this package as 
 [awsgnssroutils_demonstration](https://raw.githubusercontent.com/gnss-ro/aws-opendata/master/tutorials/awsgnssroutils_demonstration.ipynb). 
 
 # Installation
 
-The following non-standard modules must be installed: s3fs, numpy, tqdm. Installation 
-of these dependencies is automatic when installing awsgnssroutils by pip (PyPI). 
+This package can be installed from PyPI
 
-# Database Functionality
+```
+pip install awsgnssroutils
+```
+
+## Database Functionality
 
 This module defines two classes: RODatabaseClient and OccList. The first
 creates a portal to a database of RO metadata, and the second is an instance
@@ -22,29 +28,66 @@ of a list of radio occultations (ROs). Each are described below.
 ## RODatabaseClient:
 
 Create an instance of a portal to a metadata on all RO data in the AWS
-Registry of Open Data. It provides an option to create a repository of
-the RO metadata on the local file system as keyword "repository". For
-example,
+Registry of Open Data. This tool is made efficient by storing 
+metadata used in previous queries on the local file system. Subsequent 
+queries will find this metadata on the local file system and will not 
+spend valuable wall clock time repeating the download of the metadata 
+of interest. The same holds true for RO data files themselves: previously 
+downloaded data are stored on the local file system. The user is free to 
+clear out these local "mirrors" of the metadata and data, but this will 
+penalize future efficiency for the gain of local disk space. 
+
+### Setting defaults
+
+Before proceeding to use the query utility, be sure to set defaults for 
+the database query system...
 
 ```
+> from awsgnssroutils.database import setdefaults
+> setdefaults( "/my/path/to/RO/metadata", "/my/path/to/RO/data", version="v1.1" )
+```
+
+All queries will attempt to access metadata in the root path of the first 
+argument in this call, and all attempts to download RO data files will 
+attempt to find the requested files in the root path of the second 
+argument of the call. (Of course, rename these paths to paths defined 
+as you wish.) At this point, the only version of RO data published in the 
+AWS Registry of Open Data is "v1.1", so be certain this is the version of 
+RO data you specify when executing setdefaults. 
+
+A user can choose to prepopulate all RO metadata, thereby guaranteeing 
+great efficiency in all queries. Prepopulating can take up to ten minutes, 
+but it only needs to be executed once; perhaps more often if the user 
+needs to refresh the metadata. Prepopulating the metadata is done as...
+
+```
+from awsgnssroutils.database import populate
+populate()
+```
+
+If a user erases metadata files in the metadata root path, future queries 
+will still function correctly, but they will have to repopulate the metadata, 
+thereby greatly increasing the wall clock time of queries. 
+
+### Executing queries
+
+All queries to the AWS repository of RO data is done through an instance 
+of the RODatabaseClient class, which serves as a portal to the AWS 
+repository. The results of queries are instances of class OccList. 
+
+Create an instance of the portal class by...
+
+```
+> from awsgnssroutils.database import RODatabaseClient
 > rodb = RODatabaseClient()
 ```
 
+It is designed to auto re-authenticate. If authentication is needed 
+for access to an AWS S3 bucket, this class will automatically 
+re-authenticate without user interference. 
+
 creates a database interface directly to the AWS S3 bucket to access
 the metadata. This interface is slow but requires no local disk space.
-
-```
-> rodb = RODatabaseClient( repository="rometadata" )
-```
-
-also creates a database interface but with a local repository of the
-metadata in the directory "rometadata".  It is far more efficient than
-the direct access method if a copy of requested metadata is already in
-the local repository.
-
-```
-> rodb = RODatabaseClient( repository="rometadata", update=False )
-```
 
 By specifying "update" as True, the local repository is updated at the
 instantiation of rodb. The update compares metadata in the repository

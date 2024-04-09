@@ -368,6 +368,16 @@ def get_defaults() -> dict:
     for key, value in defaults.items(): 
         if value == "": defaults.update( { key: None } )
 
+    #  Backward compatibility. 
+
+    keys = defaults.keys()
+
+    if "repository" in keys and "metadata_root" not in keys: 
+        defaults.update( { 'metadata_root': defaults['repository'] } )
+
+    if "rodata" in keys and "data_root" not in keys: 
+        defaults.update( { 'data_root': defaults['rodata'] } )
+
     #  Done. 
 
     return defaults
