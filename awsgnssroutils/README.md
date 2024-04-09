@@ -1,17 +1,12 @@
-# AWS GNSS-RO Utilities
+# AWS GNSS RO Utilities
 
 This package &mdash; **awsgnssroutils** &mdash; contains two utilities 
-intended to serve and take advantage of the GNSS radio occultation data 
+intended to serve and take advantage of the GNSS radio occultation (RO) data 
 in the AWS Registry of Open Data. The first utility is a database utility, 
 which queries the RO database for occultations that satisfy a variety 
 of search criteria. The second utility is a highly efficient collocation 
 finder, which finds nadir-scanning radiance sounder data that is coincident 
 with GNSS RO data. 
-
-A jupyter notebook is provided for introduction to this package as 
-[awsgnssroutils_demonstration](https://raw.githubusercontent.com/gnss-ro/aws-opendata/master/tutorials/awsgnssroutils_demonstration.ipynb). 
-
-# Installation
 
 This package can be installed from PyPI
 
@@ -19,32 +14,19 @@ This package can be installed from PyPI
 pip install awsgnssroutils
 ```
 
-## Database Functionality
+Outline: 
+1. [First steps/initialization](first-steps)
+2. [AWS RO database](database)
+3. [Collocation utility](collocation)
 
-This module defines two classes: RODatabaseClient and OccList. The first
-creates a portal to a database of RO metadata, and the second is an instance
-of a list of radio occultations (ROs). Each are described below.  
 
-## RODatabaseClient:
-
-Create an instance of a portal to a metadata on all RO data in the AWS
-Registry of Open Data. This tool is made efficient by storing 
-metadata used in previous queries on the local file system. Subsequent 
-queries will find this metadata on the local file system and will not 
-spend valuable wall clock time repeating the download of the metadata 
-of interest. The same holds true for RO data files themselves: previously 
-downloaded data are stored on the local file system. The user is free to 
-clear out these local "mirrors" of the metadata and data, but this will 
-penalize future efficiency for the gain of local disk space. 
-
-### Setting defaults
-
+### First steps 
 Before proceeding to use the query utility, be sure to set defaults for 
 the database query system...
 
 ```
 > from awsgnssroutils.database import setdefaults
-> setdefaults( "/my/path/to/RO/metadata", "/my/path/to/RO/data", version="v1.1" )
+> setdefaults( metadata_root="/my/path/to/RO/metadata", data_root="/my/path/to/RO/data", version="v1.1" )
 ```
 
 All queries will attempt to access metadata in the root path of the first 
@@ -61,39 +43,47 @@ but it only needs to be executed once; perhaps more often if the user
 needs to refresh the metadata. Prepopulating the metadata is done as...
 
 ```
-from awsgnssroutils.database import populate
-populate()
+> from awsgnssroutils.database import populate
+> populate()
 ```
 
 If a user erases metadata files in the metadata root path, future queries 
 will still function correctly, but they will have to repopulate the metadata, 
 thereby greatly increasing the wall clock time of queries. 
 
-### Executing queries
+## Database 
 
-All queries to the AWS repository of RO data is done through an instance 
-of the RODatabaseClient class, which serves as a portal to the AWS 
-repository. The results of queries are instances of class OccList. 
+The module *awsgnssroutils.database* defines two classes: *RODatabaseClient* 
+and *OccList*. The firstcreates a portal to a database of RO metadata, and 
+the second is an instanceof a list of radio occultations (ROs). Each are 
+described below.  
 
-Create an instance of the portal class by...
+### *RODatabaseClient*
+
+Create an instance of a portal to a metadata on all RO data in the AWS
+Registry of Open Data. This tool is made efficient by storing 
+metadata used in previous queries on the local file system. Subsequent 
+queries will find this metadata on the local file system and will not 
+spend valuable wall clock time repeating the download of the metadata 
+of interest. The same holds true for RO data files themselves: previously 
+downloaded data are stored on the local file system. The user is free to 
+clear out these local "mirrors" of the metadata and data, but this will 
+penalize future efficiency for the gain of local disk space. 
+
+**Executing queries.** All queries to the AWS repository of RO data are 
+executed through an instance of the *RODatabaseClient* class. The results 
+of queries are instances of class OccList. Create an instance of the 
+portal class by...
 
 ```
 > from awsgnssroutils.database import RODatabaseClient
 > rodb = RODatabaseClient()
 ```
 
-It is designed to auto re-authenticate. If authentication is needed 
-for access to an AWS S3 bucket, this class will automatically 
-re-authenticate without user interference. 
-
-creates a database interface directly to the AWS S3 bucket to access
-the metadata. This interface is slow but requires no local disk space.
-
-By specifying "update" as True, the local repository is updated at the
-instantiation of rodb. The update compares metadata in the repository
-of metadata on the local file system to the same metadata files in the
-AWS Registry of Open Data and updates the local metadata as needed.
-The update does not add any "new" metadata files to the local repository.   
+in which *rodb* is an interface directly to the AWS S3 bucket to access
+the metadata. If metadata has not been prepopulated, queries can be slow. 
+If authentication is needed for access to an AWS S3 bucket, this class will 
+automatically re-authenticate without user interference. 
 
 There are two methods to create a list of occultations through the
 database client. One is to perform an inquiry in which missions and/or
@@ -115,7 +105,7 @@ always ISO format times...
 creates an OccList of metadata for all RO soundings in the month of June,
 2019, regardless of mission.
 
-The other option to creating an OccList is be restoring a previously
+The other option to creating an OccList is to restore a previously
 saved OccList:
 
 ```
@@ -124,7 +114,11 @@ saved OccList:
 
 in which the old OccList was saved in a JSON format file.
 
-## OccList
+A jupyter notebook is provided for introduction to the *database* module as 
+[awsgnssroutils_demonstration](https://raw.githubusercontent.com/gnss-ro/aws-opendata/master/tutorials/awsgnssroutils_demonstration.ipynb). 
+
+
+### *OccList*
 
 An instance of the class OccList is contains the metadata on a list of RO
 soundings along with pointers to the RO data files in the AWS Registry of
@@ -249,3 +243,120 @@ method call:
 > week_list.download( "jpl_refractivityRetrieval", "datadir", \
         keep_aws_structure=True )
 ```
+
+## Collocation
+
+This package includes a utility that finds nadir-scanner radiance soundings 
+that are collocated with RO soundings. It implements the rotation-collocation 
+algorithm, which greatly accelerates finding collocations by rotated RO data 
+into the reference frame of a nadir-scanning instrument's scan pattern. 
+Because the scan pattern is constantly moving (along with its host satellite), 
+the rotation is time-dependent. The algorithm is fully documented in 
+[a peer reviewed paper](http://doi.org/10.5194/amt-16-3345-2023). 
+
+The rotation-collocation algorithm is composed of a large ensemble of low-level 
+routines that perform various necessary tasks. Among those tasks are 
+interfaces to multiple data sources, definitions of various instrument types, 
+the SGP4 orbit propagator, implementation of the rotation-collocation method, 
+data download capability, and collocation save capability. Several defaults 
+must be set in advance if these algorithms are to work. 
+
+
+**First steps.** Several defaults must be set for access to various online 
+data sources. The [Space-Track](http://www.space-track.org) site contains 
+two-line element satellite orbit data that are used in the rotation-collocation 
+algorithm. The user must establish an account---with username and password---on 
+Space-Track.com. The same is true for access to Metop instrument data, which 
+hosted on the EUMETSAT Data Store. In this case, the user will have to obtain 
+a "consumer key" and a "consumer secret" after first obtaining an account. 
+Again, the same is true for NASA Earthdata, which serves as an interface to 
+data on the NASA Earth Science Data and Information Systems' DAACs. Finally, 
+of course, the user must set the defaults for access to the AWS RO repository
+as described above. All but the AWS RO repository defaults will be stored 
+in the file "~/.collocation", which is created with user read-write  
+permissions only. 
+
+For Space-Track, obtain an account. After having done so, set the defaults 
+associated with Space-Track data by 
+```
+> from awsgnssroutils.collocation.core.spacetrack import setdefaults
+> setdefaults( root_path="/my/path/to/space-track/data", username="my_username", password="my_password" )
+```
+This establishes the directory indicated by *root_path* as the root path where 
+all TLE (two-line element) data obtained from Space-Track will be stored on the 
+local file system and the username and password of your account with Space-Track. 
+Once executed, all future access to Space-Track for orbit TLE data will function 
+cleanly without interference from the user. 
+
+For NASA Earthdata, obtain an account. Follow steps like those for Space-Track...
+```
+> from awsgnssroutils.collocation.core.nasa_earthdata import setdefaults
+> setdefaults( root_path="/my/path/to/earthdata/data", username="my_username", password="my_password" )
+```
+In this case, the username and password correspond to your NASA Earthdata account's 
+username and password. 
+
+(Space-Track for orbit two-line element 
+data; the EUMETSAT Data Store for Metop data; the NASA Earthdata collection 
+of NASA satellite data; and the AWS GNSS RO repository)
+
+Direct access to those routines 
+is provided in a jupyter notebook. For ease of use, however, both a single 
+function and a command line utility are provided. The function is 
+*awsgnssroutils.collocation.rotcol.execute_rotation_collocation*, and the 
+command line utility is *rotcol*. The latter is nothing more than the 
+command line implementation of the former but with documentation that can be 
+obtained with the "-h" or "--help" switches. 
+
+**The function** is imported by 
+```
+> from awsgnssroutils.collocation.rotcol import execute_rotation_collocation
+```
+The execution of the collocation is done by rotation-collocation. RO data is 
+extracted from the AWS RO repository, sounder data is extracted from a EUMETSAT or 
+a NASA data source according to the instrument, and RO and sounder data for those 
+collocations are written to a NetCDF file. 
+```
+> execute_rotation_collocation( missions, datetimerange, ro_processing_center, nadir_instrument, nadir_satellite, output_file )
+```
+The *missions* is a tuple/list of RO missions as defined for the AWS RO repository; 
+*datetimerange* is a 2-element tuple/list containing ISO-format time strings that 
+bound the period over which RO data are to be considered for collocation; 
+*ro_processing_center* defines the RO processing centers whose RO data is to be 
+used as the baseline (as contributed to the AWS RO repository); *nadir_instrument* is 
+the nadir-scanning instrument that obtained the soundings to be collocated with the 
+RO soundings; *nadir_satellite* is the name of the satellite that hosts the nadir-scanning 
+instrument, and *output_file* is the NetCDF file where collocation data is to be written. 
+The options for all of these arguments is fluid. At present, the RO processing center 
+can be "ucar", "romsaf", or "jpl"; the nadir instrument can be one of the microwave 
+instruments "AMSU-A" or "ATMS"; the nadir satellite can be "Metop-A", "Metop-B", "Metop-C" 
+(for AMSU-A) or "Suomi-NPP", "JPSS-1", "JPSS-2" (for ATMS). Try
+```
+> execute_rotation_collocation( "cosmic2", ( "2021-03-04", "2021-03-05" ), "ucar", "ATMS", "JPSS-1", "output.nc" )
+```
+to find all COSMIC-2 RO data that are collocated with JPSS-1 ATMS data for the date of March 4, 2021. 
+Results will be written to "output.nc". 
+
+**The command-line utility** is *rotcol*. Upon installation of the package, the script 
+will be placed in the session PATH. The command is executed as 
+```
+% rotcol -h
+```
+in order to obtain help. Note that it provides two major options: the is to allow the user 
+to set defaults without having to do so in Linux; the second actually executes the 
+rotation-collocation algorithm and extracts the collocated sounding data.
+
+In order to set defaults, execute the following command to get help: 
+```
+% rotcol setdefaults -h
+```
+You will see documentation that allows you to set your defaults (usernames, passwords, data root paths, etc.) 
+for the AWS repository ("awsro"), the NASA Earthdata portal ("earthdata"), the EUMETSAT Data 
+Store ("eumetsat"), and the Space-Track archive of satellites' orbital TLE data ("spacetrack"). 
+In order to execute a rotation-collocation, you can get help documentation on doing so 
+by 
+```
+% rotcol execute -h
+```
+It is a front-end to the function *execute_rotation_collocation* that also provides 
+current information on satellite instruments, satellite names, and available RO data. 
