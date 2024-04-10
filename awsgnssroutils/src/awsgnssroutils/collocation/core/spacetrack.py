@@ -340,16 +340,19 @@ class SpacetrackSatellite():
                 break 
             elif iteration==0: 
                 ret_tles = None
-                ret_spacetrack = self.spacetrack.download_data( self.norad_number, time.datetime() )
+                ret_spacetrack = self.spacetrack.download_data( self.norad_number, time.calendar("utc").datetime() )
                 ret['messages'] += ret_spacetrack['messages']
                 ret['comments'] += ret_spacetrack['comments']
-                self.build_data()
+                self.build_instance()
             else: 
                 ret_tles = None
 
 
         if ret_tles is None: 
             ret['status'] = "fail"
+            ret['messages'].append( "NoOrbitData" )
+            ret['comments'].append( "No orbit data available at Space-Track.org for " + \
+                    time.calendar("utc").isoformat( timespec="seconds" ) )
         else: 
             ret['status'] = "success"
             ret.update( { 'data': ret_tles } )

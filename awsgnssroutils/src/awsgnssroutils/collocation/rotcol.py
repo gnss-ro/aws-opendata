@@ -75,6 +75,12 @@ def execute_rotation_collocation( missions, datetimerange, ro_processing_center,
                 availablefiletypes=f'{ro_processing_center}_refractivityRetrieval', silent=True )
     tend = time()
 
+    if occs.size == 0: 
+        ret['status'] = "fail"
+        ret['messages'].append( "NoOccultationData" )
+        ret['comments'].append( "No occultation data found for missions and time range" )
+        return ret
+
     print( "  - number found = {:}".format( occs.size ) )
     print( "  - elapsed time = {:10.3f} s".format( tend-tbegin ) )
 
@@ -361,9 +367,9 @@ def main():
                     nadir_instrument, nadir_satellite, output_file )
 
             if ret['status'] == "fail": 
-                print( "messages = " + ", ".join( ret['messages'] ) + "\n" )
-                for comment in ret['comments']: 
-                    print( comment )
+                print( 'Unsuccessful. {:}: {:}'.format( ret['messages'][-1], ret['comments'][-1] ) )
+            else: 
+                print( 'Successful completion.' )
 
     else: 
         print( 'No command provided. Valid commands are "setdefaults" and "execute".' )

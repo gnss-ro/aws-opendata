@@ -2,7 +2,7 @@
 Module: nadir_satellite.py
 Authors: Alex Meredith, Stephen Leroy
 Contact: sleroy@aer.com
-Date: February 27, 2024
+Date: April 10, 2024
 
 This module contains two classes that define nadir-scanning satellite 
 instruments and provide a context for storing geolocation metadata from 
@@ -341,10 +341,10 @@ class NadirSatelliteInstrument(ABC):
                 xp, yp = get_polar_motion( time.juliandate() )
                 polarmat = erfa.pom00( xp, yp, 0 )
                 ret_tle = self.get_current_tle( time )
+                ret['messages'] += ret_tle['messages']
+                ret['comments'] += ret_tle['comments']
                 if ret_tle['status'] == "fail": 
                     ret['status'] = "fail"
-                    ret['messages'] += ret_tle['messages']
-                    ret['comments'] += ret_tle['comments']
                     return ret
                 tle = ret_tle['data']
                 sat = Satrec.twoline2rv( *tle )
@@ -392,6 +392,8 @@ class NadirSatelliteInstrument(ABC):
                 pos_subocc = arglat_matrix @ incl_matrix @ raan_matrix
 
                 nadir_positions[iocc, isubocc, :, :] = pos_subocc
+
+        #  Done. 
 
         ret['status'] = "success"
         ret['data'] = nadir_positions
