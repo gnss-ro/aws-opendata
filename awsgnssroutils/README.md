@@ -118,7 +118,7 @@ saved OccList:
 in which the old OccList was saved in a JSON format file.
 
 A jupyter notebook is provided for introduction to the *database* module as 
-[awsgnssroutils_demonstration](../tutorials/awsgnssroutils_demonstration.ipynb). 
+[database_demonstration](../tutorials/database_demonstration.ipynb). 
 
 
 ### *OccList*
