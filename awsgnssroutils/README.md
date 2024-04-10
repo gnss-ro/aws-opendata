@@ -14,13 +14,13 @@ This package can be installed from PyPI
 pip install awsgnssroutils
 ```
 
-Outline: 
-1. [First steps](#first-steps). These are necessary first steps for basic functionality. 
-2. [Database utility](#database-utility). Query, subset, and download RO data. 
-3. [Collocation utility](#collocation-utility). Find nadir radiance scanner data collocated with RO data. 
+**Contents**
+1. [First steps](#1-first-steps). These are necessary first steps for basic functionality. 
+2. [Database utility](#2-database-utility). Query, subset, and download RO data. 
+3. [Collocation utility](#3-collocation-utility). Find nadir radiance scanner data collocated with RO data. 
 
 
-## First Steps 
+## 1. First Steps 
 Before proceeding to use the query utility, be sure to set defaults for 
 the database query system...
 
@@ -51,7 +51,7 @@ If a user erases metadata files in the metadata root path, future queries
 will still function correctly, but they will have to repopulate the metadata, 
 thereby greatly increasing the wall clock time of queries. 
 
-## Database Utility
+## 2. Database Utility
 
 The module *awsgnssroutils.database* obtains RO metadata from the AWS 
 Registry of Open Data if needed, queries the metadata according to 
@@ -245,7 +245,7 @@ the AWS directory structure, which is the default, set the keyword
 In this case, because the *data_root* was not specified, it used the 
 data_root previously set by setdefaults as the default. 
 
-## Collocation Utility
+## 3. Collocation Utility
 
 This package includes a utility that finds nadir-scanner radiance soundings 
 that are collocated with RO soundings. It implements the rotation-collocation 
