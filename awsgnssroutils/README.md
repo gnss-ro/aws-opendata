@@ -118,8 +118,7 @@ occlist = rodb.restore( "old_occlist.json" )
 in which the old OccList was saved in a JSON format file.
 
 A jupyter notebook is provided for introduction to the *database* module as 
-[database_demonstration](../tutorials/database_demonstration.ipynb). 
-
+[database_demonstration](http://github.com/gnss-ro/aws-opendata/blob/master/tutorials/database_demonstration.ipynb). 
 
 ### *OccList*
 
@@ -263,7 +262,8 @@ algorithm is fully documented in
 The rotation-collocation algorithm is composed of a large suite of low-level 
 routines that perform various necessary tasks. If you wish to learn more 
 about these low-level routines, consult the jupyter notebook 
-[collocation_demonstration](../tutorials/collocation_demonstration.ipynb). 
+[collocation_demonstration](http://github.com/gnss-ro/aws-opendata/blob/master/tutorials/collocation_demonstration.ipynb). 
+
 Among those tasks are 
 interfaces to multiple data sources, definitions of various instrument types, 
 the SGP4 orbit propagator, implementation of the rotation-collocation method, 
