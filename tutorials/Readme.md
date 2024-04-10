@@ -9,6 +9,14 @@ GNSS RO in AWS Tutorials
 
 *Correspondence:* Stephen Leroy (sleroy@aer.com) or Amy McVey (amcvey@aer.com)
 
+**Contents**
+- [Introduction](#introduction)
+- [Python environment](#python-environment)
+- [Simple introduction to database](#simple-introduction-to-database)
+- [Processing center inter-comparison](#ro-processing-center-inter-comparison)
+- [Tropopause analysis](#tropopause-analysis)
+- [Stackplot of RO counts](#stackplot-of-ro-counts)
+- [Collocation](#collocation-demonstration)
 
 ## Introduction
 
@@ -31,7 +39,7 @@ This pip installation requires Python 3.8+ and installs s3fs and numpy as
 dependencies if they are not already installed. The tutorial demonstrations 
 described below also require installations of matplotlib and cartopy. 
 
-### Simple introduction to awsgnssroutils.database
+### Simple introduction to database
 
 The **awsgnssroutils** package provides a simple mechanism for querying RO sounding 
 data according to RO mission, GNSS transmitter, low-Earth orbiting receiver, 
@@ -95,7 +103,7 @@ on a latitude-height plot.
 
 The jupyter notebook is [tropopause_demonstration](./tropopause_demonstration.ipynb). 
 
-### Stackplot of RO counts by mission
+### Stackplot of RO counts 
 
 Before a stackplot of RO mean daily counts by mission can be generated, the
 occultations must be counted! This can be a time-intensive operation, so it is
