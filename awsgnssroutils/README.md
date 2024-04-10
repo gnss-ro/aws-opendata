@@ -118,7 +118,7 @@ saved OccList:
 in which the old OccList was saved in a JSON format file.
 
 A jupyter notebook is provided for introduction to the *database* module as 
-[awsgnssroutils_demonstration](https://raw.githubusercontent.com/gnss-ro/aws-opendata/master/tutorials/awsgnssroutils_demonstration.ipynb). 
+[awsgnssroutils_demonstration](../tutorials/awsgnssroutils_demonstration.ipynb). 
 
 
 ### *OccList*
@@ -257,7 +257,10 @@ algorithm is fully documented in
 [a peer reviewed paper](http://doi.org/10.5194/amt-16-3345-2023). 
 
 The rotation-collocation algorithm is composed of a large suite of low-level 
-routines that perform various necessary tasks. Among those tasks are 
+routines that perform various necessary tasks. If you wish to learn more 
+about these low-level routines, consult the jupyter notebook 
+[collocation_demonstration](../tutorials/collocation_demonstration.ipynb). 
+Among those tasks are 
 interfaces to multiple data sources, definitions of various instrument types, 
 the SGP4 orbit propagator, implementation of the rotation-collocation method, 
 data download capability, and collocation save capability. Several defaults 
