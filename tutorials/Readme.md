@@ -9,22 +9,18 @@ GNSS RO in AWS Tutorials
 
 *Correspondence:* Stephen Leroy (sleroy@aer.com) or Amy McVey (amcvey@aer.com)
 
-**Contents**
-- [Introduction](#introduction)
-- [Python environment](#python-environment)
-- [Simple introduction to database](#simple-introduction-to-database)
-- [Processing center inter-comparison](#ro-processing-center-inter-comparison)
-- [Tropopause analysis](#tropopause-analysis)
-- [Stackplot of RO counts](#stackplot-of-ro-counts)
-- [Collocation](#collocation-demonstration)
-
-## Introduction
-
 In this directory you can find tutorial software in Python that illustrates
 the use of GNSS RO data in the AWS Open Data Registry. There are three jupyter 
 notebooks and a Python program that illustrate how to manipulate GNSS RO 
 data and metadata in the Amazon Web Services (AWS) Registry of Open Data. 
 
+**Contents**
+- [Python environment](#python-environment). Initialize the **awsgnssroutils** database module. 
+- [Simple introduction to database](#simple-introduction-to-database). Demonstration of the database module. 
+- [Processing center inter-comparison](#ro-processing-center-inter-comparison). Demonstration of a RO center inter-comparison study. 
+- [Tropopause analysis](#tropopause-analysis). Demonstration of cold-point tropopause analysis. 
+- [Stackplot of RO counts](#stackplot-of-ro-counts). A script that counts radio occultation soundings by mission. 
+- [Collocation](#collocation-demonstration). A demonstration of the routines of nadir-scanner&mdash;RO collocation finding. 
 
 ## Python environment
 
