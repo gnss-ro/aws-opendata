@@ -2,10 +2,10 @@
 
 This package &mdash; **awsgnssroutils** &mdash; contains two utilities 
 intended to serve and take advantage of the GNSS radio occultation (RO) data 
-in the AWS Registry of Open Data. The first utility is a database utility, 
+in the AWS Registry of Open Data. The first is a database utility, 
 which queries the RO database for occultations that satisfy a variety 
-of search criteria. The second utility is a highly efficient collocation 
-finder, which finds nadir-scanning radiance sounder data that is coincident 
+of search criteria. The second is a highly efficient collocation-finding 
+utility, which finds nadir-scanning radiance sounder data that is coincident 
 with GNSS RO data. 
 
 This package can be installed from PyPI
@@ -15,12 +15,12 @@ pip install awsgnssroutils
 ```
 
 Outline: 
-1. [First steps/initialization](first-steps)
-2. [AWS RO database](database)
-3. [Collocation utility](collocation)
+1. [First steps](#first-steps). These are necessary first steps for basic functionality. 
+2. [Database utility](#database-utility). Query, subset, and download RO data. 
+3. [Collocation utility](#collocation-utility). Find nadir radiance scanner data collocated with RO data. 
 
 
-### First steps 
+## First Steps 
 Before proceeding to use the query utility, be sure to set defaults for 
 the database query system...
 
@@ -29,13 +29,13 @@ the database query system...
 > setdefaults( metadata_root="/my/path/to/RO/metadata", data_root="/my/path/to/RO/data", version="v1.1" )
 ```
 
-All queries will attempt to access metadata in the root path of the first 
-argument in this call, and all attempts to download RO data files will 
-attempt to find the requested files in the root path of the second 
-argument of the call. (Of course, rename these paths to paths defined 
-as you wish.) At this point, the only version of RO data published in the 
-AWS Registry of Open Data is "v1.1", so be certain this is the version of 
-RO data you specify when executing setdefaults. 
+All queries will attempt to access metadata in a directory hierarchy 
+whose root is the first argument in this call, and all attempts to 
+download RO data files will attempt to find the requested files in a 
+directory hierarchy whose root is the second argument of the call. 
+(Of course, rename these root paths to the desired root paths on your 
+own file system.) At this point, the only version of RO data published in the 
+AWS Registry of Open Data is "v1.1". 
 
 A user can choose to prepopulate all RO metadata, thereby guaranteeing 
 great efficiency in all queries. Prepopulating can take up to ten minutes, 
@@ -51,12 +51,15 @@ If a user erases metadata files in the metadata root path, future queries
 will still function correctly, but they will have to repopulate the metadata, 
 thereby greatly increasing the wall clock time of queries. 
 
-## Database 
+## Database Utility
 
-The module *awsgnssroutils.database* defines two classes: *RODatabaseClient* 
-and *OccList*. The firstcreates a portal to a database of RO metadata, and 
-the second is an instanceof a list of radio occultations (ROs). Each are 
-described below.  
+The module *awsgnssroutils.database* obtains RO metadata from the AWS 
+Registry of Open Data if needed, queries the metadata according to 
+a variety of conditions, permits filtering/subsetting of the results, and 
+downloads RO data as desired. The module defines two classes that serve 
+as its core engine: *RODatabaseClient* and *OccList*. The first creates a 
+portal to a database of RO metadata, and the second is an instance of a 
+list of ROs. Each are described below.  
 
 ### *RODatabaseClient*
 
@@ -227,42 +230,40 @@ Finally, RO data files themselves can be downloaded for subsequent
 scientific analysis using the OccList.download() method. If one wishes to
 download the all RO bending angle data contributed by JPL to the archive
 for the week of June 5-11, 2012, one only need execute the commands
-
 ```
 > week_list = rodb.query( datetimerange=("2012-06-05","2012-06-12") )
-> week_list.download( "jpl_refractivityRetrieval", "datadir" )
+> week_list.download( "jpl_refractivityRetrieval", data_root="datadir", keep_aws_structure=False )
 ```
-
 which will download all file type "refractivityRetrieval" contributed by
 JPL into the directory "datadir". All of the files will be entered into
 just one directory. If instead one wants to download the files maintaining
-the AWS directory structure, use the keyword "keep\_aws\_structure" in the
-method call:
-
+the AWS directory structure, which is the default, set the keyword 
+*keep\_aws\_structure* to True: 
 ```
-> week_list.download( "jpl_refractivityRetrieval", "datadir", \
-        keep_aws_structure=True )
+> week_list.download( "jpl_refractivityRetrieval", keep_aws_structure=True )
 ```
+In this case, because the *data_root* was not specified, it used the 
+data_root previously set by setdefaults as the default. 
 
-## Collocation
+## Collocation Utility
 
 This package includes a utility that finds nadir-scanner radiance soundings 
 that are collocated with RO soundings. It implements the rotation-collocation 
-algorithm, which greatly accelerates finding collocations by rotated RO data 
-into the reference frame of a nadir-scanning instrument's scan pattern. 
-Because the scan pattern is constantly moving (along with its host satellite), 
-the rotation is time-dependent. The algorithm is fully documented in 
+algorithm, which greatly accelerates finding collocations by rotating the 
+geolocations of RO soundings into the reference frame of a nadir-scanning 
+instrument's scan pattern. Because the scan pattern is constantly moving 
+(along with its host satellite), the rotation is time-dependent. The 
+algorithm is fully documented in 
 [a peer reviewed paper](http://doi.org/10.5194/amt-16-3345-2023). 
 
-The rotation-collocation algorithm is composed of a large ensemble of low-level 
+The rotation-collocation algorithm is composed of a large suite of low-level 
 routines that perform various necessary tasks. Among those tasks are 
 interfaces to multiple data sources, definitions of various instrument types, 
 the SGP4 orbit propagator, implementation of the rotation-collocation method, 
 data download capability, and collocation save capability. Several defaults 
 must be set in advance if these algorithms are to work. 
 
-
-**First steps.** Several defaults must be set for access to various online 
+**Set defaults.** Several defaults must be set for access to various online 
 data sources. The [Space-Track](http://www.space-track.org) site contains 
 two-line element satellite orbit data that are used in the rotation-collocation 
 algorithm. The user must establish an account---with username and password---on 
