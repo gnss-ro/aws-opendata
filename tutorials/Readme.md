@@ -33,7 +33,7 @@ described below also require installations of matplotlib and cartopy.
 
 ### Simple introduction to awsgnssroutils.database
 
-The awsgnssroutils provides a simple mechanism for querying RO sounding 
+The **awsgnssroutils** package provides a simple mechanism for querying RO sounding 
 data according to RO mission, GNSS transmitter, low-Earth orbiting receiver, 
 GNSS constellation tracked, longitude range, latitude range, range of 
 date-times, range of local (solar) times, and occultation geometry 
@@ -125,6 +125,16 @@ to generate an encapsulated postscript plot of the occultation counts by mission
 ```
 By default, output is written to plot_count_occultations.eps.
 
+### Collocation demonstration
+
+The **awsgnssroutils** package has the capability of finding nadir radiance-scanner 
+sounder data that are collocation with RO soundings. It is a highly efficient 
+collocation finder, based on the rotation-collocation algorithm, in which RO soundings
+are rotated into the time-dependent reference frame of the nadir scanner's scan pattern. 
+The *awsgnssroutils.collocation* package contains a suite of low-level routines that 
+perform rotation-collocation and brute force collocation. The jupyter notebook 
+[collocation_demonstration](./collocation_demonstration.ipynb) demonstrates how the 
+low level routines are called in order to perform collocation-finding calculations. 
 
 ### OPAC7 IROWG9 workshop jupyter notebook
 
