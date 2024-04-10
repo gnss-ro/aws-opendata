@@ -51,7 +51,7 @@ is complete enough and extensive enough to enable many research use cases.
 Lastly, a local demand-driven mirror of RO metadata is generated to 
 maximize the efficiency of querying a large RO metadata database. 
 
-The jupyter notebook is [awsgnssroutils_demonstration](https://raw.githubusercontent.com/gnss-ro/aws-opendata/master/tutorials/awsgnssroutils_demonstration.ipynb). 
+The jupyter notebook is [database_demonstration](./database_demonstration.ipynb). 
 
 In order to greatly simplify use of the awsgnssroutils, be sure to 
 initialize your local repository of RO database queries using 
@@ -59,7 +59,7 @@ the awsgnssroutils.database.setdefaults function. For example,
 
 ```
 from awsgnssroutils.database import setdefaults
-setdefaults( "/home/myhome/local/rodatabase", rodata="/home/myhome/Data/rodata", version="1.1" )
+setdefaults( metadata_root="/home/myhome/local/rodatabase", data_root="/home/myhome/Data/rodata", version="1.1" )
 ```
 
 will define the first argument as the directory in which a history of 
@@ -80,7 +80,7 @@ simple. A jupyter notebook demonstrates how center inter-comparison
 research can be done using the awsgnssroutils package and simple 
 data analysis and plotting commands. 
 
-The jupyter notebook is [intercomparison_demonstration](https://raw.githubusercontent.com/gnss-ro/aws-opendata/master/tutorials/intercomparison_demonstration.ipynb). 
+The jupyter notebook is [intercomparison_demonstration](./intercomparison_demonstration.ipynb). 
 
 ### Tropopause analysis
 
@@ -93,14 +93,14 @@ and subsequently reads the contents of those data files, scans for
 temperature minima, and plots a scatterplot of the cold-point tropopause 
 on a latitude-height plot. 
 
-The jupyter notebook is [tropopause_demonstration](https://raw.githubusercontent.com/gnss-ro/aws-opendata/master/tutorials/tropopause_demonstration.ipynb). 
+The jupyter notebook is [tropopause_demonstration](./tropopause_demonstration.ipynb). 
 
 ### Stackplot of RO counts by mission
 
 Before a stackplot of RO mean daily counts by mission can be generated, the
 occultations must be counted! This can be a time-intensive operation, so it is
 best done in parallel, breaking up the counting by year interval. For that reason,
-we provide the [count_occultations](https://raw.githubusercontent.com/gnss-ro/aws-opendata/master/tutorials/count_occultations)
+we provide the [count_occultations](./count_occultations)
 program. It utilizes the awsgnssroutils package and generates
 a local repository of GNSS RO metadata in the directory ~/local/rodatabase.
 Consider the following parallel processing, submitted as background jobs:
@@ -118,7 +118,7 @@ times faster, precisely because the RO metadata will be local, in ~/local/rodata
 
 Once these jobs are completed, then you can use the command line
 python executable
-[plot_count_occultations](https://raw.githubusercontent.com/gnss-ro/aws-opendata/master/tutorials/plot_count_occultations)
+[plot_count_occultations](./plot_count_occultations)
 to generate an encapsulated postscript plot of the occultation counts by mission.
 ```
 ./plot_count_occultations count_occultations.*.json
@@ -128,7 +128,7 @@ By default, output is written to plot_count_occultations.eps.
 
 ### OPAC7 IROWG9 workshop jupyter notebook
 
-The [opac7irowg9_workshop.ipynb](https://raw.githubusercontent.com/gnss-ro/aws-opendata/master/tutorials/opac7irowg9_workshop.ipynb) 
+The [opac7irowg9_workshop.ipynb](./opac7irowg9_workshop.ipynb) 
 code was used during the 2022 workshop in Austria. It walked users through s3fs and a
 program to perform queries of DynamoDB.
 As it is based on querying an AWS DynamoDB database table, you will not be able to execute
