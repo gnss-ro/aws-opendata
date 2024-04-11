@@ -1,3 +1,16 @@
+"""rotcol.py
+
+Function and command line executable for the rotation-collocation algorithm. 
+The function bundles together the low-level routines for operationalized 
+rotation-collocation. The script does the same on the Linux command line as 
+well as implementing setdefaults for usernames, passwords, root directories, 
+etc.
+
+Authors: Stephen Leroy (sleroy@aer.com)
+Date: April 11, 2024
+"""
+
+
 import argparse
 import re
 import json
