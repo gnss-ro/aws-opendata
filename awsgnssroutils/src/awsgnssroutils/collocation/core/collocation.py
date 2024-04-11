@@ -469,16 +469,15 @@ class CollocationList( list ):
         if author is not None: 
             d.setncattr( "author", author )
 
+        d.createDimension( "timestr", 19 )
+
         #  Loop over collocations. 
 
         for collocation in self: 
 
-            if collocation.data is None: 
-                ret = collocation.get_data()
-
             #  Write occultation and sounder data. 
 
-            occid = collocation.data['occid'] 
+            occid = collocation.occultation._data[0]['occid']
             collocation_name = occid + "+" + \
                     collocation.nadir_satellite.satellite_name + "-" + \
                     collocation.nadir_satellite.instrument_name
@@ -486,13 +485,26 @@ class CollocationList( list ):
             collocation_group = d.createGroup( collocation_name )
             collocation_group.setncattr( "status", collocation.status )
 
-            if collocation.status == "nominal": 
+            longitude = collocation_group.createVariable( "longitude", "f4" )
+            longitude.setncatts( { 'description': "Reference longitude of collocation, positive eastward", 'units': "degrees" } )
+
+            latitude = collocation_group.createVariable( "latitude", "f4" )
+            latitude.setncatts( { 'description': "Reference latitude of collocation, positive northward", 'units': "degrees" } )
+
+            ctime = collocation_group.createVariable( "time", "c", dimensions=("timestr",) )
+            ctime.setncatts( { 'description': "Reference time of collocation, UTC, ISO format string" } )
+
+            if collocation.data is not None and collocation.status == "nominal": 
 
                 occultation_group = collocation_group.createGroup( "occultation" )
                 write_dataset_to_netcdf( collocation.data['occultation'], occultation_group )
 
                 sounder_group = collocation_group.createGroup( "sounder" )
                 write_dataset_to_netcdf( collocation.data['sounder'], sounder_group )
+
+            longitude.assignValue( collocation.longitude )
+            latitude.assignValue( collocation.latitude )
+            ctime[:] = collocation.time.calendar("utc").isoformat(timespec="seconds")
 
         #  Done. 
 
