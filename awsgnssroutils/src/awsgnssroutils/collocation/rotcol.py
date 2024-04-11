@@ -10,6 +10,7 @@ Authors: Stephen Leroy (sleroy@aer.com)
 Date: April 11, 2024
 """
 
+#  Imports. 
 
 import argparse
 import re
@@ -20,6 +21,12 @@ from time import time
 
 from awsgnssroutils.database import valid_table 
 from awsgnssroutils.collocation.instruments import instruments
+
+
+################################################################################
+#  Wrapper for executing the rotation-collocation algorithm for collocating 
+#  RO soundings with scanner soundings. 
+################################################################################
 
 def execute_rotation_collocation( missions, datetimerange, ro_processing_center, 
         nadir_instrument, nadir_satellite, outputfile, nodata=False ): 
@@ -183,6 +190,10 @@ def execute_rotation_collocation( missions, datetimerange, ro_processing_center,
 
     return ret
 
+
+################################################################################
+#  Command line parser and execution of the above function. 
+################################################################################
 
 def main(): 
 
@@ -421,8 +432,13 @@ def main():
 
     else: 
         print( 'No command provided. Valid commands are "setdefaults" and "execute".' )
-        return
+            
+    return
 
+
+################################################################################
+#  Enable execution of this script from the command line in development mode. 
+################################################################################
 
 if __name__ == "__main__": 
     main()
