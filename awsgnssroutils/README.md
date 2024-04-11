@@ -270,7 +270,9 @@ the SGP4 orbit propagator, implementation of the rotation-collocation method,
 data download capability, and collocation save capability. Several defaults 
 must be set in advance if these algorithms are to work. 
 
-**Set defaults.** Several defaults must be set for access to various online 
+### Set defaults
+
+Several defaults must be set for access to various online 
 data sources. The [Space-Track](http://www.space-track.org) site contains 
 two-line element satellite orbit data that are used in the rotation-collocation 
 algorithm. The user must establish an account---with username and password---on 
@@ -280,16 +282,18 @@ a "consumer key" and a "consumer secret" after first obtaining an account.
 Again, the same is true for NASA Earthdata, which serves as an interface to 
 data on the NASA Earth Science Data and Information Systems' DAACs. Finally, 
 of course, the user must set the defaults for access to the AWS RO repository
-as described above. All but the AWS RO repository defaults will be stored 
-in the file "~/.collocation", which is created with user read-write  
-permissions only. 
+as described above. <span style="color:red">All but the AWS RO repository 
+defaults will be stored in the file "~/.collocation", which is created with 
+user read-write permissions only.</span> The AWS RO repository defaults 
+are stored in "~/.awsgnssroutilsrc". Since the latter does not contain 
+a password or secret key, it is assigned no exclusive access permissions. 
 
 For Space-Track, obtain an account. After having done so, set the defaults 
 associated with Space-Track data by 
 
 ```
 from awsgnssroutils.collocation.core.spacetrack import setdefaults
-setdefaults( root_path="/my/path/to/space-track/data", username="my_username", password="my_password" )
+setdefaults( root_path="/my/path/to/space-track/data", spacetracklogin=("my_username","my_password") )
 ```
 
 This establishes the directory indicated by *root_path* as the root path where 
@@ -302,11 +306,25 @@ For NASA Earthdata, obtain an account. Follow steps like those for Space-Track..
 
 ```
 from awsgnssroutils.collocation.core.nasa_earthdata import setdefaults
-setdefaults( root_path="/my/path/to/earthdata/data", username="my_username", password="my_password" )
+setdefaults( root_path="/my/path/to/earthdata/data", earthdatalogin=("my_username","my_password") )
 ```
 
 In this case, the username and password correspond to your NASA Earthdata account's 
 username and password. 
+
+For the EUMETSAT Data Store, obtain an account. Your account will grant you access 
+tokens in the form of a consumer key and a consumer secret. You can find both on 
+[this site](https://api.eumetsat.int/api-key/) after logging in to your EUMETSAT 
+data store account. You can then set defaults for access to the EUMETSAT Data Store by...
+
+```
+from awsgnssroutils.collocation.core.eumetsat import setdefaults
+setdefaults( root_path="/my/path/to/eumetsat/data", eumetsattokens=("consumer_key","consumer_secret") )
+```
+
+Set the consumer key and consumer secret to those granted you in your EUMETSAT account. 
+
+### Executing rotation-collocation 
 
 For ease of use, both a single function and a command line utility are provided. The function is 
 *awsgnssroutils.collocation.rotcol.execute_rotation_collocation*, and the 
