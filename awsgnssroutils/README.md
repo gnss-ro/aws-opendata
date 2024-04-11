@@ -282,9 +282,9 @@ a "consumer key" and a "consumer secret" after first obtaining an account.
 Again, the same is true for NASA Earthdata, which serves as an interface to 
 data on the NASA Earth Science Data and Information Systems' DAACs. Finally, 
 of course, the user must set the defaults for access to the AWS RO repository
-as described above. <span style="color:red">All but the AWS RO repository 
+as described above. **All but the AWS RO repository 
 defaults will be stored in the file "~/.collocation", which is created with 
-user read-write permissions only.</span> The AWS RO repository defaults 
+user read-write permissions only.** The AWS RO repository defaults 
 are stored in "~/.awsgnssroutilsrc". Since the latter does not contain 
 a password or secret key, it is assigned no exclusive access permissions. 
 
