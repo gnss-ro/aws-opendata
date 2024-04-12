@@ -1,6 +1,6 @@
 [build-system]
 # requires = [ "hatchling", "s3fs", "numpy", "tqdm" ]
-requires = [ "hatchling" ]
+requires = [ "hatchling>=1.22.2" ]
 build-backend = "hatchling.build"
 
 [project]
