@@ -1,0 +1,21 @@
+name: "dev-collocation"
+channels: 
+  - nodefaults
+  - anaconda
+  - conda-forge
+dependencies: 
+  - python==3.9.18
+  - jupyter
+  - awscli
+  - boto3
+  - aiobotocore
+  - tqdm
+  - numpy
+  - xarray
+  - astropy>=5.3
+  - pyerfa
+  - sgp4
+  - netCDF4
+  - eumdac
+  - earthaccess
+  - pip
