@@ -333,10 +333,17 @@ def main():
             if args.dataroot is not None: 
                 kwargs.update( { 'data_root': args.dataroot } )
             if args.metadataroot is not None: 
-                kwargs.update( { 'metadata_root': args.dataroot } )
+                kwargs.update( { 'metadata_root': args.metadataroot } )
 
             print( "Updating AWS RO defaults: " + json.dumps( kwargs ) )
-            setdefaults( **kwargs )
+
+            ret = setdefaults( **kwargs )
+
+            if ret['status'] == "success": 
+                print( "Successful." )
+                print( ret['data'] )
+            else: 
+                print( "Failed.\n{:}: {:}".format( ret['messages'][-1], ret['comments'][-1] ) )
 
         elif args.service == "eumetsat": 
 
@@ -349,9 +356,15 @@ def main():
                 kwargs.update( { 'eumetsattokens': ( args.consumer_key, args.consumer_secret ) } )
 
             print( "Updating EUMETSAT defaults: " + json.dumps( kwargs ) )
+
             ret = setdefaults( **kwargs )
-            if ret['status'] == "fail": 
-                print( "Error: \n" + "\n".join( ret['comments'] ) )
+
+            if ret['status'] == "success": 
+                print( "Successful." )
+                odata = { key: value for key, value in ret['data'].items() if "password" not in key }
+                print( odata )
+            else: 
+                print( "Failed.\n{:}: {:}".format( ret['messages'][-1], ret['comments'][-1] ) )
 
         elif args.service == "earthdata": 
 
@@ -365,9 +378,15 @@ def main():
                 kwargs.update( { 'earthdatalogin': ( args.username, password ) } )
 
             print( "Updating NASA Earthdata defaults: " + json.dumps( kwargs ) )
+
             ret = setdefaults( **kwargs )
-            if ret['status'] == "fail": 
-                print( "Error: \n" + "\n".join( ret['comments'] ) )
+
+            if ret['status'] == "success": 
+                print( "Successful." )
+                odata = { key: value for key, value in ret['data'].items() if "password" not in key }
+                print( odata )
+            else: 
+                print( "Failed.\n{:}: {:}".format( ret['messages'][-1], ret['comments'][-1] ) )
 
         elif args.service == "spacetrack": 
 
@@ -381,13 +400,19 @@ def main():
                 kwargs.update( { 'spacetracklogin': ( args.username, password ) } )
 
             print( "Updating Space-Track defaults: " + json.dumps( kwargs ) )
+
             ret = setdefaults( **kwargs )
-            if ret['status'] == "fail": 
-                print( "Error: \n" + "\n".join( ret['comments'] ) )
+
+            if ret['status'] == "success": 
+                print( "Successful." )
+                odata = { key: value for key, value in ret['data'].items() if "password" not in key }
+                print( odata )
+            else: 
+                print( "Failed.\n{:}: {:}".format( ret['messages'][-1], ret['comments'][-1] ) )
 
         else: 
 
-            print( f'Invalid service: "{args.service}"' )
+            print( f'Invalid service: "{args.service}". Get help by "rotcol setdefaults -h".' )
 
     elif args.command == "execute": 
 
@@ -396,9 +421,9 @@ def main():
         #  Get arguments for rotation-collocation: missions, timerange, nadir_satellite, 
         #  nadir_instrument, ro_processing_center. 
 
-        missions = re.split( "\s+", args.missions )
+        missions = re.split( r"\s+", args.missions )
 
-        ss = re.split( "\s+", args.timerange )
+        ss = re.split( r"\s+", args.timerange )
         timerange = ( datetime.fromisoformat( ss[0] ), datetime.fromisoformat( ss[1] ) )
 
         nadir_satellite = str( args.nadir_satellite )

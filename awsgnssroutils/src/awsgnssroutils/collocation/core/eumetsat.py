@@ -45,25 +45,21 @@ def setdefaults( root_path=None, eumetsattokens=None ):
     consumer secret as provided for the user's account on the EUMETSAT Data 
     Store."""
 
-    ret = { 'status': None, 'messages': [], 'comments': [] }
+    ret = { 'status': None, 'messages': [], 'comments': [], 'data': None }
+    new_defaults = {}
 
-    if isinstance(root_path,str): 
+    if root_path is not None:
 
-        if os.path.exists( defaults_file ): 
-            with open( defaults_file, 'r' ) as f: 
-                defaults = json.load( f )
-        else: 
-            defaults = {}
+        try:
+            os.makedirs( root_path, exist_ok=True )
 
-        path = os.path.abspath( os.path.expanduser( root_path ) ) 
-        defaults.update( { root_path_variable: path } )
-        os.makedirs( path, exist_ok=True )
+        except:
+            ret['status'] = "fail"
+            ret['messages'].append( "BadPathName" )
+            ret['comments'].append( f'Unable to create root_path ("{root_path}") as a directory.' )
+            return ret
 
-        #  Write to defaults file. 
-
-        with open( defaults_file, 'w' ) as f: 
-            json.dump( defaults, f, indent="  " )
-        os.chmod( defaults_file, stat.S_IRUSR | stat.S_IWUSR )
+        new_defaults.update( { root_path_variable: os.path.abspath( root_path ) } )
 
     #  Define consumer key, consumer secret. 
 
@@ -84,6 +80,28 @@ def setdefaults( root_path=None, eumetsattokens=None ):
             ret['messages'].append( "InvalidArgument" )
             ret['comments'].append( "eumetsattokens must be a tuple or a list" )
             return ret
+
+    if len( new_defaults ) > 0: 
+
+        #  Get old defaults.
+
+        if os.path.exists( defaults_file ):
+            with open( defaults_file, 'r' ) as f:
+                defaults = json.load( f )
+        else:
+            defaults = {}
+
+        #  Update with new defaults.
+
+        defaults.update( new_defaults )
+
+        #  Write to defaults file.
+
+        with open( defaults_file, 'w' ) as f:
+            json.dump( defaults, f, indent="  " )
+        os.chmod( defaults_file, stat.S_IRUSR | stat.S_IWUSR )
+
+        ret['data'] = defaults
 
     #  Done. 
 
@@ -180,7 +198,7 @@ class EUMETSATDataStore():
         #  Get list of satellites. 
 
         data_root = os.path.join( self.data_root, "amsua" )
-        satellites = [ p for p in os.listdir( data_root ) if re.search( "^Metop-", p ) \
+        satellites = [ p for p in os.listdir( data_root ) if re.search( r"^Metop-", p ) \
                 and os.path.isdir( os.path.join( data_root, p ) ) ]
 
         #  Initialize inventory. 
@@ -195,7 +213,7 @@ class EUMETSATDataStore():
                 subdirs.sort()
                 files.sort()
 
-                ss = "^" + sat + "_AMSAL1_(\d{8}T\d{6})Z_(\d{8}T\d{6})Z\.nc$"
+                ss = "^" + sat + r"_AMSAL1_(\d{8}T\d{6})Z_(\d{8}T\d{6})Z\.nc$"
                 st = "%Y%m%dT%H%M%S" 
 
                 for file in files: 
@@ -284,7 +302,7 @@ class EUMETSATDataStore():
 
         for item in inventory: 
 
-            m = re.search( "(\d{14})Z_(\d{14})Z", item )
+            m = re.search( r"(\d{14})Z_(\d{14})Z", item )
             if not m: continue
 
             #  Start time and end time of inventory item. 
@@ -362,7 +380,7 @@ class EUMETSATDataStore():
 
                 for file in files:
                     inpath = os.path.join( "tmp", file )
-                    m = re.search( "^AMSAL1_(\d{8}T\d{6})Z_(\d{8}T\d{6})Z_epct_.*\.nc$", file )
+                    m = re.search( r"^AMSAL1_(\d{8}T\d{6})Z_(\d{8}T\d{6})Z_epct_.*\.nc$", file )
                     t = datetime.strptime( m.group(1), "%Y%m%dT%H%M%S" )
                     outpath = os.path.join( self.data_root, "amsua", satellite, 
                             f'{t.year:4d}', f'{t.month:02d}', f'{t.day:02d}',

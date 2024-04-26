@@ -247,7 +247,8 @@ def setdefaults( metadata_root:str=None, data_root:str=None, version:str=None ) 
                         can be found in s3://gnss-ro-data/dynamo. 
     """
 
-    # defaults = { 'metadata_root': "", 'data_root': "", 'version': "" }
+    ret = { 'status': None, 'messages': [], 'comments': [], 'data': None }
+
     new_defaults = {}
 
     #  Check for existence of defaults file. Get existing defaults. 
@@ -265,29 +266,42 @@ def setdefaults( metadata_root:str=None, data_root:str=None, version:str=None ) 
     #  don't already exist. 
 
     if metadata_root is not None: 
-        if metadata_root != os.path.abspath( metadata_root ): 
-            raise AWSgnssroutilsError( "BadPathName", 
-                    f'Path to metadata_root ({metadata_root}) must be an absolute path' )
-        else: 
-            defaults.update( { 'metadata_root': metadata_root } )
+
+        try: 
             os.makedirs( metadata_root, exist_ok=True )
 
+        except: 
+            ret['status'] = "fail"
+            ret['messages'].append( "BadPathName" )
+            ret['comments'].append( f'Unable to create metadata_root ("{metadata_root}") as a directory.' )
+            return ret
+
+        defaults.update( { 'metadata_root': os.path.abspath( metadata_root ) } )
+
+
     if data_root is not None: 
-        if data_root != os.path.abspath( data_root ): 
-            raise AWSgnssroutilsError( "BadPathName", 
-                    f'Path to data_root ({data_root}) must be an absolute path' )
-        else: 
-            defaults.update( { 'data_root': data_root } )
+
+        try: 
             os.makedirs( data_root, exist_ok=True )
 
+        except: 
+            ret['status'] = "fail"
+            ret['messages'].append( "BadPathName" )
+            ret['comments'].append( f'Unable to create data_root ("{data_root}") as a directory.' )
+            return ret
+
+        defaults.update( { 'data_root': os.path.abspath( data_root ) } )
 
     #  Check for a valid version. 
 
     if version is not None: 
 
         if version not in valid_versions: 
-            raise AWSgnssroutilsError( "InvalidVersion", f'Version "{version}" is invalid; ' + \
+            ret['status'] = "fail"
+            ret['messages'].append( "InvalidVersion" )
+            ret['comments'].append( f'Version "{version}" is invalid; ' + \
                     'valid versions are ' + ", ".join( valid_versions ) )
+            return ret
 
         defaults.update( { 'version': version } )
 
@@ -297,11 +311,14 @@ def setdefaults( metadata_root:str=None, data_root:str=None, version:str=None ) 
     #  Record new set of defaults. 
 
     with open( defaults_file_path, 'w' ) as fp: 
-        json.dump( defaults, fp )
+        json.dump( defaults, fp, indent="  " )
 
     #  Done. 
 
-    return defaults
+    ret['data'] = defaults
+    ret['status'] = "success"
+
+    return ret
 
 
 def populate() -> subprocess.CompletedProcess : 

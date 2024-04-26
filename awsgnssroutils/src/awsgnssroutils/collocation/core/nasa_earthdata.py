@@ -47,7 +47,7 @@ time_limit = timedelta( seconds=3600 )
 
 #  String parsing. 
 
-file_search_string = "^SNDR\..*(\d{8}T\d{4})\.m.*\.nc$"
+file_search_string = r"^SNDR\..*(\d{8}T\d{4})\.m.*\.nc$"
 time_parse_string = "%Y%m%dT%H%M" 
 
 #  Establist the netrc file name. 
@@ -84,27 +84,23 @@ def setdefaults( root_path=None, earthdatalogin=None ):
     The Earthdata username and password can be given as a 2-tuple 
     (username,password) in optional argument earthdatalogin."""
 
-    ret = { 'status': None, 'messages': [], 'comments': [] }
+    ret = { 'status': None, 'messages': [], 'comments': [], 'data': None }
+    new_defaults = {}
 
     #  Set root data path. Create the directory. 
 
-    if isinstance(root_path,str): 
+    if root_path is not None:
 
-        if os.path.exists( defaults_file ): 
-            with open( defaults_file, 'r' ) as f: 
-                defaults = json.load( f )
-        else: 
-            defaults = {}
+        try:
+            os.makedirs( root_path, exist_ok=True )
 
-        path = os.path.abspath( os.path.expanduser( root_path ) ) 
-        defaults.update( { root_path_variable: path } )
-        os.makedirs( path, exist_ok=True )
+        except:
+            ret['status'] = "fail"
+            ret['messages'].append( "BadPathName" )
+            ret['comments'].append( f'Unable to create root_path ("{root_path}") as a directory.' )
+            return ret
 
-        #  Write to defaults file. 
-
-        with open( defaults_file, 'w' ) as f: 
-            json.dump( defaults, f, indent="  " )
-        os.chmod( defaults_file, stat.S_IRUSR | stat.S_IWUSR )
+        new_defaults.update( { root_path_variable: os.path.abspath( root_path ) } )
 
     #  Write Earthdata login username and password to .netrc file if 
     #  provided. 
@@ -123,7 +119,7 @@ def setdefaults( root_path=None, earthdatalogin=None ):
 
                 catalog = {}
                 for line in lines: 
-                    m = re.search( "^machine\s+(\S+)", line )
+                    m = re.search( r"^machine\s+(\S+)", line )
                     if m: 
                         catalog.update( { m.group(1): line.strip() } )
 
@@ -155,6 +151,28 @@ def setdefaults( root_path=None, earthdatalogin=None ):
             ret['comments'].append( "earthdatalogin must be a tuple or a list" )
             return ret
 
+    if len( new_defaults ) > 0:
+
+        #  Get old defaults.
+
+        if os.path.exists( defaults_file ):
+            with open( defaults_file, 'r' ) as f:
+                defaults = json.load( f )
+        else:
+            defaults = {}
+
+        #  Update with new defaults.
+
+        defaults.update( new_defaults )
+
+        #  Write to defaults file.
+
+        with open( defaults_file, 'w' ) as f:
+            json.dump( defaults, f, indent="  " )
+        os.chmod( defaults_file, stat.S_IRUSR | stat.S_IWUSR )
+
+        ret['data'] = defaults
+
     #  Done. 
 
     ret['status'] = "success" 
@@ -182,7 +200,7 @@ def checkdefaults():
         lines = f.readlines()
 
     for line in lines: 
-        m = re.search( "^machine\s+(\S+)", line )
+        m = re.search( r"^machine\s+(\S+)", line )
         if m: 
             machine = m.group(1)
             if machine == earthdata_machine: 

@@ -61,16 +61,23 @@ def setdefaults( root_path=None, spacetracklogin=None ):
     containing the user's username and password for the user's Space-Track 
     account."""
 
-    ret = { 'status': None, 'messages': [], 'comments': [] }
-
+    ret = { 'status': None, 'messages': [], 'comments': [], 'data': None }
     new_defaults = {}
 
     #  Update data root path and create the directory. 
 
-    if isinstance(root_path,str): 
-        path = os.path.abspath( os.path.expanduser( root_path ) ) 
-        new_defaults.update( { root_path_variable: path } )
-        os.makedirs( path, exist_ok=True )
+    if root_path is not None:
+
+        try:
+            os.makedirs( root_path, exist_ok=True )
+
+        except:
+            ret['status'] = "fail"
+            ret['messages'].append( "BadPathName" )
+            ret['comments'].append( f'Unable to create root_path ("{root_path}") as a directory.' )
+            return ret
+
+        new_defaults.update( { root_path_variable: os.path.abspath( root_path ) } )
 
     #  Update username and password. 
 
@@ -93,23 +100,27 @@ def setdefaults( root_path=None, spacetracklogin=None ):
             ret['comments'].append( "spacetracklogin must be a tuple or a list" )
             return ret
 
-    #  Get old defaults. 
+    if len( new_defaults ) > 0:
 
-    if os.path.exists( defaults_file ):
-        with open( defaults_file, 'r' ) as f:
-            defaults = json.load( f )
-    else: 
-        defaults = {}
+        #  Get old defaults.
 
-    #  Update with new defaults. 
+        if os.path.exists( defaults_file ):
+            with open( defaults_file, 'r' ) as f:
+                defaults = json.load( f )
+        else:
+            defaults = {}
 
-    defaults.update( new_defaults )
+        #  Update with new defaults.
 
-    #  Write to defaults file. 
+        defaults.update( new_defaults )
 
-    with open( defaults_file, 'w' ) as f:  
-        json.dump( defaults, f, indent="  " ) 
-    os.chmod( defaults_file, stat.S_IRUSR | stat.S_IWUSR )
+        #  Write to defaults file.
+
+        with open( defaults_file, 'w' ) as f:
+            json.dump( defaults, f, indent="  " )
+        os.chmod( defaults_file, stat.S_IRUSR | stat.S_IWUSR )
+
+        ret['data'] = defaults
 
     #  Done. 
 
@@ -400,7 +411,7 @@ class Spacetrack():
             dirs.sort()
 
             for file in files: 
-                m = re.search( "^sat(\d{5}).*\.txt$", file )
+                m = re.search( r"^sat(\d{5}).*\.txt$", file )
                 if not m: continue
 
                 #  Read first line of the file to get the satellite NORAD number. 
