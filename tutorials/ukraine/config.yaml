@@ -1,0 +1,16 @@
+name: ro-distributions
+channels: 
+  - nodefaults
+  - anaconda
+  - conda-forge
+dependencies: 
+  - python==3.9.18
+  - matplotlib
+  - cartopy
+  - numpy
+  - xarray
+  - jupyter
+  - tqdm
+  - pip
+  - pip:
+    - awsgnssroutils
