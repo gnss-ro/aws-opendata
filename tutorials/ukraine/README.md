@@ -21,8 +21,8 @@ conda env create -f config.yaml
 ```
 
 at the Linux command line. If you haven't previously implemented the 
-*awsgnssroutils* Python package and set its defaults, be sure to 
-change the "False" to a "True" in on line 530 of *ukraine_ro_gap.py* 
+**awsgnssroutils** Python package and set its defaults, be sure to 
+change the "False" to a "True" in on line 530 of **ukraine_ro_gap.py** 
 and change the paths that follow according to user wishes. 
 
 ## Analysis and Figure Generation
@@ -34,4 +34,11 @@ following on the Linux command line.
 conda activate ro-distributions
 python ukraine_ro_gap.py
 ```
+
+## Scatterplot of RO Soundings
+
+If you wish to experiment with the RO sounding coverage globally 
+by a scatterplot of soundings on a map, use the jupyter notebook 
+**distributions.ipynb**. It will color-code the points according 
+to RO mission. 
 
