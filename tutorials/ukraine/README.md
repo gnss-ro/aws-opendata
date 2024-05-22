@@ -14,7 +14,7 @@ repository of Earth Radio Occultation data. The PyPI package
 data and RO metadata. 
 
 Reproducing the analysis is best done with a Miniconda/Anaconda Python 
-installation. Create a working environment using the *config.yaml*: 
+installation. Create a working environment using the **config.yaml**: 
 
 ```
 conda env create -f config.yaml
