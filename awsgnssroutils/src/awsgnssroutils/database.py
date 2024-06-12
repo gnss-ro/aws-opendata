@@ -631,11 +631,11 @@ class OccList():
 
             if not os.path.exists( local_file ):
                 self._s3.download( os.path.join( databaseS3bucket, ro_file ), local_file )
-                ret = True
-            else:
-                ret = False
 
-            local_file_list.append( local_file )
+            if os.path.exists( local_file ):
+                local_file_list.append( local_file )
+            else: 
+                local_file_list.append( None )
 
         print( "Download took {:} seconds.".format( round((time.time()-sTime),1 ) ) )
         return local_file_list
