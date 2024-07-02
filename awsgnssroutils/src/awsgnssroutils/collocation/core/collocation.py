@@ -234,85 +234,175 @@ class Collocation():
             occultation -> An xarray.Dataset containing radio occultation profile data
             sounder -> An xarray.Dataset containing nadir-scanner sounding data """
 
-        #  Download occultation data file. 
+        #  Download occultation data files. 
 
-        occ_files = self.occultation.download( f"{ro_processing_center}_refractivityRetrieval", silent=True )
-        if len( occ_files ) != 1: 
-            raise collocationError( "InvalidOccultation", 
-                    f"Unable to obtain {ro_processing_center}_refractivityRetrieval for collocated occultation" )
-        occ_file = occ_files[0]
+        level2a_occ_files = self.occultation.download( f"{ro_processing_center}_refractivityRetrieval", silent=True )
+        level2b_occ_files = self.occultation.download( f"{ro_processing_center}_atmosphericRetrieval", silent=True )
+
+        emessage = f"Unable to obtain {ro_processing_center}_refractivityRetrieval for collocated occultation" 
+        ecomment = "InvalidOccultation"
+
+        if len( level2a_occ_files ) != 1: 
+            raise collocationError( emessage, ecomment )
+        elif level2a_occ_files[0] is None: 
+            raise collocationError( emessage, ecomment )
+
+        level2a_occ_file = level2a_occ_files[0]
+
+        if len( level2b_occ_files ) == 1: 
+            level2b_occ_file = level2b_occ_files[0]
+        else: 
+            level2b_occ_file = None
 
         #  Initialize output dictionary. 
 
         ret = {}
 
-        #  Extract occultation data. 
+        #  Extract level2a occultation data. 
 
-        d = netCDF4.Dataset( occ_file, 'r' )
+        d = netCDF4.Dataset( level2a_occ_file, 'r' )
 
-        longitude_dataarray = xarray.DataArray( self.occultation.values("longitude")[0] )
-        longitude_dataarray.attrs.update( { 
-            'description': "Longitude of radio occultation sounding, eastward", 
+        reference_longitude_dataarray = xarray.DataArray( self.occultation.values("longitude")[0] )
+        reference_longitude_dataarray.attrs.update( { 
+            'description': "Reference longitude of radio occultation sounding, eastward", 
             'units': "degrees" } )
 
-        latitude_dataarray = xarray.DataArray( self.occultation.values("latitude")[0] )
-        latitude_dataarray.attrs.update( { 
-            'description': "Latitude of radio occultation sounding, northward", 
+        reference_latitude_dataarray = xarray.DataArray( self.occultation.values("latitude")[0] )
+        reference_latitude_dataarray.attrs.update( { 
+            'description': "Reference latitude of radio occultation sounding, northward", 
             'units': "degrees" } )
 
-        bendingangle_dataarray = masked_dataarray( d.variables['bendingAngle'][:], fill_value, 
+        level2a_bendingangle_dataarray = masked_dataarray( d.variables['bendingAngle'][:], fill_value, 
             dims=("impactParameter",) )
-        bendingangle_dataarray.attrs.update( { 
+        level2a_bendingangle_dataarray.attrs.update( { 
             'description': "Bending angle, ionosphere calibrated, unoptimized", 
             'units': "radians" } )
 
-        impactparameter_dataarray = masked_dataarray( d.variables['impactParameter'][:], fill_value, 
+        level2a_impactparameter_dataarray = masked_dataarray( d.variables['impactParameter'][:], fill_value, 
             dims=("impactParameter",) )
-        impactparameter_dataarray.attrs.update( { 
+        level2a_impactparameter_dataarray.attrs.update( { 
             'description': "Impact parameter of ray", 
             'units': "meters" } )
 
-        radiusofcurvature_dataarray = xarray.DataArray( d.variables['radiusOfCurvature'].getValue() )
-        radiusofcurvature_dataarray.attrs.update( { 
+        level2a_radiusofcurvature_dataarray = xarray.DataArray( d.variables['radiusOfCurvature'].getValue() )
+        level2a_radiusofcurvature_dataarray.attrs.update( { 
             'description': "Local radius of curvature of the Earth", 
             'units': "meters" } )
 
-        refractivity_dataarray = masked_dataarray( d.variables['refractivity'][:], fill_value, 
-            dims=("altitude",) )
-        refractivity_dataarray.attrs.update( { 
-            'description': "Refractivity", 
-            'units': "N-units" } )
-
-        geopotential_dataarray = masked_dataarray( d.variables['geopotential'][:], fill_value, 
-            dims=("altitude",) )
-        geopotential_dataarray.attrs.update( { 
-            'description': "Geopotential energy per unit mass", 
-            'units': "J/kg" } )
-
-        altitude_dataarray = masked_dataarray( d.variables['altitude'][:], fill_value, 
-            dims=("altitude",) )
-        altitude_dataarray.attrs.update( { 
-            'description': "Altitude above mean sea-level geoid", 
+        level2a_altitude_dataarray = masked_dataarray( d.variables['altitude'][:], fill_value, 
+            dims=("l2a_altitude",) )
+        level2a_altitude_dataarray.attrs.update( { 
+            'description': "Altitude above mean sea-level geoid referring to level 2a refractivity retrieval", 
             'units': "meters" } )
 
-        ds_occultation = xarray.Dataset( { 
-            'longitude': longitude_dataarray, 
-            'latitude': latitude_dataarray, 
-            'bendingAngle': bendingangle_dataarray, 
-            'impactParameter': impactparameter_dataarray, 
-            'radiusOfCurvature': radiusofcurvature_dataarray, 
-            'refractivity': refractivity_dataarray, 
-            'geopotential': geopotential_dataarray, 
-            'altitude': altitude_dataarray } )
+        level2a_refractivity_dataarray = masked_dataarray( d.variables['refractivity'][:], fill_value, 
+            dims=("l2a_altitude",) )
+        level2a_refractivity_dataarray.attrs.update( { 
+            'description': "Level 1b refractivity retrieval", 
+            'units': "N-units" } )
 
-        ds_occultation.attrs.update( {
-            'file': occ_files[0], 
+        level2a_longitude_dataarray = masked_dataarray( d.variables['longitude'][:], fill_value, 
+            dims=("l2a_altitude",) )
+        level2a_longitude_dataarray.attrs.update( { 
+            'description': "Longitude of the occultation tangent point referring to level 2a refractivity retrieval", 
+            'units': "degrees east" } )
+
+        level2a_latitude_dataarray = masked_dataarray( d.variables['latitude'][:], fill_value, 
+            dims=("l2a_altitude",) )
+        level2a_latitude_dataarray.attrs.update( { 
+            'description': "Latitude of the occultation tangent point referring to level 2a refractivity retrieval", 
+            'units': "degrees north" } )
+
+        level2a_orientation_dataarray = masked_dataarray( d.variables['orientation'][:], fill_value, 
+            dims=("l2a_altitude",) )
+        level2a_orientation_dataarray.attrs.update( { 
+            'description': "The direction of the occultation ray, transmitter to " + \
+                    "receiver, at the occultation tangent point, measured eastward from north, " + \
+                    "referring to level 2a refractivity retrieval", 
+            'units': "degrees" } )
+
+        level2a_geopotential_dataarray = masked_dataarray( d.variables['geopotential'][:], fill_value, 
+            dims=("l2a_altitude",) )
+        level2a_geopotential_dataarray.attrs.update( { 
+            'description': "Geopotential energy per unit mass referring to level 2a refractivity retrieval", 
+            'units': "J/kg" } )
+
+        #  Compose dictionaries to be used in defining an xarray.Dataset for level 2a data. 
+
+        ds_occultation_dict = { 
+            'reference_longitude': reference_longitude_dataarray, 
+            'reference_latitude': reference_latitude_dataarray, 
+            'level2a_impactParameter': level2a_impactparameter_dataarray, 
+            'level2a_bendingAngle': level2a_bendingangle_dataarray, 
+            'level2a_longitude': level2a_longitude_dataarray, 
+            'level2a_latitude': level2a_latitude_dataarray, 
+            'level2a_orientation': level2a_orientation_dataarray, 
+            'level2a_radiusOfCurvature': level2a_radiusofcurvature_dataarray, 
+            'level2a_altitude': level2a_altitude_dataarray, 
+            'level2a_refractivity': level2a_refractivity_dataarray, 
+            'level2a_geopotential': level2a_geopotential_dataarray } 
+
+        ds_occultation_attrs_dict = {
+            'level2a_file': level2a_occ_file, 
             'mission': self.occultation._data[0]['mission'], 
             'transmitter': self.occultation._data[0]['transmitter'], 
             'receiver': self.occultation._data[0]['receiver'], 
-            'time': self.time.calendar("utc").isoformat(timespec="seconds")+"Z" } )
+            'time': self.time.calendar("utc").isoformat(timespec="seconds")+"Z" } 
 
         d.close()
+
+
+        #  Extract level2b occultation data. 
+
+        if level2b_occ_file is not None: 
+
+            d = netCDF4.Dataset( level2b_occ_file, 'r' )
+
+            level2b_altitude_dataarray = masked_dataarray( d.variables['altitude'][:], fill_value, 
+                dims=("l2b_altitude",) )
+            level2b_altitude_dataarray.attrs.update( { 
+                'description': "Altitude above mean sea-level geoid referring to level 2b 1DVAR retrieval", 
+                'units': "meters" } )
+
+            level2b_pressure_dataarray = masked_dataarray( d.variables['pressure'][:], fill_value, 
+                dims=("l2b_altitude",) )
+            level2b_pressure_dataarray.attrs.update( { 
+                'description': "Atmospheric pressure, referring to level 2b retrieval", 
+                'units': "Pa" } )
+
+            level2b_temperature_dataarray = masked_dataarray( d.variables['temperature'][:], fill_value, 
+                dims=("l2b_altitude",) )
+            level2b_temperature_dataarray.attrs.update( { 
+                'description': "Atmospheric temperature, referring to level 2b retrieval", 
+                'units': "K" } )
+
+            level2b_humidity_dataarray = masked_dataarray( d.variables['waterVaporPressure'][:], fill_value, 
+                dims=("l2b_altitude",) )
+            level2b_humidity_dataarray.attrs.update( { 
+                'description': "Atmospheric water vapor partial pressure, referring to level 2b retrieval", 
+                'units': "Pa" } )
+
+            level2b_geopotential_dataarray = masked_dataarray( d.variables['geopotential'][:], fill_value, 
+                dims=("l2b_altitude",) )
+            level2b_geopotential_dataarray.attrs.update( { 
+                'description': "Geopotential energy per unit mass, referring to level 2b retrieval", 
+                'units': "J/kg" } )
+
+            #  Compose dictionaries to be used in defining an xarray.Dataset for level 2b data. 
+
+            ds_occultation_dict.update( { 
+                'level2b_altitude': level2b_altitude_dataarray, 
+                'level2b_pressure': level2b_pressure_dataarray, 
+                'level2b_temperature': level2b_temperature_dataarray, 
+                'level2b_waterVaporPressure': level2b_humidity_dataarray, 
+                'level2b_geopotential': level2a_geopotential_dataarray } )
+
+            ds_occultation_attrs_dict.update( { 'level2b_file': level2b_occ_file } )
+
+        #  Create xarray.Dataset and attributes. 
+
+        ds_occultation = xarray.Dataset( ds_occultation_dict )
+        ds_occultation.attrs.update( ds_occultation_attrs_dict )
 
         #  Find the actual closest nadir-scanner sounding. 
 
