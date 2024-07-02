@@ -535,7 +535,7 @@ class CollocationList( list ):
 
         return ret
 
-    def write_to_netcdf( self, outputfile, author=None ): 
+    def write_to_netcdf( self, outputfile, time_tolerance=None, author=None ): 
         """Write a list of collocations to an output NetCDF-4 file. The collocations 
         must be a list of instances of Collocation, and the file is the path of the 
         output file. Giving the author's name is optional."""
@@ -560,6 +560,15 @@ class CollocationList( list ):
             d.setncattr( "author", author )
 
         d.createDimension( "timestr", 19 )
+
+        #  Collocation time window. 
+
+        tt = d.createVariable( "time_tolerance", np.float32 )
+        tt.setncatts( {
+                'description': "The time tolerance window for collocation", 
+                'units': "seconds" } )
+        if time_tolerance is not None: 
+            tt.assignValue( np.float32( time_tolerance ) )
 
         #  Loop over collocations. 
 
