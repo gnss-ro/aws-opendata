@@ -979,6 +979,34 @@ class OccList():
 
         return x
 
+    def sort( self, order=("receiver","transmitter","date-time") ): 
+        """Sort occultations according to the ordering 3-tuple. The first element of the tuple
+        is the highest priority. Tuple strings must be "receiver", "transmitter", and "date-time". 
+        This is an in-place method."""
+
+        if len(order) != 3: 
+            raise AWSgnssroutilsError( "InvalidArgument", "The order key must be length 3." )
+
+        if not { "receiver", "transmitter", "date-time" }.issubset( order ): 
+            raise AWSgnssroutilsError( "InvalidArgument", 'order must include "receiver", "transmitter", and "date-time"' )
+
+        #  Build list of sort-keys. 
+
+        keys = []
+        for rec in self._data: 
+            keys.append( "_".join( [ rec[order[i]] for i in range(3) ] ) )
+
+        #  Sort. 
+
+        ii = np.argsort( keys ).squeeze()
+
+        #  Reconstruct data. 
+
+        d = [ self._data[i] for i in ii ]
+        self._data = d
+
+        #  Done. 
+
     #  Magic methods.
 
     def __add__(self, occlist2):

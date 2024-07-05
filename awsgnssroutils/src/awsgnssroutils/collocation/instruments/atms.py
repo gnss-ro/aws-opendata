@@ -49,7 +49,9 @@ class nasa_jpss_error( Error ):
 
 #  Buffer for data files. 
 
-open_data_file = { 'path': None, 'pointer': None }
+open_data_file = { 'path': None, 'pointer': None, 
+        'dim_nscans': None, 'dim_nfootprints': None, 'nchannels': None, 
+        'brightness_temperature': None, 'zenith_angles': None, 'frequencies': None }
 
 
 class ATMS(NadirSatelliteInstrument):
@@ -259,42 +261,45 @@ class ATMS(NadirSatelliteInstrument):
         global open_data_file
 
         if open_data_file['pointer'] is not None: 
-            if open_data_file['path'] == file: 
-                #  Data file already open. 
-                d = open_data_file['pointer']
-            else: 
+            if open_data_file['path'] != file: 
                 #  Close previously opened file. 
                 open_data_file['pointer'].close()
                 open_data_file['path'] = None
                 open_data_file['pointer'] = None
+                open_data_file['dim_nscans'] = None
+                open_data_file['dim_nfootprints'] = None
+                open_data_file['nchannels'] = None
+                open_data_file['brightness_temperature'] = None
 
         if open_data_file['path'] is None: 
             #  Open new file. 
             open_data_file['path'] = file
-            open_data_file['pointer'] = Dataset( file, 'r' )
-            d = open_data_file['pointer']
-
-        dim_nscans, dim_nfootprints = d.dimensions['atrack'].size, d.dimensions['xtrack'].size
-        nchannels = d.dimensions['channel'].size  
+            d = Dataset( file, 'r' )
+            open_data_file['pointer'] = d
+            open_data_file['dim_nscans'] = d.dimensions['atrack'].size
+            open_data_file['dim_nfootprints'] = d.dimensions['xtrack'].size
+            open_data_file['nchannels'] = d.dimensions['channel'].size  
+            open_data_file['brightness_temperature'] = d.variables['antenna_temp'][:]
+            open_data_file['zenith_angles'] = d.variables['sat_zen'][:]
+            open_data_file['frequencies'] = d.variables['center_freq'][:] * 1.0e6   #  Convert to Hz. 
 
         #  Get data values. 
 
-        brightness_temperature = d.variables['antenna_temp'][scan_index,footprint_index,:].flatten()
+        brightness_temperature = open_data_file['brightness_temperature'][scan_index,footprint_index,:].flatten()
 
         #  Convert brightness tempereature to radiance. Convert radiances from 
         #  W m**-2 Hz**-1 ster**-1 to mW m**-2 (cm**-1)**-1 ster**-1. 
 
-        frequencies = d.variables['center_freq'][:] * 1.0e6     #  Convert to Hz. 
-        radiances = planck_blackbody( frequencies, brightness_temperature ) \
+        radiances = planck_blackbody( open_data_file['frequencies'], brightness_temperature ) \
                 * 1.0e3 * speed_of_light * 100.0 
 
-        zenith = d.variables['sat_zen'][scan_index,footprint_index]
+        zenith = open_data_file['zenith_angles'][scan_index,footprint_index]
 
         #  Convert to np.ndarrays. 
 
         radiance_dataarray = masked_dataarray( radiances, fill_value, 
                 dims=("channel",), 
-                coords = { 'channel': np.arange(nchannels,dtype=np.int32)+1 } )
+                coords = { 'channel': np.arange(open_data_file['nchannels'],dtype=np.int32)+1 } )
         radiance_dataarray.attrs.update( {
             'description': "Microwave radiance from ATMS instrument", 
             'units': "mW m**-2 (cm**-1)**-1 steradian**-1" } )
@@ -312,8 +317,8 @@ class ATMS(NadirSatelliteInstrument):
             'satellite': self.satellite_name, 
             'instrument': self.instrument_name, 
             'data_file_path': file, 
-            'scan_index': np.int16( scan_index ), 
-            'footprint_index': np.int16( footprint_index ) } 
+            'scan_index': np.int32( scan_index ), 
+            'footprint_index': np.int32( footprint_index ) } 
 
         if longitude is not None: 
             longitude_dataarray = xarray.DataArray( longitude )

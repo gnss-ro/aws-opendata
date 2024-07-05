@@ -185,7 +185,18 @@ def masked_dataarray( data, fill_value, attrs={}, **kwargs ):
 
     #  Check input. 
 
-    if isinstance( data, np.ma.core.MaskedArray ): 
+    numpy_scalar = False
+
+    for stype in [ np.int8, np.int16, np.int32, np.int64, np.float32, np.float64 ]: 
+        if isinstance( data, stype ): 
+            numpy_scalar = True
+            break 
+
+    if isinstance( data, np.ndarray ) or numpy_scalar: 
+
+        ret = xr.DataArray( data, attrs=attrs, **kwargs )
+
+    elif isinstance( data, np.ma.core.MaskedArray ): 
 
         xdata = data.data
         xfill = data.dtype.type( fill_value )
@@ -199,10 +210,6 @@ def masked_dataarray( data, fill_value, attrs={}, **kwargs ):
 
         attrs.update( { '_FillValue': xfill } )
         ret = xr.DataArray( xdata, attrs=attrs, **kwargs )
-
-    elif isinstance( data, np.ndarray ): 
-
-        ret = xr.DataArray( data, attrs=attrs, **kwargs )
 
     return ret
 
