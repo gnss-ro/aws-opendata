@@ -611,20 +611,7 @@ class CollocationList( list ):
 
         return
 
-    ############################################################
-    #  Magic methods. 
-    ############################################################
-
-    def __getitem__( self, ss ): 
-        items = list( self ).__getitem__(ss)
-        if isinstance( items, Collocation ): 
-            ret = items
-        else: 
-            ret = CollocationList( items )
-
-        return ret
-
-    def __sort__( self, method="occtime" ): 
+    def sort( self, method="occtime" ): 
 
         if method == "occid": 
             sdict = { c.data['occid']: c for c in self } 
@@ -632,7 +619,17 @@ class CollocationList( list ):
         elif method == "occtime": 
             sdict = {}
             for element in self: 
-                time = c.data['occultation'].attrs['time']
+                time = element.data['occultation'].attrs['time']
+                for ikeychar in range(26): 
+                    key = time + chr( ord("a") + ikeychar )
+                    if key not in sdict.keys(): 
+                        break
+                sdict.update( { key: element } )
+
+        elif method == "soundertime": 
+            sdict = {}
+            for element in self: 
+                time = element.time.calendar("utc").isoformat(timespec="seconds")
                 for ikeychar in range(26): 
                     key = time + chr( ord("a") + ikeychar )
                     if key not in sdict.keys(): 
@@ -644,6 +641,19 @@ class CollocationList( list ):
 
         keys = sorted( list( sdict.keys() ) )
         ret = CollocationList( [ sdict[key] for key in keys ] )
+
+        return ret
+
+    ############################################################
+    #  Magic methods. 
+    ############################################################
+
+    def __getitem__( self, ss ): 
+        items = list( self ).__getitem__(ss)
+        if isinstance( items, Collocation ): 
+            ret = items
+        else: 
+            ret = CollocationList( items )
 
         return ret
 

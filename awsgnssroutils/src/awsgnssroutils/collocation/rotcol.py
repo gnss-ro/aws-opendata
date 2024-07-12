@@ -122,7 +122,7 @@ def execute_rotation_collocation( missions, datetimerange, ro_processing_center,
     tbegin = time()
     occs = rodb.query( missions=missions, datetimerange=[ dt.isoformat() for dt in datetimerange ], 
                 availablefiletypes=f'{ro_processing_center}_refractivityRetrieval', silent=True )
-    occs.sort( order=("date-time","receiver","transmitter") )
+    # occs.sort( order=("date-time","receiver","transmitter") )
 
     tend = time()
 
@@ -153,6 +153,7 @@ def execute_rotation_collocation( missions, datetimerange, ro_processing_center,
         return ret
 
     collocations_rotation = ret_rotation['data']
+    collocations_rotation.sort( "soundertime" )
 
     print( "  - number found = {:}".format( len( collocations_rotation ) ) )
     print( "  - elapsed time = {:10.3f} s".format( tend-tbegin ) )
