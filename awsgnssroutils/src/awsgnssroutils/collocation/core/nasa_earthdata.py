@@ -24,7 +24,9 @@ from .constants_and_utils import defaults_file
 
 Satellites = { 
         'Aqua': { 
-                 'aliases': [] }, 
+                'aliases': [ "Aqua" ], 
+                'airs': "10.5067/VWD3DRC07UEN"      # This is the AIRS L1C IR product (AIRICRAD)
+        }, 
         'Suomi-NPP': { 
                 'aliases': [ "Suomi-NPP", "SNPP" ], 
                 'atms': "10.5067/FCXKUUE9VCLN", 
@@ -47,8 +49,14 @@ time_limit = timedelta( seconds=3600 )
 
 #  String parsing. 
 
-file_search_string = r"^SNDR\..*(\d{8}T\d{4})\.m.*\.nc$"
-time_parse_string = "%Y%m%dT%H%M" 
+search_parse = { 
+        'atms': { 
+            'file': re.compile( r"^SNDR\..*(\d{8}T\d{4})\.m.*\.nc$" ), 
+            'time': "%Y%m%dT%H%M" }, 
+        'airs': { 
+            'file': re.compile( r"^AIRS\.(\d{4}\.\d{2}\.\d{2})\.(\d{3})\.L1C\.AIRS_Rad\v6\.7\.5\.0\.G\d+\.hdf$" ),
+            'time': "%Y%m%d" }
+    }
 
 #  Establist the netrc file name. 
 
@@ -306,10 +314,12 @@ class NASAEarthdata():
                         self.inventory[instrument].update( { sat: [] } )
 
                     for file in files: 
-                        m = re.search( file_search_string, file )
+                        m = search_parse[instrument]['file']( file )
                         if m is None: 
                             continue
-                        t1 = Time( utc = datetime.strptime( m.group(1), time_parse_string ) ) 
+                        t1 = Time( utc = datetime.strptime( m.group(1), search_parse[instrument]['time'] ) ) 
+                        if instrument == "airs": 
+                            t1 += ( int( m.group(2) ) - 1 ) * 360
                         t2 = t1 + 6 * 60
 
                         rec = { 'satellite': sat, 'path': os.path.join( root, file ), 'timerange': ( t1, t2 ) }
@@ -409,8 +419,10 @@ class NASAEarthdata():
             basename = os.path.basename( p.data_links()[0] )
             if basename in local_basenames: 
                 continue
-            m = re.search( file_search_string, basename )
-            t = Time( utc=datetime.strptime( m.group(1), time_parse_string ) )
+            m = search_parse[instrument]['file']( basename )
+            t = Time( utc=datetime.strptime( m.group(1), search_parse[instrument]['time'] ) )
+            if instrument == "airs": 
+                t += ( int( m.group(2) ) - 1 ) * 360
             if t+360 >= _timerange[0] and t <= _timerange[1]: 
                 get.append( p )
 
@@ -425,8 +437,10 @@ class NASAEarthdata():
 
                 #  Parse file name for time of granule. 
 
-                m = re.search( file_search_string, os.path.basename(file) )
-                dt = datetime.strptime( m.group(1), time_parse_string )
+                m = search_parse[instrument]['file']( os.path.basename(file) )
+                dt = datetime.strptime( m.group(1), search_parse[instrument]['time'] )
+                if instrument == "airs": 
+                    dt += ( int( m.group(2) ) - 1 ) * 360
 
                 #  Define local path for file. 
 
