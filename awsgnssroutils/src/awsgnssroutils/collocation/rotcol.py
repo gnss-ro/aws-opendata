@@ -153,9 +153,9 @@ def execute_rotation_collocation( missions, datetimerange, ro_processing_center,
         return ret
 
     collocations_rotation = ret_rotation['data']
-    collocations_rotation.sort( "soundertime" )
+    sorted_collocations = collocations_rotation.sort( "soundertime" )
 
-    print( "  - number found = {:}".format( len( collocations_rotation ) ) )
+    print( "  - number found = {:}".format( len( sorted_collocations ) ) )
     print( "  - elapsed time = {:10.3f} s".format( tend-tbegin ) )
 
     if not nodata: 
@@ -174,7 +174,7 @@ def execute_rotation_collocation( missions, datetimerange, ro_processing_center,
         print( "Extracting collocation data" )
 
         tbegin = time()
-        for collocation in collocations_rotation: 
+        for collocation in sorted_collocations: 
             occid = collocation.get_data( ro_processing_center )
         tend = time()
 
@@ -184,7 +184,7 @@ def execute_rotation_collocation( missions, datetimerange, ro_processing_center,
 
     tbegin = time()
     print( f"Writing to output file {outputfile}" )
-    collocations_rotation.write_to_netcdf( outputfile, time_tolerance=time_tolerance )
+    sorted_collocations.write_to_netcdf( outputfile, time_tolerance=time_tolerance )
     tend = time()
 
     print( "  - elapsed time = {:10.3f} s".format( tend-tbegin ) )

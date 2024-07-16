@@ -225,3 +225,14 @@ def planck_blackbody( frequency, temperature ):
     return ret
 
 
+def inverse_planck_blackbody( frequency, radiance ): 
+    """Inverse of Planck blackbody radiation. The input arguments 
+    can be scalars or numpy.ndarray's. Frequency is Hz, radiance 
+    is W m**-2 Hz**-1 steradian**-1. Brightness temperature [K] 
+    is output."""
+
+    ret = planck_constant * frequency / boltzmann_constant / \
+            np.log( 1 + 2 * ( planck_constant * frequency**3 ) / ( radiance * speed_of_light**2 ) )
+
+    return ret
+

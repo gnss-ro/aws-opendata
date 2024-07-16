@@ -286,23 +286,15 @@ class ATMS(NadirSatelliteInstrument):
         #  Get data values. 
 
         brightness_temperature = open_data_file['brightness_temperature'][scan_index,footprint_index,:].flatten()
-
-        #  Convert brightness tempereature to radiance. Convert radiances from 
-        #  W m**-2 Hz**-1 ster**-1 to mW m**-2 (cm**-1)**-1 ster**-1. 
-
-        radiances = planck_blackbody( open_data_file['frequencies'], brightness_temperature ) \
-                * 1.0e3 * speed_of_light * 100.0 
-
         zenith = open_data_file['zenith_angles'][scan_index,footprint_index]
 
         #  Convert to np.ndarrays. 
 
-        radiance_dataarray = masked_dataarray( radiances, fill_value, 
+        brightness_temperature_dataarray = masked_dataarray( brightness_temperature, fill_value, 
                 dims=("channel",), 
                 coords = { 'channel': np.arange(open_data_file['nchannels'],dtype=np.int32)+1 } )
-        radiance_dataarray.attrs.update( {
-            'description': "Microwave radiance from ATMS instrument", 
-            'units': "mW m**-2 (cm**-1)**-1 steradian**-1" } )
+        brightness_temperature_dataarray.attrs.update( {
+            'description': "Microwave brightness temperature", 'units': "K" } )
 
         zenith_dataarray = masked_dataarray( zenith, fill_value )
         zenith_dataarray.attrs.update( {
@@ -310,7 +302,7 @@ class ATMS(NadirSatelliteInstrument):
             'units': "degrees" } )
 
         ds_dict = { 
-            'data': radiance_dataarray, 
+            'data': brightness_temperature_dataarray, 
             'zenith': zenith_dataarray } 
 
         ds_attrs_dict = { 

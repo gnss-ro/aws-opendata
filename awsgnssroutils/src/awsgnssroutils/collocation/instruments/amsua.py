@@ -18,7 +18,7 @@ import xarray
 from ..core.nadir_satellite import NadirSatelliteInstrument, ScanMetadata
 from ..core.timestandards import Time
 from ..core.eumetsat import eumetsat_time_convention
-from ..core.constants_and_utils import masked_dataarray
+from ..core.constants_and_utils import masked_dataarray, speed_of_light, inverse_planck_blackbody
 
 
 #  REQUIRED attributes
@@ -31,6 +31,12 @@ valid_satellites = [ "Metop-A", "Metop-B", "Metop-C" ]
 #   - get_geolocations
 #   - get_data
 
+#  Instrument channel center frequencies [Hz]. 
+
+center_frequencies = 1.0e9 * np.array( 
+        [ 23.8, 31.4, 50.3, 52.8, 53.596, 
+        54.4, 54.94, 55.5, 57.290, 57.290, 
+        57.290, 57.290, 57.290, 57.290, 89.0 ] )
 
 #  Parameters. 
 
@@ -265,20 +271,25 @@ class AMSUA(NadirSatelliteInstrument):
 
         #  Get data values. 
 
-        data = np.array( [ d.variables["channel_"+str(ichannel+1) ][scan_index,footprint_index] \
+        radiance_data = np.array( [ d.variables["channel_"+str(ichannel+1) ][scan_index,footprint_index] \
                     for ichannel in range(nchannels) ] )
-        data = np.ma.masked_where( data <= 0, data )
+        radiance_data = np.ma.masked_where( radiance_data <= 0, radiance_data )
 
         zenith = d.variables['satellite_zenith'][scan_index,footprint_index]
 
+        #  Convert radiance data to brightness temperature. First convert from 
+        #  mW m**-2 (cm**-1)**-1 steradian**-1 to W m**-2 (Hz)**-1 steradian**-1. 
+
+        radiance_data *= 0.001 * 0.01 / speed_of_light
+        brightness_temperature = inverse_planck_blackbody( center_frequencies, radiance_data )
+
         #  Convert to np.ndarrays. 
 
-        radiance_dataarray = masked_dataarray( data, fill_value, 
+        brightness_temperature_dataarray = masked_dataarray( brightness_temperature, fill_value, 
                 dims=("channel",), 
                 coords = { 'channel': np.arange(nchannels,dtype=np.int32)+1 } )
-        radiance_dataarray.attrs.update( {
-            'description': "Microwave radiance from Metop AMSU-A instrument", 
-            'units': "mW m**-2 (cm**-1)**-1 steradian**-1" } )
+        brightness_temperature_dataarray.attrs.update( {
+            'description': "Microwave brightness temperature", 'units': "K" } )
 
         zenith_dataarray = masked_dataarray( zenith, fill_value )
         zenith_dataarray.attrs.update( {
@@ -286,7 +297,7 @@ class AMSUA(NadirSatelliteInstrument):
             'units': "degrees" } )
 
         ds_dict = { 
-            'data': radiance_dataarray, 
+            'data': brightness_temperature_dataarray, 
             'zenith': zenith_dataarray } 
 
         ds_attrs_dict = { 
