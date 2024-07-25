@@ -231,8 +231,14 @@ def inverse_planck_blackbody( frequency, radiance ):
     is W m**-2 Hz**-1 steradian**-1. Brightness temperature [K] 
     is output."""
 
-    ret = planck_constant * frequency / boltzmann_constant / \
-            np.log( 1 + 2 * ( planck_constant * frequency**3 ) / ( radiance * speed_of_light**2 ) )
+    z1 = np.log( planck_constant ) + np.log( frequency ) - np.log( boltzmann_constant )
+    z2 = np.log( planck_constant ) + 3 * np.log( frequency ) - np.log( radiance ) - 2 * np.log( speed_of_light )
+
+    # ret = planck_constant * frequency / boltzmann_constant / \
+    #         np.log( 1 + 2 * ( planck_constant * frequency**3 ) / ( radiance * speed_of_light**2 ) )
+
+    ret = np.exp( z1 ) / np.log( 1 + 2 * np.exp( z2 ) )
+
 
     return ret
 

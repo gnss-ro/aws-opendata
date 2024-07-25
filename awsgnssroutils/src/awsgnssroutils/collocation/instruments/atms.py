@@ -1,4 +1,4 @@
-"""metop_amsua.py
+"""atms.py
 
 Authors: Meredith, Stephen Leroy
 Contact: Stephen Leroy (sleroy@aer.com)

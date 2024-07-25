@@ -1,6 +1,5 @@
 """nasa_earthdata.py
 
-
 Author: Stephen Leroy (sleroy@aer.com)
 Date: March 1, 2024
 
@@ -20,6 +19,7 @@ from .constants_and_utils import defaults_file
 #  Definitions. 
 
 #  ATMS pointers are for version 3 level 1B radiances. 
+#  AIRS pointers are for L1C. 
 #  CrIS pointers are for "full spectral resolution, version 3" level 1B radiances. 
 
 Satellites = { 
@@ -51,11 +51,11 @@ time_limit = timedelta( seconds=3600 )
 
 search_parse = { 
         'atms': { 
-            'file': re.compile( r"^SNDR\..*(\d{8}T\d{4})\.m.*\.nc$" ), 
+            'file': re.compile( r'^SNDR\..*(\d{8}T\d{4})\.m.*\.nc$' ), 
             'time': "%Y%m%dT%H%M" }, 
         'airs': { 
-            'file': re.compile( r"^AIRS\.(\d{4}\.\d{2}\.\d{2})\.(\d{3})\.L1C\.AIRS_Rad\v6\.7\.5\.0\.G\d+\.hdf$" ),
-            'time': "%Y%m%d" }
+            'file': re.compile( r'^AIRS.(\d{4}\.\d{2}\.\d{2})\.(\d{3})\.L1C\.AIRS_Rad\.v[\d\.]+\.G\d+\.hdf$' ), 
+            'time': "%Y.%m.%d" }
     }
 
 #  Establist the netrc file name. 
@@ -278,8 +278,8 @@ class NASAEarthdata():
         return
 
     def regenerate_inventory( self ): 
-        """Create an inventory of the files available on the local file system 
-        with ATMS data (as obtained from GES DISC."""
+        """Create an inventory of the NASA Earthdata files available on the 
+        local file system (as obtained from GES DISC)."""
 
         #  Get list of satellites. 
 
@@ -314,13 +314,15 @@ class NASAEarthdata():
                         self.inventory[instrument].update( { sat: [] } )
 
                     for file in files: 
-                        m = search_parse[instrument]['file']( file )
+                        m = search_parse[instrument]['file'].search( file )
                         if m is None: 
                             continue
-                        t1 = Time( utc = datetime.strptime( m.group(1), search_parse[instrument]['time'] ) ) 
-                        if instrument == "airs": 
-                            t1 += ( int( m.group(2) ) - 1 ) * 360
-                        t2 = t1 + 6 * 60
+
+                        if instrument == "atms": 
+                            t1 = Time( utc = datetime.strptime( m.group(1), search_parse[instrument]['time'] ) ) 
+                        elif instrument == "airs": 
+                            t1 = Time( tai = datetime.strptime( m.group(1), search_parse[instrument]['time'] ) ) + int( m.group(2) ) * 360
+                        t2 = t1 + 360
 
                         rec = { 'satellite': sat, 'path': os.path.join( root, file ), 'timerange': ( t1, t2 ) }
                         self.inventory[instrument][sat].append( rec )
@@ -328,11 +330,11 @@ class NASAEarthdata():
         return
 
     def get_paths( self, satellite, instrument, timerange ): 
-        """Return a listing of the paths to JPSS ATMS data files given a 
-        satellite name and a time range. The timerange is a two-element 
-        tuple/list with instances of timestandards.Time or datetime.datetime. 
-        If it is the latter, then the datetime elements are understood to be 
-        UTC."""
+        """Return a listing of the paths to sounder data files given a 
+        satellite name, and instrument name, and a time range. The timerange 
+        is a two-element tuple/list with instances of timestandards.Time or 
+        datetime.datetime. If it is the latter, then the datetime elements 
+        are understood to be UTC."""
 
         #  Check input. Interpret datetime.datetime as timestandards.Time instances 
         #  if necessary. 
@@ -368,10 +370,10 @@ class NASAEarthdata():
         return ret
 
     def populate( self, satellite, instrument, timerange ): 
-        """Download SNPP, JPSS ATMS data that fall within a timerange. 
+        """Download sounder data that fall within a timerange. 
 
         * satellite must be one of Satellites.keys(). 
-        * instrument is one of 'atms', 'cris'. 
+        * instrument is one of 'atms', 'airs'. 
         * timerange is a 2-element tuple/list of instances of timestandards.Time 
           or instances of datetime.datetime defining the range of times over which 
           to retrieve data. If they are instances of datetime.datetime, then the 
@@ -404,8 +406,9 @@ class NASAEarthdata():
 
         #  Query the local and remote inventories. 
 
-        local_inventory = self.get_paths( satellite, instrument, _timerange )
-        etimerange = [ _timerange[0], _timerange[1] + 86400 ]
+        # local_inventory = self.get_paths( satellite, instrument, _timerange )
+        local_inventory = [ e['path'] for e in self.inventory[instrument][satellite] ]
+        etimerange = [ _timerange[0]-360, _timerange[1]+360 ]
         temporal = tuple( [ t.calendar("utc").datetime().strftime("%Y-%m-%d") for t in etimerange ] ) 
         
         remote_inventory = earthaccess.search_data( doi=Satellites[satellite][instrument], temporal=temporal )
@@ -419,7 +422,7 @@ class NASAEarthdata():
             basename = os.path.basename( p.data_links()[0] )
             if basename in local_basenames: 
                 continue
-            m = search_parse[instrument]['file']( basename )
+            m = search_parse[instrument]['file'].search( basename )
             t = Time( utc=datetime.strptime( m.group(1), search_parse[instrument]['time'] ) )
             if instrument == "airs": 
                 t += ( int( m.group(2) ) - 1 ) * 360
@@ -437,10 +440,10 @@ class NASAEarthdata():
 
                 #  Parse file name for time of granule. 
 
-                m = search_parse[instrument]['file']( os.path.basename(file) )
+                m = search_parse[instrument]['file'].search( os.path.basename(file) )
                 dt = datetime.strptime( m.group(1), search_parse[instrument]['time'] )
                 if instrument == "airs": 
-                    dt += ( int( m.group(2) ) - 1 ) * 360
+                    dt += timedelta( seconds = int( m.group(2) ) * 360 )
 
                 #  Define local path for file. 
 
