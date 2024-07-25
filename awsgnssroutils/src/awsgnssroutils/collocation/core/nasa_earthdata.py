@@ -406,8 +406,10 @@ class NASAEarthdata():
 
         #  Query the local and remote inventories. 
 
-        # local_inventory = self.get_paths( satellite, instrument, _timerange )
-        local_inventory = [ e['path'] for e in self.inventory[instrument][satellite] ]
+        local_inventory = []
+        if instrument in self.inventory.keys(): 
+            if satellite in self.inventory[instrument].keys(): 
+                local_inventory = [ e['path'] for e in self.inventory[instrument][satellite] ]
         etimerange = [ _timerange[0]-360, _timerange[1]+360 ]
         temporal = tuple( [ t.calendar("utc").datetime().strftime("%Y-%m-%d") for t in etimerange ] ) 
         
