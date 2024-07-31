@@ -1,13 +1,13 @@
 """database.py
 
 Authors: Amy McVey (amcvey@aer.com) and Stephen Leroy (sleroy@aer.com)
-Date: 2 Aug 2023
+Date: 10 January 2024
 
 ================================================================================
 
-This module contains utilities to query the AWS Registry of Open Data repository
+This module contains utilities to query the AWS Registry of Open Data metadata_root
 of GNSS radio occultation data. It does so using database files posted in the
-AWS repository.
+AWS metadata_root.
 
 Functionality
 =============
@@ -17,8 +17,8 @@ of a list of radio occultations (ROs). Each are described below.
 
 RODatabaseClient:
     Create an instance of a portal to a metadata on all RO data in the AWS
-    Registry of Open Data. It provides an option to create a repository of
-    the RO metadata on the local file system as keyword "repository".
+    Registry of Open Data. It provides an option to create a metadata_root of
+    the RO metadata on the local file system as keyword "metadata_root".
 
 OccList:
     An instance of the class OccList is contains the metadata on a list of RO
@@ -31,39 +31,48 @@ OccList:
     instances of OccList, save the OccList to a JSON format file for future
     restoration by RODatabaseClient.restore, and even download RO data files.
 
-See README documentation for further instruction on usage.
+Very useful utilities...
 
+setdefaults: 
+    A function that sets defaults for use of RODatabaseClient and OccList. 
+    It allows the user to specify defaults for storage of RO metadata 
+    database files ("metadata_root") and for downloads of RO data files 
+    ("data_root"). In doing so, the user won't have to specify the metadata_root 
+    every time an instance of RODatabaseClient is created nor specify a 
+    data download path every time the OccList.download method is called. 
+
+populate:
+    Pre-populate the metadata database in the default metadata storage 
+    directory. This will greatly accelerate all queries of the database, 
+    including first queries. Be sure to have run setdefaults in advance. 
+
+See README documentation for further instruction on usage. 
 """
 
 #  Define parameters of the database.
 
 AWSregion = "us-east-1"
 databaseS3bucket = "gnss-ro-data"
-AWSversion = "v1.1"
 float_fill_value = -999.99
+defaults_filename = ".awsgnssroutilsrc"
 
 #  Imports.
 
 import os
 import datetime
 import numpy as np
-import s3fs
+import boto3
 import json
 import re
 import time
+from tqdm import tqdm
+import subprocess
 from botocore import UNSIGNED
 
-#  Update valid processing centers as they appear in the AWS Registry of Open Data.
 
-s3 = s3fs.S3FileSystem( client_kwargs={ 'region_name': AWSregion },
-                                 config_kwargs={ 'signature_version': UNSIGNED } )
+#  Linux epoch. 
 
-initial_prefix_array = s3.ls( os.path.join( databaseS3bucket, f'contributed/v1.1/' ) )
-valid_processing_centers = [ os.path.basename(prefix) for prefix in initial_prefix_array ]
-
-#  Define valid file types.
-
-valid_file_types = [ "calibratedPhase", "refractivityRetrieval", "atmosphericRetrieval" ]
+linux_epoch = datetime.datetime( 1970, 1, 1, tzinfo=datetime.timezone.utc )
 
 #  Exception handling.
 
@@ -80,70 +89,315 @@ class AWSgnssroutilsError( Error ):
 #  Useful utility functions and classes.
 ################################################################################
 
-
-
-def unsigned_S3FileSystem():
+def unsigned_S3Client():
     """This is a custom function that contains code to generate an authenticated
-    instance of s3fs.S3FileSystem. In this particular case, authentication is
+    instance of a boto3 S3 client. In this particular case, authentication is
     UNSIGNED."""
 
-    s3 = s3fs.S3FileSystem( client_kwargs={ 'region_name': AWSregion },
-                                     config_kwargs={ 'signature_version': UNSIGNED } )
+    session = boto3.Session( region_name=AWSregion )
+    s3client = session.client( "s3", config = boto3.session.Config( signature_version=UNSIGNED ) )
 
-    return s3
+    return s3client
 
-class S3FileSystem():
-    """This class is a wrapper for s3fs.S3FileSystem that checks for broken
+class S3Wrapper():
+    """This class is a wrapper for a boto3 s3 cleint that checks for broken
     instances and restores them when necessary."""
 
-    def __init__( self, S3FileSystem_create_function ):
-        """Create a wrapper for s3fs.S3FileSystem. The sole argument points to a
-        function that returns an instance of s3fs.S3FileSystem that is fully
-        authenticated."""
+    def __init__( self, S3Client_create_function, bucket ):
+        """Create a wrapper for a boto3 s3 client. The sole argument points to a
+        function that returns an instance of boto3.Session.client('s3') that is 
+        fully authenticated."""
 
-        self._s3fscreate = S3FileSystem_create_function
-        message = "Argument to S3FileSystem must be a reference to a function " + \
-                "that returns an instance of s3fs.S3FileSystem."
+        self._s3clientcreate = S3Client_create_function
+        message = "Argument to S3Client must be a reference to a function " + \
+                "that returns an instance of a boto3 s3 client." 
 
         try:
-            self._s3 = self._s3fscreate()
+            self._s3client = self._s3clientcreate()
         except:
             raise AWSgnssroutilsError( "IncorrectArgument", message )
 
-        if not isinstance( self._s3, s3fs.S3FileSystem ):
-            raise AWSgnssroutilsError( "IncorrectArgument", message )
+        self.bucket = bucket
 
-    def info( self, x ):
+    def info( self, prefix ):
         try:
-            ret = self._s3.info( x )
+            ret = self._s3client.list_objects_v2( Bucket=self.bucket, Prefix=prefix )
         except:
-            self._s3 = self._s3fscreate()
-            ret = self._s3.info( x )
+            self._s3client = self._s3clientcreate()
+            ret = self._s3client.list_objects_v2( Bucket=self.bucket, Prefix=prefix )
+        return ret[0]
+
+    def download( self, prefix, y ):
+        try:
+            ret = self._s3client.download_file( self.bucket, prefix, y )
+        except:
+            self._s3client = self._s3clientcreate()
+            ret = self._s3client.download_file( self.bucket, prefix, y )
         return ret
 
-    def download( self, x, y ):
-        try:
-            ret = self._s3.download( x, y )
+    def ls( self, prefix ):
+
+        try: 
+            paginator = self._s3client.get_paginator( "list_objects_v2" )
         except:
-            self._s3 = self._s3fscreate()
-            ret = self._s3.download( x, y )
+            self._s3client = self._s3clientcreate()
+            paginator = self._s3client.get_paginator( "list_objects_v2" )
+
+        pages = paginator.paginate( Bucket=self.bucket, Prefix=prefix, Delimiter="/" )
+        ret = { 'prefixes':[], 'keys':[] }
+
+        for page in pages: 
+            if "CommonPrefixes" in page.keys(): 
+                ret['prefixes'] += [ m['Prefix'] for m in page['CommonPrefixes'] ]
+            if "Contents" in page.keys(): 
+                ret['keys'] += [ m['Key'] for m in page['Contents'] ]
+
         return ret
 
-    def ls( self, x ):
-        try:
-            ret = self._s3.ls( x )
-        except:
-            self._s3 = self._s3fscreate()
-            ret = self._s3.ls( x )
-        return ret
+################################################################################
+#  IMPORTANT!!!!
+#  Define the auto-refresh S3 client that will be used. 
+################################################################################
 
-    def open( self, x ):
-        try:
-            ret = self._s3.open( x )
-        except:
-            self._s3 = self._s3fscreate()
-            ret = self._s3.open( x )
-        return ret
+use_S3Client = unsigned_S3Client 
+
+################################################################################
+
+
+#  Useful parameters. Scan the AWS RO data metadata_root for valid versions 
+#  (valid_versions), valid processing centers (valid_processing_centers), 
+#  valid file types (valid_file_types), and valid missions (valid_missions). 
+#
+#  valid_versions -> a list of version identifiers
+#
+#  valid_processing_centers[version] -> a list of processing centers for a 
+#           specified version
+#
+#  valid_file_types[version] -> a list of existing file types for a 
+#           specified version
+#
+#  valid_missions[version] -> a list of missions for a specified version
+#
+#  validity_table -> a list of dictionaries defining the versions, processing 
+#           centers, file types, and missions available. 
+#
+
+s3client = use_S3Client()
+kwargs = { 'Bucket': databaseS3bucket, 'Delimiter': "/" }
+
+#  Create valid versions. 
+
+prefixes = s3client.list_objects_v2( Prefix=f'contributed/', **kwargs )['CommonPrefixes'] 
+valid_versions = [ entry['Prefix'].split("/")[-2] for entry in prefixes ]
+
+#  Initialize bookkeeping for loops over versions, centers, and missions. 
+
+valid_processing_centers = {}
+valid_file_types = {}
+valid_missions = {}
+valid_table = []
+
+for version in valid_versions: 
+
+    prefixes = s3client.list_objects_v2( Prefix=f'contributed/{version}/', **kwargs )['CommonPrefixes'] 
+    valid_processing_centers.update( { version: list( { entry['Prefix'].split("/")[-2] for entry in prefixes } ) } )
+    valid_missions.update( { version: [] } )
+
+    all_filetypes = []
+
+    for center in valid_processing_centers[version]: 
+
+        prefixes = s3client.list_objects_v2( Prefix=f'contributed/{version}/{center}/', **kwargs )['CommonPrefixes'] 
+        missions = [ entry['Prefix'].split("/")[-2] for entry in prefixes ]
+        valid_missions[version] += missions
+
+        for mission in missions: 
+
+            prefixes = s3client.list_objects_v2( Prefix=f'contributed/{version}/{center}/{mission}/', **kwargs )['CommonPrefixes'] 
+            filetypes = [ entry['Prefix'].split("/")[-2] for entry in prefixes ]
+
+            all_filetypes += [ entry['Prefix'].split("/")[-2] for entry in prefixes ]
+            valid_table += [ { 'version': version, 'center': center, 'mission': mission, 'filetype': ft } for ft in filetypes ] 
+
+    valid_file_types.update( { version: list( set( all_filetypes ) ) } )
+
+valid_missions = { version: sorted( list( set( missions ) ) ) for version, missions in valid_missions.items() }
+
+
+################################################################################
+#  Resources utilities: Create a defaults file, populate metadata database. 
+################################################################################
+
+def setdefaults( metadata_root:str=None, data_root:str=None, version:str=None ) -> dict: 
+    """Create a local metadata_root for a history database queries. 
+
+    Create a local metadata_root of prior database queries and record the 
+    directory path in a defaults file that can be found in the user's home 
+    directory. Also, one can specify a default path for RO data downloads. 
+
+    metadata_root       An absolute path to a directory containing 
+                        RO metadata information from all previous searches. 
+
+    data_root           The default path for downloading RO data. If 
+                        it is not provided here, then it must be provided 
+                        when the method OccList.download is called. "data_root" 
+                        must be an absolute path.
+
+    version             The default RO format version. The available versions 
+                        can be found in s3://gnss-ro-data/dynamo. 
+    """
+
+    ret = { 'status': None, 'messages': [], 'comments': [], 'data': None }
+
+    new_defaults = {}
+
+    #  Check for existence of defaults file. Get existing defaults. 
+
+    HOME = os.path.expanduser( "~" )
+    defaults_file_path = os.path.join( HOME, defaults_filename )
+
+    if os.path.exists( defaults_file_path ): 
+        with open( defaults_file_path, 'r' ) as fp: 
+            defaults = json.load( fp )
+    else: 
+        defaults = {}
+
+    #  Be sure the paths are absolute paths. Also, create paths if they 
+    #  don't already exist. 
+
+    if metadata_root is not None: 
+
+        try: 
+            os.makedirs( metadata_root, exist_ok=True )
+
+        except: 
+            ret['status'] = "fail"
+            ret['messages'].append( "BadPathName" )
+            ret['comments'].append( f'Unable to create metadata_root ("{metadata_root}") as a directory.' )
+            return ret
+
+        defaults.update( { 'metadata_root': os.path.abspath( metadata_root ) } )
+
+
+    if data_root is not None: 
+
+        try: 
+            os.makedirs( data_root, exist_ok=True )
+
+        except: 
+            ret['status'] = "fail"
+            ret['messages'].append( "BadPathName" )
+            ret['comments'].append( f'Unable to create data_root ("{data_root}") as a directory.' )
+            return ret
+
+        defaults.update( { 'data_root': os.path.abspath( data_root ) } )
+
+    #  Check for a valid version. 
+
+    if version is not None: 
+
+        if version not in valid_versions: 
+            ret['status'] = "fail"
+            ret['messages'].append( "InvalidVersion" )
+            ret['comments'].append( f'Version "{version}" is invalid; ' + \
+                    'valid versions are ' + ", ".join( valid_versions ) )
+            return ret
+
+        defaults.update( { 'version': version } )
+
+        if metadata_root is not None: 
+            os.makedirs( os.path.join( metadata_root, version ), exist_ok=True )
+
+    #  Record new set of defaults. 
+
+    with open( defaults_file_path, 'w' ) as fp: 
+        json.dump( defaults, fp, indent="  " )
+
+    #  Done. 
+
+    ret['data'] = defaults
+    ret['status'] = "success"
+
+    return ret
+
+
+def populate() -> subprocess.CompletedProcess : 
+    """Populate the metadata database in the path established by 
+    setdefaults. 
+
+    This function will synchronize the default metadata_root path 
+    "{respository}/{version}" with the contents in the AWS S3 path 
+    s3://gnss-ro-data/dynamo/{version}/export_subsets. 
+    """
+
+    defaults = get_defaults()
+    metadata_root, version = defaults['metadata_root'], defaults['version']
+
+    if version is None: 
+        raise AWSgnssroutilsError( "InvalidVersion", 'A default version must ' + \
+                'be specified using the awsgnssroutils.database.setdefaults function.' )
+
+    #  Check for validity of version. 
+
+    if version not in valid_versions: 
+        raise AWSgnssroutilsError( "InvalidVersion", f'Version "{version}" is invalid; ' + \
+                'valid versions are ' + ", ".join( valid_versions ) )
+
+    #  Create command to sync the metadata database. 
+
+    command = [ 'aws', 's3', 'sync', 
+               f's3://{databaseS3bucket}/dynamo/{version}/export_subsets/', 
+               os.path.join(metadata_root,version), '--no-sign-request', '--delete' ]
+
+    #  Synchronize using subprocess.
+
+    ret = subprocess.run( command, capture_output=True )
+
+    return
+
+
+################################################################################
+#  Internal utilities. 
+################################################################################
+
+def get_defaults() -> dict: 
+    """Read the module defaults from a file in the user's home 
+    directory and return contents in a dictionary."""
+
+    #  Define defaults file path. 
+
+    HOME = os.path.expanduser( "~" )
+    defaults_file_path = os.path.join( HOME, defaults_filename )
+
+    if not os.path.exists( defaults_file_path ): 
+        raise AWSgnssroutilsError( "NoResourcesFile", 
+                    f'The defaults file "{defaults_file_path}" could not be found. ' + \
+                            'Be sure to create the defaults using the function ' + \
+                            'awsgnssroutils.database.setdefaults.' )
+
+    #  Read the defaults. 
+
+    with open( defaults_file_path, 'r' ) as fp: 
+        defaults = json.load( fp )
+
+    #  Replace emptry strings with Nones. 
+
+    for key, value in defaults.items(): 
+        if value == "": defaults.update( { key: None } )
+
+    #  Backward compatibility. 
+
+    keys = defaults.keys()
+
+    if "repository" in keys and "metadata_root" not in keys: 
+        defaults.update( { 'metadata_root': defaults['repository'] } )
+
+    if "rodata" in keys and "data_root" not in keys: 
+        defaults.update( { 'data_root': defaults['rodata'] } )
+
+    #  Done. 
+
+    return defaults
 
 
 ################################################################################
@@ -160,33 +414,47 @@ class OccList():
     all RO data associated with the entries in the list to the local file
     system."""
 
-    def __init__( self, data, s3 ):
-        """Create an instance of OccList. The data argument is a list of
-        items/RO soundings from the RO database.  The s3 argument is an
-        instance of S3FileSystem that enables access to the AWS
-        repository of RO data."""
+    def __init__( self, data:list, s3wrapper:S3Wrapper, version:str ):
+        """Create an instance of OccList. 
+
+        Arguments
+        =========
+        data        A list of items/RO soundings from the RO database. 
+
+        s3wrapper   An instance of S3Wrapper that provides access to the AWS 
+                    metadata_root of RO data.
+
+        version     The AWS metadata_root version.
+        """
 
         if isinstance( data, list ):
             self._data = data
         else:
             raise AWSgnssroutilsError( "BadInput", "Input argument data must be a list." )
 
-        if isinstance( s3, S3FileSystem ):
-            self._s3 = s3
-        else:
-            raise AWSgnssroutilsError( "BadInput", "Input argument s3 must be an " + \
-                    "instance of class s3fs.S3FileSystem" )
+        if isinstance( s3wrapper, S3Wrapper ): 
+            self._s3 = s3wrapper
+        else: 
+            raise AWSgnssroutilsError( "BadInput", "Second input argument must be " + \
+                    "an instance of S3tWrapper." )
+
+        self._version = version
 
         self.size = len( self._data )
 
 
-    def filter( self, missions=None, receivers=None, transmitters=None,
-        GNSSconstellations=None, longituderange=None, latituderange=None,
-        datetimerange=None, localtimerange=None, geometry=None,
-        availablefiletypes=None ):
-        '''Filter a list of occultations according to various criteria, such as
-        mission, receiver, transmitter, etc.  df is a list of items in the database,
-        and repository points to the local repository of the database data.
+    def filter( self, missions:{str,tuple,list}=None, 
+               receivers:{str,tuple,list}=None, 
+               transmitters:{str,tuple,list}=None,
+               GNSSconstellations:{str,tuple,list}=None, 
+               longituderange:{str,tuple,list}=None, 
+               latituderange:{str,tuple,list}=None,
+               datetimerange:{tuple,list}=None, 
+               localtimerange:{tuple,list}=None, 
+               geometry:str=None,
+               availablefiletypes:{str,tuple,list}=None ):
+        """Filter a list of occultations according to various criteria, such as
+        mission, receiver, transmitter, etc.  
 
         Filtering can be done through the following keywords:
 
@@ -239,7 +507,7 @@ class OccList():
                             "filetype" is one of the valid AWS RO data file
                             types ("calibratedPhase", "refractivityRetrieval",
                             "atmosphericRetrieval".
-        '''
+        """
 
         #  Filter by GNSSconstellations or by transmitters, but not by both.
 
@@ -419,14 +687,14 @@ class OccList():
                 f_availablefiletypes = set( availablefiletypes )
 
             for availablefiletype in f_availablefiletypes:
-                m = re.search( "^(\w+)_(\w+)$", availablefiletype )
+                m = re.search( r"^(\w+)_(\w+)$", availablefiletype )
                 if m:
                     center, filetype = m.group(1), m.group(2)
-                    if center not in valid_processing_centers:
+                    if center not in valid_processing_centers[self._version]:
                         raise AWSgnssroutilsError( "InvalidProcessingCenter",
                                 f'Processing center "{center}" in availablefiletype {availablefiletype} ' + \
                                         'is not valid.' )
-                    if filetype not in valid_file_types:
+                    if filetype not in valid_file_types[self._version]:
                         raise AWSgnssroutilsError( "InvalidFileType",
                                 f'File type "{filetype}" in availablefiletype {availablefiletype} ' + \
                                         'is not valid.' )
@@ -457,8 +725,12 @@ class OccList():
                 keep &= ( item['transmitter'] in f_transmitters )
 
             if f_datetimerange is not None:
-                dt = datetime.datetime( *[ int(s) for s in item['date-time'].split("-") ] )
-                keep &= ( f_datetimerange[0] <= dt and dt <= f_datetimerange[1] )
+                ms = re.match( r"\d{4}-\d{2}-\d{2}-\d{2}-\d{2}", item['date-time'] )
+                if ms: 
+                    dt = datetime.datetime.strptime( item['date-time'], "%Y-%m-%d-%H-%M" )
+                    keep &= ( f_datetimerange[0] <= dt and dt <= f_datetimerange[1] )
+                else: 
+                    keep = False 
 
             if f_longituderange is not None:
                 if item['longitude'] == float_fill_value:
@@ -507,9 +779,9 @@ class OccList():
 
         #  Generate new OccList based on kept items.
 
-        return OccList( data=keep_list, s3=self._s3 )
+        return OccList( data=keep_list, s3wrapper=self._s3, version=self._version )
 
-    def save(self, filename):
+    def save(self, filename:str):
         """Save instance of OccList to filename in line JSON format. The OccList
         can be restored using RODatabaseClient.restore."""
 
@@ -517,9 +789,7 @@ class OccList():
             for item in self._data:
                 file.write(json.dumps(item)+'\n')
 
-        print( f"Search results saved to {filename}." )
-
-    def info( self, param ):
+    def info( self, param:str ) -> { list, dict }:
         '''Provides information on the following parameters: "mission", "receiver",
         "transmitter", "datetime", "longitude", "latitude", "localtime", "geometry",
         "filetype".
@@ -573,48 +843,89 @@ class OccList():
             display = {}
             for item in self._data:
                 for key in item.keys():
-                    m = re.search( "^(\w+)_(\w+)$", key )
+                    m = re.search( r"^(\w+)_(\w+)$", key )
                     if m:
-                        if m.group(1) in valid_processing_centers and m.group(2) in valid_file_types:
+                        if m.group(1) in valid_processing_centers[self._version] and m.group(2) in valid_file_types[self._version]:
                             if key not in display.keys():
                                 display.update( { key: 0 } )
                             display[key] += 1
 
         return display
 
-    def download(self, filetype, rootdir, keep_aws_structure = False):
-        '''Download RO data files of file type "filetype" from the AWS Registry of Open
-        Data to into the local directory "rootdir". The "filetype" must be one of
-        *_calibratedPhase, *_refractivityRetrieval, *_atmosphericRetrieval, where * is
-        one of the valid contributed RO retrieval centers "ucar", "romsaf", "jpl". If
-        "keep_aws_structure" is True, then maintain the same directory structure locally
-        as in the AWS bucket; if False, download all data files into "rootdir" without
-        subdirectories. '''
+    def download(self, filetype:str, data_root:str=None, 
+                 keep_aws_structure:bool=True, silent:bool=False ) -> list :
+        """Download RO data files from AWS Registry of Open Data metadata_root of RO 
+        data. 
 
-        m = re.search( "^([a-z]+)_([a-zA-Z]+)$", filetype )
+        Download RO data of file type "filetype" from the AWS Registry of Open
+        Data. The data are downloaded into the directory "data_root" as specified in 
+        the defaults (created by setdefaults) data_root is specified by the keyword. 
+
+        Arguments
+        =========
+
+        filetype            The filetype must be one of *_calibratedPhase, 
+                            *_refractivityRetrieval, *_atmosphericRetrieval, where 
+                            * is one of the valid contributed RO retrieval centers 
+                            "ucar", "romsaf", "jpl", etc. 
+
+        data_root              The path to the directory for downloaded RO data files. 
+                            It overrides the default download path created by 
+                            setdefaults. It can be a relative or absolute path. 
+
+        keep_aws_structure  If true, create a directory hierarchy in the same way 
+                            as exists in the RO metadata_root in the AWS Registry of 
+                            Open Data. If false, all files are downloaded into the 
+                            same directory. Note that all RO files are downloaded 
+                            using the AWS hierarchy structure if data_root is not 
+                            specified as an argument here. 
+
+        silent              By setting to True, no progress bars are displayed. 
+                            Progress bars are shown by default. 
+        """
+
+        if data_root is not None: 
+            rootdir = data_root
+
+        else: 
+            defaults = get_defaults()
+            rootdir = defaults['data_root']
+            if not keep_aws_structure: 
+                raise AWSgnssroutilsError( "BadArgument", 'keep_aws_structure must be ' + \
+                        'true if RO data are downloaded into the default directory' )
+
+        m = re.match( r"([a-z]+)_([a-zA-Z]+)", filetype )
         if m:
-            if m.group(1) not in valid_processing_centers:
-                raise AWSgnssroutilsError( "InvalidInput", f'Invalid retrieval center "{m.group(1)}" ' + \
-                        'requested; must be one of ' + ', '.join( valid_processing_centers ) )
-            elif m.group(2) not in valid_file_types:
-                raise AWSgnssroutilsError( "InvalidInput", f'Invalid file type "{m.group(2)}" ' + \
-                        'requested; must be one of ' + ', '.join( valid_file_types ) )
+            if m.group(1) not in valid_processing_centers[self._version]:
+                raise AWSgnssroutilsError( "InvalidInput", 
+                        f'Invalid retrieval center "{m.group(1)}" ' + \
+                        'requested; must be one of ' + \
+                        ', '.join( valid_processing_centers[self._version] ) )
+            elif m.group(2) not in valid_file_types[self._version]:
+                raise AWSgnssroutilsError( "InvalidInput", 
+                        f'Invalid file type "{m.group(2)}" ' + \
+                        'requested; must be one of ' + \
+                        ', '.join( valid_file_types[self._version] ) )
         else:
-            raise AWSgnssroutilsError( "InvalidInput", f'You must select the "filetype" to download ' + \
-                'as ' + ', '.join( [ f"*_{ft}" for f in valid_file_types ] ) + ', where * is one of ' + \
-                'the processing centers ' + ', '.join( valid_processing_centers ) )
+            raise AWSgnssroutilsError( "InvalidInput", 
+                        f'You must select the "filetype" to download ' + 'as ' + \
+                        ', '.join( [ f"*_{ft}" for f in valid_file_types[self._version] ] ) + \
+                        ', where * is one of the processing centers ' + \
+                        ', '.join( valid_processing_centers[self._version] ) )
 
-        ro_file_list = []
-        for item in self._data:
-            if filetype in item.keys():
-                ro_file_list.append(item[filetype])
-        ro_file_list = sorted( set( ro_file_list ) )
+        ro_file_list = sorted( [ item[filetype] for item in self._data if filetype in item.keys() ] )
 
         sTime = time.time()
         local_file_list = []
-        print( f"Downloading {len(ro_file_list)} {filetype} files to {rootdir}." )
 
-        for ro_file in ro_file_list:
+        #  Progress bar or no progress bar. 
+
+        if silent: 
+            iterator = ro_file_list
+        else: 
+            iterator = tqdm( ro_file_list, desc=f'Downloading {filetype}' )
+
+        for ro_file in iterator: 
 
             if keep_aws_structure:
                 local_path = os.path.join( rootdir, os.path.dirname(ro_file) )
@@ -630,40 +941,24 @@ class OccList():
             #  Download the file if it doesn't already exist locally.
 
             if not os.path.exists( local_file ):
-                self._s3.download( os.path.join( databaseS3bucket, ro_file ), local_file )
+                self._s3.download( ro_file, local_file )
+                ret = True
+            else:
+                ret = False
 
-            if os.path.exists( local_file ):
-                local_file_list.append( local_file )
-            else: 
-                local_file_list.append( None )
+            local_file_list.append( local_file )
 
-        print( "Download took {:} seconds.".format( round((time.time()-sTime),1 ) ) )
         return local_file_list
 
-    def values( self, field ):
-        """Return an array of values of a requested field for the data in the
-        OccList. Valid fields are "longitude", "latitude", "datetime", "localtime",
-        in which case ndarrays are returned. Longitudes and latitudes are in degrees;
-        datetime is an ISO format time; and local times are in hours. Valid values
-        also include paths to data files. If the requested field is "ucar_calibratedPhase",
-        then a list of strings is returned, each element being the path to a ucar_calibratedPhase
-        file, for example."""
+    def values( self, field:str ) -> np.ndarray :
+        """Return an ndarray of values of a requested field for the data in the
+        OccList. 
 
-        m = re.search( "^([a-z]+)_([a-zA-Z]+)$", field )
+        Valid fields are "longitude", "latitude", "datetime", "localtime" and "time".  
+        Longitudes and latitudes are in degrees; time is an ISO format time; and 
+        local times are in hours."""
 
-        if m:
-            processing_center, file_type = m.group(1), m.group(2)
-            if processing_center in valid_processing_centers and file_type in valid_file_types:
-                x = []
-                for item in self._data:
-                    if field in item.keys():
-                        if item[field] == "":
-                            x.append( None )
-                        else:
-                            x.append( "s3://" + os.path.join( databaseS3bucket, item[field] ) )
-                    else:
-                        x.append( None )
-        elif field == "longitude":
+        if field == "longitude":
             x = np.ma.masked_equal( [ item['longitude'] for item in self._data ], float_fill_value )
 
         elif field == "latitude":
@@ -675,34 +970,67 @@ class OccList():
         elif field == "datetime":
             x = [ item['date-time'] for item in self._data ]
 
+        elif field == "time":
+            x = [ item['time'] for item in self._data ]
+
         else:
             raise AWSgnssroutilsError( "InvalidArgument", "Valid fields are " + \
                     "longitude, latitude, localtime, datetime." )
 
         return x
 
+    def sort( self, order=("receiver","transmitter","date-time") ): 
+        """Sort occultations according to the ordering 3-tuple. The first element of the tuple
+        is the highest priority. Tuple strings must be "receiver", "transmitter", and "date-time". 
+        This is an in-place method."""
+
+        if len(order) != 3: 
+            raise AWSgnssroutilsError( "InvalidArgument", "The order key must be length 3." )
+
+        if not { "receiver", "transmitter", "date-time" }.issubset( order ): 
+            raise AWSgnssroutilsError( "InvalidArgument", 'order must include "receiver", "transmitter", and "date-time"' )
+
+        #  Build list of sort-keys. 
+
+        keys = []
+        for rec in self._data: 
+            keys.append( "_".join( [ rec[order[i]] for i in range(3) ] ) )
+
+        #  Sort. 
+
+        ii = np.argsort( keys ).squeeze()
+
+        #  Reconstruct data. 
+
+        d = [ self._data[i] for i in ii ]
+        self._data = d
+
+        #  Done. 
+
     #  Magic methods.
 
     def __add__(self, occlist2):
 
         if not isinstance( occlist2, OccList ):
-            raise AWSgnssroutilsError( "FaultyAddition", "Unable to concatenate; both arguments must be instances of OccList." )
+            raise AWSgnssroutilsError( "FaultyAddition", 
+                    "Unable to concatenate; both arguments must be instances of OccList." )
 
-        return OccList( data=self._data + occlist2._data, s3=self._s3 )
+        return OccList( data=self._data + occlist2._data, s3wrapper=self._s3, version=self._version )
 
     def __padd__(self, occlist2):
 
         if not isinstance( occlist2, OccList ):
-            raise AWSgnssroutilsError( "FaultyAddition", "Unable to concatenate; both arguments must be instances of OccList." )
+            raise AWSgnssroutilsError( "FaultyAddition", 
+                    "Unable to concatenate; both arguments must be instances of OccList." )
 
-        return OccList( data=self._data + occlist2._data, s3=self._s3 )
+        return OccList( data=self._data + occlist2._data, s3wrapper=self._s3, version=self._version )
 
     def __getitem__(self,items):
         new = self._data[items]
         if isinstance( new, dict ):
-            out = OccList( data=[new], s3=self._s3 )
+            out = OccList( data=[new], s3wrapper=self._s3, version=self._version )
         else:
-            out = OccList( data=new, s3=self._s3 )
+            out = OccList( data=new, s3wrapper=self._s3, version=self._version )
         return out
 
     def __repr__(self):
@@ -719,111 +1047,133 @@ class RODatabaseClient:
     An instance of this class initiates a gateway to the database of GNSS radio
     occultation data in the AWS Registry of Open Data. '''
 
-    def __init__( self, repository=None, version=AWSversion, update=False ):
+    def __init__( self, metadata_root:str=None, version:str=None, update:bool=False ):
         '''Create an instance of RODatabaseClient. This object serves as a portal
-        to the database contents of the AWS Registry of Open Data repository of
+        to the database contents of the AWS Registry of Open Data metadata_root of
         GNSS radio occultation data.
 
-        repository  If set, it is the path to the directory on the local file
+        metadata_root  If set, it is the path to the directory on the local file
                     system where the contents of the RO database are stored
-                    locally. If not set, the RO database is read directly from
-                    the Open Data Registry S3 bucket. It is *highly* recommended
-                    that the contents of the database be stored locally, as this
-                    will greatly accelerate database inquiries.
+                    locally. If not set, the metadata_root path is read from a 
+                    defaults file created by the function setdefaults. 
 
         version     The version of the contents of the AWS Registry of Open Data
                     that should be accessed. The various versions that are
                     accessible can be found in s3://gnss-ro-data/dynamo/.
 
-        update      If requested, update the contents of the local repository
-                    to what currently exists in the AWS repository.
+        update      If requested, update the contents of the local metadata_root
+                    to what currently exists in the AWS metadata_root.
         '''
 
-        self._version = version
-        self._repository = repository
+        #  Instantiate the s3 client in AWS region AWSregion and with unsigned certificate
+        #  authentication.
 
-#  Instantiate the s3 file system in AWS region AWSregion and with unsigned certificate
-#  authentication.
+        self._s3 = S3Wrapper( use_S3Client, databaseS3bucket )
 
-        self._s3 = S3FileSystem( unsigned_S3FileSystem )
+        #  Check version. 
 
-#  Update the existing repository if requested.
+        if version is None: 
+            defaults = get_defaults()
+            if defaults['version'] is None: 
+                raise( "InvalidVersion", 'Either specify a version when instantiating ' + \
+                        'RODatabaseClient or specify it when setting defaults with setdefaults.' )
+            else: 
+                uversion = defaults['version']
+        else: 
+            uversion = version
+
+        if uversion not in valid_versions: 
+            raise AWSgnssroutilsError( "InvalidVersion", f'Version "{uversion}" is invalid; ' + \
+                    'valid versions are ' + ", ".join( valid_versions ) )
+
+        self._version = uversion
+
+        #  Get location of local database metadata_root of previous searches. 
+
+        if metadata_root is None: 
+            defaults = get_defaults()
+            self._metadata_root = defaults['metadata_root']
+        else: 
+            self._metadata_root = metadata_root
+
+        os.makedirs( os.path.join( self._metadata_root, self._version ), exist_ok=True )
+
+        #  Update the existing metadata_root if requested.
 
         self._update = update
-        if update and repository is not None:
+        if update: 
             self.update_repo()
-
 
     def update_repo(self):
         '''This module will check for updated json files on the AWS Registry of Open Data.
         If there has been an update in files that are part of your local repo, they will be
         updated.'''
 
-        if not os.path.exists( self._repository ):
+        if not os.path.exists( self._metadata_root ):
             return
-
-        print( f"Updating dynamo json files in {self._repository}." )
 
         sTime = time.time()
         altzone = int( time.altzone / 3600 )     #  Correct for the time zone.
-        allfiles = sorted( os.listdir( self._repository ) )
+        allfiles = sorted( os.listdir( self._metadata_root ) )
 
         for filename in allfiles:
-            local_json_info = os.stat( os.path.join( self._repository, filename ) )
-            local_LastModified_ctime = time.ctime( local_json_info.st_mtime )
-            local_LastModified_unaware = datetime.datetime.strptime( local_LastModified_ctime, "%a %b %d %H:%M:%S %Y" )
-            local_LastModified = datetime.datetime( local_LastModified_unaware.year,
-                        local_LastModified_unaware.month,
-                        local_LastModified_unaware.day,
-                        local_LastModified_unaware.hour)
 
-            s3_uri = os.path.join( databaseS3bucket, f'dynamo/{self._version}/export_subsets', filename )
-            s3_info = self._s3.info( s3_uri )
-            s3_LastModified_unaware = s3_info['LastModified']
-            s3_LastModified = datetime.datetime( s3_LastModified_unaware.year,
-                                s3_LastModified_unaware.month, s3_LastModified_unaware.day,
-                                s3_LastModified_unaware.hour-altzone )
+            linux_time = os.path.getmtime( os.path.join( self._metadata_root, filename ) )
+            local_LastModified = linux_epoch + datetime.timedelta( seconds=linux_time )
 
-            if s3_LastModified > local_LastModified:
-                print( f"  Updating {filename}" )
-                self._s3.download(s3_uri, os.path.join(self._repository,filename) )
+            s3_info = self._s3.info( f'dynamo/{self._version}/export_subsets/{filename}' )
+            s3_LastModified = s3_info['LastModified']
 
-        print( "Local repository update took {:} seconds.".format( round((time.time()-sTime),1) ) )
+            if s3_LastModified > local_LastModified + datetime.timedelta(seconds=60):
+                self._s3.download( s3_uri, os.path.join(self._metadata_root,self._version,filename) )
 
-    def query(self, missions=None, receivers=None, datetimerange=None, **filterargs ):
-        '''Execute an inquiry on the RO database for RO soundings. At least one of
-        the keywords "missions" or "datetimerange" must be specified. If accessing
-        a database on the local file system, an inquiry will download all relevant
-        database files from the AWS repository. All other keywords will serve as
-        filters on the inquiry. Return an instance of class OccList.'''
+    def query(self, missions:{str,tuple,list}=None, 
+              datetimerange:{tuple,list}=None, 
+              silent:bool=False, **filterargs ) -> OccList:
+        """Execute an query on the RO database for RO soundings. 
+
+        This method obtains database JSON files from the AWS S3 bucket if the 
+        requested files are not already available in the local metadata_root. 
+        At least one of the keywords "missions" or "datetimerange" must be 
+        specified. All other keywords will serve as filters on the query. 
+        Return an instance of class OccList. 
+
+        Arguments
+        =========
+        missions        The names of the missions to query, as defined in the 
+                        documentation at github.com/gnss-ro/aws-opendata. 
+
+        datetimerange   A two-element tuple or list specifying the time range 
+                        over which to query RO metadata, both elements being 
+                        ISO format datetimes.
+
+        silent          Whether or not to run silently, generally pertaining 
+                        to progress bars. 
+        """
 
         #  Check input.
 
         if missions is None and datetimerange is None:
-            raise AWSgnssroutilsError( "InvalidInput", f"Either 'missions' or 'datetimerange' or both must be provided." )
+            raise AWSgnssroutilsError( "InvalidInput", 
+                    f"Either 'missions' or 'datetimerange' or both must be provided." )
 
         #  Get listing of all JSON database files.
 
-        initial_file_array = self._s3.ls( os.path.join( databaseS3bucket, f'dynamo/{self._version}/export_subsets' ) )
-        print( f"Initial file count: {len(initial_file_array)}" )
+        file_array = self._s3.ls( f'dynamo/{self._version}/export_subsets/' )['keys']
 
-        # Filter by mission.
+        #  Filter by mission.
 
-        if missions is None:
-            file_array = initial_file_array.copy()
-        else:
-            file_array = []
-            for file in initial_file_array:
-                basename = os.path.basename(file)
-                basename_mission = basename.split('_')[0]
-                if basename_mission in missions:
-                    file_array.append( file )
-            print( f"File count after filtering by mission: {len(file_array)}" )
+        if missions is not None:
+            if isinstance( missions, str ): 
+                list_missions = [ missions ]
+            elif isinstance( missions, list ) or isinstance( missions, tuple ): 
+                list_missions = list( missions )
+            file_array = [ file for file in file_array if re.split( r"_", re.split( r"/", file )[-1] )[0] in list_missions ]
 
-        # Filter by date.
+        #  Filter by date.
 
         if datetimerange is not None:
-            remove_list = []
+
             try:
                 dt = datetime.datetime.fromisoformat( datetimerange[0] )
                 rangeStart = datetime.datetime( dt.year, dt.month, dt.day )
@@ -832,83 +1182,80 @@ class RODatabaseClient:
             except:
                 raise AWSgnssroutilsError( "FaultyDateFormat", "The datetimerange elements are not ISO format datetimes" )
 
+            retain_array = []
             for file in file_array:
-                m = re.search( "^\w+_(\d{4})-(\d{2})-(\d{2})\.json$", os.path.basename(file) )
-                file_datetime = datetime.datetime( int(m.group(1)), int(m.group(2)), int(m.group(3)) )
-                if file_datetime < rangeStart or file_datetime > rangeEnd:
-                    remove_list.append(file)
+                m = re.search( r"\w+_(\d{4}-\d{2}-\d{2})\.json$", file ) 
+                file_datetime = datetime.datetime.fromisoformat( m.group(1) )
+                if file_datetime >= rangeStart and file_datetime <= rangeEnd:
+                    retain_array.append( file )
+                else: 
+                    pass
+            file_array = retain_array
 
-            for f in remove_list:
-                file_array.remove(f)
 
-            print( f"File count after filtering by date: {len(file_array)}" )
 
-            # self._repository should be for line JSON files only.
+        local_file_array = []
+        os.makedirs(self._metadata_root, exist_ok=True)
 
-        if self._repository is not None:
+        #  Progress bar? 
 
-            print( "Updating local database repository..." )
+        if silent: 
+            iterator = file_array
+        else: 
+            iterator = tqdm( file_array, desc="Downloading metadata" )
 
-            local_file_array = []
-            os.makedirs(self._repository, exist_ok=True)
-            for file in file_array:
-                local_path = os.path.join(self._repository,os.path.basename(file))
-                if not os.path.exists(local_path):
-                    self._s3.download(file, local_path)
-                local_file_array.append(local_path)
+        for file in iterator: 
+            local_path = os.path.join(self._metadata_root,self._version,os.path.basename(file))
+            if not os.path.exists(local_path):
+                self._s3.download( file, local_path )
+            local_file_array.append(local_path)
 
-            # Reset file_array to local path.
+        #  Reset file_array to local path.
 
-            file_array = local_file_array
-
-        print( "Searching files for RO events..." )
+        file_array = local_file_array
 
         #  With file array, open up and read files in to query more.
 
-        ret_list = OccList( data=[], s3=self._s3 )
+        ret_list = OccList( data=[], s3wrapper=self._s3, version=self._version )
 
-        for file in file_array:
-            if self._repository is None:
-                with self._s3.open(file) as f:
-                    df_dict = json.loads( f.readline() )
-            else:
-                with open(file, 'r') as f:
-                    df_dict = json.loads( f.readline() )
+        if silent: 
+            iterator = file_array
+        else: 
+            iterator = tqdm( file_array, desc="Loading metadata" )
+
+        for file in iterator:
+
+            with open(file, 'r') as f:
+                df_dict = json.loads( f.readline() )
             df = list( df_dict.values() )
 
-            add_list = OccList( df, self._s3 ).filter( missions=missions, receivers=receivers,
-                    datetimerange=datetimerange, **filterargs )
+            add_list = OccList( df, s3wrapper=self._s3, version=self._version ).filter( 
+                    missions=missions, datetimerange=datetimerange, **filterargs )
 
             ret_list += add_list
 
         return ret_list
 
-    def restore( self, datafile ):
+    def restore( self, datafile:str ) -> OccList :
         """Restore a previously saved OccList from datafile, which is a
         JSON format file."""
 
         if os.path.exists( datafile ):
-            print( f"Restoring previously saved OccList from {datafile}." )
-            data = []
             with open( datafile, 'r' ) as f:
-                for line in f.readlines():
-                    data.append( json.loads(line) )
+                data = [ json.loads(line) for line in f.readlines() ]
         else:
             raise AWSgnssroutilsError( "FaultyData", "Argument data must be a list " + \
                     "of RO database items or a path to a previously saved OccList." )
 
-        occlist = OccList( data=data, s3=self._s3 )
+        occlist = OccList( data=data, s3wrapper=self._s3, version=self._version )
         return occlist
 
     def __repr__( self ):
 
         output_list = []
 
-        if self._repository is not None:
-            output_list.append( f'repository="{self._repository}"' )
-
-        if self._version is not None:
-            output_list.append( f'version="{self._version}"' )
+        output_list.append( f'metadata_root="{self._metadata_root}"' )
+        output_list.append( f'version="{self._version}"' )
 
         if self._update:
             output_list.append( "update=True" )
