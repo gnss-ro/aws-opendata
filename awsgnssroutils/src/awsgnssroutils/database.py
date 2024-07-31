@@ -1264,4 +1264,3 @@ class RODatabaseClient:
 
         ret = "RODatabaseClient({:})".format( ", ".join( output_list ) )
         return ret
-
