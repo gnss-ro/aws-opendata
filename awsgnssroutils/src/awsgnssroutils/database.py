@@ -1,13 +1,13 @@
 """database.py
 
 Authors: Amy McVey (amcvey@aer.com) and Stephen Leroy (sleroy@aer.com)
-Date: 10 January 2024
+Date: 31 July 2024
 
 ================================================================================
 
-This module contains utilities to query the AWS Registry of Open Data metadata_root
+This module contains utilities to query the AWS Registry of Open Data repository
 of GNSS radio occultation data. It does so using database files posted in the
-AWS metadata_root.
+AWS repository of GNSS RO data.
 
 Functionality
 =============
@@ -17,7 +17,7 @@ of a list of radio occultations (ROs). Each are described below.
 
 RODatabaseClient:
     Create an instance of a portal to a metadata on all RO data in the AWS
-    Registry of Open Data. It provides an option to create a metadata_root of
+    Registry of Open Data. It provides an option to create a repository of
     the RO metadata on the local file system as keyword "metadata_root".
 
 OccList:
@@ -37,7 +37,7 @@ setdefaults:
     A function that sets defaults for use of RODatabaseClient and OccList. 
     It allows the user to specify defaults for storage of RO metadata 
     database files ("metadata_root") and for downloads of RO data files 
-    ("data_root"). In doing so, the user won't have to specify the metadata_root 
+    ("data_root"). In doing so, the user won't have to specify the repository 
     every time an instance of RODatabaseClient is created nor specify a 
     data download path every time the OccList.download method is called. 
 
@@ -164,7 +164,7 @@ use_S3Client = unsigned_S3Client
 ################################################################################
 
 
-#  Useful parameters. Scan the AWS RO data metadata_root for valid versions 
+#  Useful parameters. Scan the AWS RO data repository for valid versions 
 #  (valid_versions), valid processing centers (valid_processing_centers), 
 #  valid file types (valid_file_types), and valid missions (valid_missions). 
 #
@@ -229,9 +229,9 @@ valid_missions = { version: sorted( list( set( missions ) ) ) for version, missi
 ################################################################################
 
 def setdefaults( metadata_root:str=None, data_root:str=None, version:str=None ) -> dict: 
-    """Create a local metadata_root for a history database queries. 
+    """Create a local repository for a history database queries. 
 
-    Create a local metadata_root of prior database queries and record the 
+    Create a local repository of prior database queries and record the 
     directory path in a defaults file that can be found in the user's home 
     directory. Also, one can specify a default path for RO data downloads. 
 
@@ -325,7 +325,7 @@ def populate() -> subprocess.CompletedProcess :
     """Populate the metadata database in the path established by 
     setdefaults. 
 
-    This function will synchronize the default metadata_root path 
+    This function will synchronize the default repository path 
     "{respository}/{version}" with the contents in the AWS S3 path 
     s3://gnss-ro-data/dynamo/{version}/export_subsets. 
     """
@@ -422,9 +422,9 @@ class OccList():
         data        A list of items/RO soundings from the RO database. 
 
         s3wrapper   An instance of S3Wrapper that provides access to the AWS 
-                    metadata_root of RO data.
+                    repository of RO data.
 
-        version     The AWS metadata_root version.
+        version     The AWS repository version.
         """
 
         if isinstance( data, list ):
@@ -854,7 +854,7 @@ class OccList():
 
     def download(self, filetype:str, data_root:str=None, 
                  keep_aws_structure:bool=True, silent:bool=False ) -> list :
-        """Download RO data files from AWS Registry of Open Data metadata_root of RO 
+        """Download RO data files from AWS Registry of Open Data repository of RO 
         data. 
 
         Download RO data of file type "filetype" from the AWS Registry of Open
@@ -874,7 +874,7 @@ class OccList():
                             setdefaults. It can be a relative or absolute path. 
 
         keep_aws_structure  If true, create a directory hierarchy in the same way 
-                            as exists in the RO metadata_root in the AWS Registry of 
+                            as exists in the RO repository in the AWS Registry of 
                             Open Data. If false, all files are downloaded into the 
                             same directory. Note that all RO files are downloaded 
                             using the AWS hierarchy structure if data_root is not 
@@ -913,9 +913,7 @@ class OccList():
                         ', where * is one of the processing centers ' + \
                         ', '.join( valid_processing_centers[self._version] ) )
 
-        ro_file_list = sorted( [ item[filetype] for item in self._data if filetype in item.keys() ] )
-
-        sTime = time.time()
+        ro_file_list = [ item[filetype] for item in self._data if filetype in item.keys() ] 
         local_file_list = []
 
         #  Progress bar or no progress bar. 
@@ -941,12 +939,12 @@ class OccList():
             #  Download the file if it doesn't already exist locally.
 
             if not os.path.exists( local_file ):
-                self._s3.download( ro_file, local_file )
-                ret = True
-            else:
-                ret = False
+                self._s3.download( os.path.join( databaseS3bucket, ro_file ), local_file )
 
-            local_file_list.append( local_file )
+            if os.path.exists( local_file ):
+                local_file_list.append( local_file )
+            else: 
+                local_file_list.append( None )
 
         return local_file_list
 
@@ -1049,7 +1047,7 @@ class RODatabaseClient:
 
     def __init__( self, metadata_root:str=None, version:str=None, update:bool=False ):
         '''Create an instance of RODatabaseClient. This object serves as a portal
-        to the database contents of the AWS Registry of Open Data metadata_root of
+        to the database contents of the AWS Registry of Open Data repository of
         GNSS radio occultation data.
 
         metadata_root  If set, it is the path to the directory on the local file
@@ -1061,8 +1059,8 @@ class RODatabaseClient:
                     that should be accessed. The various versions that are
                     accessible can be found in s3://gnss-ro-data/dynamo/.
 
-        update      If requested, update the contents of the local metadata_root
-                    to what currently exists in the AWS metadata_root.
+        update      If requested, update the contents of the local repository
+                    to what currently exists in the AWS repository.
         '''
 
         #  Instantiate the s3 client in AWS region AWSregion and with unsigned certificate
@@ -1088,7 +1086,7 @@ class RODatabaseClient:
 
         self._version = uversion
 
-        #  Get location of local database metadata_root of previous searches. 
+        #  Get location of local database repository of previous searches. 
 
         if metadata_root is None: 
             defaults = get_defaults()
@@ -1098,7 +1096,7 @@ class RODatabaseClient:
 
         os.makedirs( os.path.join( self._metadata_root, self._version ), exist_ok=True )
 
-        #  Update the existing metadata_root if requested.
+        #  Update the existing repository if requested.
 
         self._update = update
         if update: 
@@ -1112,7 +1110,6 @@ class RODatabaseClient:
         if not os.path.exists( self._metadata_root ):
             return
 
-        sTime = time.time()
         altzone = int( time.altzone / 3600 )     #  Correct for the time zone.
         allfiles = sorted( os.listdir( self._metadata_root ) )
 
@@ -1133,7 +1130,7 @@ class RODatabaseClient:
         """Execute an query on the RO database for RO soundings. 
 
         This method obtains database JSON files from the AWS S3 bucket if the 
-        requested files are not already available in the local metadata_root. 
+        requested files are not already available in the local repository. 
         At least one of the keywords "missions" or "datetimerange" must be 
         specified. All other keywords will serve as filters on the query. 
         Return an instance of class OccList. 
