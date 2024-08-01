@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "awsgnssroutils"
-version = "1.2.2"
+version = "1.2.3"
 authors = [
 	{ name="Stephen Leroy", email="sleroy@aer.com" },
 	{ name="Amy McVey", email="amcvey@aer.com" }
