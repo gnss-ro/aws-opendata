@@ -939,7 +939,7 @@ class OccList():
             #  Download the file if it doesn't already exist locally.
 
             if not os.path.exists( local_file ):
-                self._s3.download( os.path.join( databaseS3bucket, ro_file ), local_file )
+                self._s3.download( ro_file, local_file )
 
             if os.path.exists( local_file ):
                 local_file_list.append( local_file )
