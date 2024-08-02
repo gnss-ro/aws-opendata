@@ -485,8 +485,11 @@ class CollocationList( list ):
         return
 
 
-    def union( self, union_list ): 
-        """Return the union with the argument (instance of CollocationList)."""
+    def union( self, union_list, allow_multiple=True ): 
+        """Return the union with the argument (instance of CollocationList). If 
+        allow_multiple is true, then allow a single RO soundings to be collocated 
+        with several radiance soundings. If false, then at most one collocation 
+        element in the list for an occultation sounding."""
 
         #  Check input. 
 
@@ -495,23 +498,45 @@ class CollocationList( list ):
 
         #  Create a dictionary corresponding to both lists. 
 
-        dict1 = { c.occultation._data[0]['occid']: c for c in self }
-        dict2 = { c.occultation._data[0]['occid']: c for c in union_list }
+        dict1 = {}
+        for c in self: 
+            if allow_multiple: 
+                key = '{:}+{:}_{:}'.format( c.occultation._data[0]['occid'], 
+                                   c.nadir_satellite.instrument_name, 
+                                   c.nadir_satellite.satellite_name )
+            else: 
+                key = c.occultation._data[0]['occid']
+            dict1.update( { key: c } )
 
-        #  Get union of "occid" keys. 
+        dict2 = {}
+        for c in union_list: 
+            if allow_multiple: 
+                key = '{:}+{:}_{:}'.format( c.occultation._data[0]['occid'], 
+                                   c.nadir_satellite.instrument_name, 
+                                   c.nadir_satellite.satellite_name )
+            else: 
+                key = c.occultation._data[0]['occid']
+            dict2.update( { key: c } )
 
-        keys = sorted( list( set( dict1.keys() ).union( set( dict2.keys() ) ) ) )
+        #  Get union. 
+
+        d = dict1
+        d.update( dict2 )
+        keys = sorted( list( d.keys() ) )
 
         #  Generate the result. 
 
-        ret = CollocationList( [ dict1[k] for k in keys ] )
+        ret = CollocationList( [ d[k] for k in keys ] )
 
         #  Done. 
 
         return ret
 
-    def intersection( self, union_list ): 
-        """Return the intersection with the argument (instance of CollocationList)."""
+    def intersection( self, union_list, allow_multiple=True ): 
+        """Return the intersection with the argument (instance of CollocationList).
+        If allow_multiple is true, then allow a single RO to be collocated 
+        with several radiance soundings. If false, then at most one collocation 
+        element in the list for an occultation sounding."""
 
         #  Check input. 
 
@@ -520,10 +545,27 @@ class CollocationList( list ):
 
         #  Create a dictionary corresponding to both lists. 
 
-        dict1 = { c.occultation._data[0]['occid']: c for c in self }
-        dict2 = { c.occultation._data[0]['occid']: c for c in union_list }
+        dict1 = {}
+        for c in self: 
+            if allow_multiple: 
+                key = '{:}+{:}_{:}'.format( c.occultation._data[0]['occid'], 
+                                   c.nadir_satellite.instrument_name, 
+                                   c.nadir_satellite.satellite_name )
+            else: 
+                key = c.occultation._data[0]['occid']
+            dict1.update( { key: c } )
 
-        #  Get intersection of "occid" keys. 
+        dict2 = {}
+        for c in intersection_list: 
+            if allow_multiple: 
+                key = '{:}+{:}_{:}'.format( c.occultation._data[0]['occid'], 
+                                   c.nadir_satellite.instrument_name, 
+                                   c.nadir_satellite.satellite_name )
+            else: 
+                key = c.occultation._data[0]['occid']
+            dict2.update( { key: c } )
+
+        #  Get intersection of keys. 
 
         keys = sorted( list( set( dict1.keys() ).intersection( set( dict2.keys() ) ) ) )
 
@@ -578,8 +620,8 @@ class CollocationList( list ):
 
             occid = collocation.occultation._data[0]['occid']
             collocation_name = occid + "+" + \
-                    collocation.nadir_satellite.satellite_name + "-" + \
-                    collocation.nadir_satellite.instrument_name
+                    collocation.nadir_satellite.instrument_name + "_" + \
+                    collocation.nadir_satellite.satellite_name 
 
             collocation_group = d.createGroup( collocation_name )
             collocation_group.setncattr( "status", collocation.status )
