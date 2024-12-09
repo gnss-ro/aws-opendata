@@ -1,0 +1,33 @@
+[build-system]
+requires = [ "hatchling>=1.22.2" ]
+build-backend = "hatchling.build"
+
+[project]
+name = "rorefcat"
+version = "1.0.0"
+authors = [
+	{ name="Stephen Leroy", email="sleroy@aer.com" }
+	]
+description = "File reformatting software for generation of AWS Registry of Open Data RO data"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [ "hatchling", "awscli", "boto3", "s3fs", "aiobotocore[awscli,boto3,s3fs]", "scipy", 
+	"numpy", "astropy", "netCDF4", "pandas" ]
+classifiers = [
+	"Programming Language :: Python :: 3",
+	"License :: OSI Approved :: BSD License",
+	"Operating System :: OS Independent"
+	]
+
+[project.urls]
+"Homepage" = ""
+"Bug Tracker" = ""
+
+[project.scripts]
+batchprocess = "rorefcat.Utilities.batchprocess:main"
+createjobs = "rorefcat.Utilities.createjobs:main"
+initialize = "rorefcat.Utilities.initialize:main"
+terminate_batch_jobs = "rorefcat.Utilities.terminate_batch_jobs:main"
+liveupdate_wrapper = "rorefcat.Utilities.liveupdate_wrapper:main"
+check_dynamo_links = "rorefcat.Webscrape.check_dynamo_links:main"
+
