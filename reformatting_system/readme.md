@@ -12,7 +12,8 @@ in the atmosphere, profiles of the microwave index of refraction, and profiles
 of pressure, temperature, and water vapor. Historical Earth RO data are now 
 manifested in the AWS Registry of Open Data S3 bucket 
 [gnss-ro-data](https://registry.opendata.aws/gnss-ro-opendata). The archive and 
-its background is documented in [an article in Earth and Space Sciences](). 
+its background is documented in 
+[an article in Earth and Space Sciences](https://doi.org/10.5281/10.1029/2023EA003021). 
 Descriptions of the GNSS RO technique can be found in 
 [Kursinski et al. 2000](https://doi.org/10.3319/TAO.2000.11.1.53(COSMIC)) 
 and in [Leroy 2015](https://doi.org/10.1016/B978-0-12-382225-3.00350-9). 
