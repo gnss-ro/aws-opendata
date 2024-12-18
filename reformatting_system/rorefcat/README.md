@@ -24,6 +24,8 @@ metadata and documenting the paths to retrievals for individual occultations,
 **Utilities** provides fundamental utilities for RO reformatting as well as 
 the command line executables, and **Webscrape** provides webscrapting 
 utiltiies. 
+Definitions of S3 bucket names and DynamoDB table names are specified 
+in Versions/version\*.py modules. 
 
 **Caveat:**  By default, this code will run in operational mode. If you 
 wish to run in a test environment, set the environment variable _TEST_ to 

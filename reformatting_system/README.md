@@ -1,4 +1,4 @@
-# Radio Occultation Reformatting and Cataloging System (RORefCat)
+# Radio Occultation Reformatting and Cataloging System 
 
 The Radio Occultation Reformatting and Cataloging (RORefCat) system ingests 
 GNSS radio occultation data for all missions from multiple independent RO 
@@ -32,8 +32,8 @@ The second and third options are the most robust to the local environment.
 The third option requires that you have installed Docker Desktop and that 
 its daemon is running in the background. The system can be deployed in AWS 
 using the infrastructure-as-code formulation in Terraform, documented in 
-the [terraform readme](terraform/readme.md). 
-RORefCat itself has [its own Readme page](rorefcat/Readme.md). 
+the [terraform readme](terraform/README.md). 
+RORefCat itself has [its own Readme page](rorefcat/README.md). 
 
 The RORefCat system was built with funding from the NASA Advancing 
 Collaborative Connections for Earth System Science (ACCESS) 2019 
