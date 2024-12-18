@@ -34,6 +34,8 @@ its daemon is running in the background. The system can be deployed in AWS
 using the infrastructure-as-code formulation in Terraform, documented in 
 the [terraform readme](terraform/README.md). 
 RORefCat itself has [its own Readme page](rorefcat/README.md). 
+The python script submit_batch.py illustrates how to submit an AWS Batch 
+job using RORefCat. 
 
 The RORefCat system was built with funding from the NASA Advancing 
 Collaborative Connections for Earth System Science (ACCESS) 2019 

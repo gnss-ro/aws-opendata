@@ -1,9 +1,5 @@
 # Radio Occultation Reformatting and Cataloging (RORefCat) System
 
-Author: Stephen Leroy (sleroy@aer.com)
-
-Date: October 3, 2024
-
 
 This software package possesses tools that ingest GNSS (Global Navigation Satellite 
 Systems) radio occultation (RO) data produced by a wide range of RO missions and 
@@ -129,3 +125,7 @@ be clobbered.
 
 The in-line help message is complete ("batchprocess -h"). 
 
+
+Author: Stephen Leroy (sleroy-at-aer.com)
+
+Date: October 3, 2024
