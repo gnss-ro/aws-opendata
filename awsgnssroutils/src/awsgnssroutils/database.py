@@ -128,11 +128,15 @@ class S3Wrapper():
         return ret[0]
 
     def download( self, prefix, y ):
-        try:
-            ret = self._s3client.download_file( self.bucket, prefix, y )
-        except:
-            self._s3client = self._s3clientcreate()
-            ret = self._s3client.download_file( self.bucket, prefix, y )
+        n = 0
+        while n < 3: 
+            n += 1
+            try:
+                ret = self._s3client.download_file( self.bucket, prefix, y )
+            except:
+                ret = None
+                self._s3client = self._s3clientcreate()
+
         return ret
 
     def ls( self, prefix ):
@@ -944,6 +948,7 @@ class OccList():
             if os.path.exists( local_file ):
                 local_file_list.append( local_file )
             else: 
+                print( f"Failed download: {ro_file}" )
                 local_file_list.append( None )
 
         return local_file_list
