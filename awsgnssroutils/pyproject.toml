@@ -1,11 +1,11 @@
 [build-system]
 # requires = [ "hatchling", "s3fs", "numpy", "tqdm" ]
-requires = [ "hatchling>=1.22.2" ]
+requires = [ "hatchling>=1.22.1" ]
 build-backend = "hatchling.build"
 
 [project]
 name = "awsgnssroutils"
-version = "1.2.3"
+version = "1.2.4"
 authors = [
 	{ name="Stephen Leroy", email="sleroy@aer.com" },
 	{ name="Amy McVey", email="amcvey@aer.com" }
