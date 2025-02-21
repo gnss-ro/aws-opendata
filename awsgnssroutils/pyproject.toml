@@ -5,14 +5,14 @@ build-backend = "hatchling.build"
 
 [project]
 name = "awsgnssroutils"
-version = "1.2.3"
+version = "1.2.5"
 authors = [
 	{ name="Stephen Leroy", email="sleroy@aer.com" },
 	{ name="Amy McVey", email="amcvey@aer.com" }
 	]
 description = "Utilities for access and manipulation of GNSS radio occultation in the AWS Registry of Open Data"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 dependencies = [ "hatchling", "awscli", "boto3", "tqdm", 
 	"numpy", "pyhdf", "xarray", "astropy>=5.3", "pyerfa", "sgp4", "netCDF4<1.7.0", 
 	"eumdac", "earthaccess", "aiobotocore[awscli,boto3]" ]
