@@ -292,7 +292,7 @@ class EUMETSATDataStore():
             self.get_token()
 
         ret = subprocess.run( command, capture_output=True )
-        inventory = sorted( ret.stdout.decode().split("\n") )
+        inventory = sorted( [ item for item in ret.stdout.decode().split("\n") if item != "" ] )
 
         #  Scan inventory of files; check to see if all files already exist in data 
         #  repository directory. 

@@ -174,10 +174,14 @@ def execute_rotation_collocation( missions, datetimerange, ro_processing_center,
         print( "Extracting collocation data" )
 
         tbegin = time()
+        nsuccessful = 0
         for collocation in sorted_collocations: 
             occid = collocation.get_data( ro_processing_center )
+            if collocation.data['sounder'] is not None: 
+                nsuccessful += 1
         tend = time()
 
+        print( "  - successful data extractions: {:d} out of {:d}".format( nsuccessful, len(sorted_collocations) ) )
         print( "  - elapsed time = {:10.3f} s".format( tend-tbegin ) )
 
     #  Save to output file. 

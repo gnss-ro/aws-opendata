@@ -262,6 +262,8 @@ class NASAEarthdata():
         #  Configure credentials. 
 
         self.earthaccess = earthaccess.login( strategy="netrc", persist=True )
+        if not self.earthaccess.authenticated: 
+            raise earthdataError( "InvalidLogin", "Unable to log in to NASA Earthdata; update ~/.netrc accordingly" )
 
         #  Get root data path. 
 
