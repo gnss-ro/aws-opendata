@@ -29,5 +29,4 @@ createjobs = "rorefcat.Utilities.createjobs:main"
 initialize = "rorefcat.Utilities.initialize:main"
 terminate_batch_jobs = "rorefcat.Utilities.terminate_batch_jobs:main"
 liveupdate_wrapper = "rorefcat.Utilities.liveupdate_wrapper:main"
-check_dynamo_links = "rorefcat.Webscrape.check_dynamo_links:main"
 

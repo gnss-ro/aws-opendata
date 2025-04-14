@@ -1,5 +1,4 @@
 import os
-import argparse 
 import datetime
 import numpy as np
 import re
@@ -86,67 +85,32 @@ def read_json(mission,year):
 
     return final_array
 
-def process( mission, daterange ):
+def main(mission,dstr):
     '''Checks dynamo table items to ensure any open data linked files
     actually exist'''
-    # print(f"checking {mission} for {dstr}")
+    print(f"checking {mission} for {dstr}")
 
-    if isinstance(daterange,str): 
-        drange = [ daterange, daterange ]
-    else: 
-        drange = list( daterange )
+    file_array = read_json(mission,dstr)
 
-    first_day = datetime.datetime.fromisoformat( drange[0] )
-    last_day = datetime.datetime.fromisoformat( drange[1] )
-    day = first_day + datetime.timedelta(days=0)
-
-    while day <= last_day: 
-
-        dstr = day.strftime( "%Y-%m-%d" )
-        file_array = read_json(mission,dstr)
-
-        for file in file_array:
-            # open each file for said mission
-            with s3.open(file, 'r') as f:
-                df_dict = json.loads( f.readline() )
-            df = list( df_dict.values() )
-            print( f"Number of items in file {file} = {len(df)}" )
-            # loop through items in file and check attr and files
-            for each in df:
-                # make sure we check each center_filetype combo
-                for type in valid_file_types:
-                    if type in each.keys():
-                        try:
-                            #load the NASA account one in case it wasn't sync'd
-                            s3client.get_object(Bucket = bucket, Key=each[type])
-                        except:
-                            #print("can't find: ", each[type])
-                            updateTable_rm(f'{each["receiver"]}-{each["transmitter"]}', each['date-time'], type)
-
-        day = day + datetime.timedelta(days=1)
-
-def main(): 
-    parser = argparse.ArgumentParser( description="Edit the DynamoDB database for missing links (references to data files that don't exist)" )
-    parser.add_argument( "mission", type=str, help="Name of the mission whose metadata should be edited." )
-    parser.add_argument( "daterange", type=str, help="""Either the date or the range of dates over which metadata should be edited.
-        If a single date, it should be have format "YYYY-MM-DD". If a range of dates, it should be a space-separated string 
-        containing two dates that define the (inclusive) range: "YYYY-MM-DD YYYY-MM-DD".""" )
-    args = parser.parse_args()
-
-    m1 = re.search( r'^(\d{4}-\d{2}-\d{2})\s+(\d{4}-\d{2}-\d{2})$', args.daterange )
-    m2 = re.search( r'^\d{4}-\d{2}-\d{2}$', args.daterange )
-    if m1: 
-        daterange = [ m1.group(1), m1.group(2) ]
-    elif m2: 
-        daterange = str( args.daterange )
-    else: 
-        print( """Bad daterange format. Must be either "YYYY-MM-DD" or "YYYY-MM-DD YYYY-MM-DD".""" )
-
-    process( args.mission, daterange )
-    pass
-
+    for file in file_array:
+        # open each file for said mission
+        with s3.open(file, 'r') as f:
+            df_dict = json.loads( f.readline() )
+        df = list( df_dict.values() )
+        print("number of items in file:", len(df))
+        # loop through items in file and check attr and files
+        for each in df:
+            # make sure we check each center_filetype combo
+            for type in valid_file_types:
+                if type in each.keys():
+                    try:
+                        #load the NASA account one in case it wasn't sync'd
+                        s3client.get_object(Bucket = bucket, Key=each[type])
+                    except:
+                        #print("can't find: ", each[type])
+                        updateTable_rm(f'{each["receiver"]}-{each["transmitter"]}', each['date-time'], type)
 
 if __name__ == "__main__":
-    main()
 
+    main("cosmic1","2008-12-01")
 

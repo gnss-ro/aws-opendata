@@ -1,17 +1,23 @@
 import os
+import re
 import boto3
 import sys
 import datetime
 import subprocess
 
-from rorefcat.src.rorefcat.Webscrape import job_tracking as track 
+from rorefcat.Webscrape import job_tracking as track 
 
 #  Create session.
-session = boto3.session.Session( profile_name="nasa", region_name="us-east-1" )
+
+try: 
+    session = boto3.session.Session( profile_name="aernasaprod", region_name="us-east-1" )
+except: 
+    session = boto3.session.Session( region_name="us-east-1" )
+
 batch = session.client( service_name="batch")
 s3 = session.resource( "s3" )
 todayMMDD = datetime.datetime.today().strftime('%m%d')
-todayDate = datetime.datetime.today().strftime("%Y%m")
+todayDate = datetime.datetime.today().strftime("%Y%m%d")
 
 def rerun_log_file(lst,AWSversion):
     with open(lst,'r') as file:
@@ -45,18 +51,23 @@ def rerun_log_file(lst,AWSversion):
 
             dependsID = track.main(job_tracking, session)
 
-def submit_export(AWSversion):
+def submit_export( AWSversion, mission="all" ):
     job_tracking = {}
+    if mission == "all": 
+        command = [ "liveupdate_wrapper", "export", AWSversion ]
+    else: 
+        command = [ "liveupdate_wrapper", "export", AWSversion, "--mission", mission ]
+
     job_tracking = {
         'job-date': f"export-{todayDate}",
-        'jobname': f"dynamo_export_test_{todayMMDD}_{AWSversion.split('.','_')}",
+        'jobname': f"dynamo_export_test_{todayMMDD}_{AWSversion.replace('.','_')}",
         'test': "false",
         'ram': 7500,
         'version': AWSversion,
         'center': "",
-        "mission": "",
+        "mission": mission,
         'process_date': "",
-        'command': ["liveupdate_wrapper", "export", AWSversion]
+        'command': command 
     }
     dependsID = track.main(job_tracking)
 
@@ -134,7 +145,7 @@ def submit_batchprocess(processing_center, liveupdate, calibratedphase, AWSversi
 
     return
 
-def createjobs(processing_center, mission = None, daterange = None):
+def createjobs(processing_center, mission=None, daterange=None):
     AWSversion = "1.1"
     mission_list = []
 
@@ -207,12 +218,13 @@ def createjobs(processing_center, mission = None, daterange = None):
                 submit_createjobs(jobName, command,processing_center,m,lvl)
                                   
 if __name__ == "__main__":
-    STEP = 3 #for which chunk below to RUN
-    AWSversion = "2.0"
+
+    STEP = 4 #for which chunk below to RUN
+    AWSversion = "1.1"
     test = "false"
-    m = 'cosmic1' # spire, cosmic2, all
+    mission = 'cosmic1' # spire, cosmic2, all
     center = "ucar"   #eumetsat, ucar, romsaf, jpl, all
-    daterange = "2008-02-01:2008-02-29"
+    daterange = "2006-04-30:2019-12-10"
 
     #COSMIC-1 data for one month, February, 2008. This is a test of organization, as four processing centers contributed different levels of data for COSMIC-1. 
     #All RO data collected for one month, May, 2022. This is a test of volume, including Metop, COSMIC-2, Spire, and others. 
@@ -243,59 +255,59 @@ if __name__ == "__main__":
 
     if STEP == 1:
         #run createjobs
-        if m == "all": m = None
+        if mission == "all": mission = None
         if center == "all":
             for c in ["eumetsat", "ucar", "romsaf", "jpl"]:
                 #createjobs(center)
                 #createjobs(center, mission = m)
-                createjobs(c, mission = m, daterange = daterange)
+                createjobs(c, mission=mission, daterange=daterange)
         else:
             #createjobs(center)
-            #createjobs(center, mission = m)            
-            createjobs(center, mission = m, daterange = daterange)
+            #createjobs(center, mission=mission)            
+            createjobs(center, mission=mission, daterange=daterange)
 
-    if STEP ==2:
+    elif STEP == 2:
         #run calibratedPhase
         if center == "all":
             for c in ["eumetsat", "ucar", "romsaf", "jpl"]:
                 calibratedphase = True #for batchprocess to run only calibratedphase or the others
                 liveupdate = True #for batchprocess liveupdate/webscrape files
-                submit_batchprocess(c, liveupdate, calibratedphase, AWSversion, m, test)
+                submit_batchprocess(c, liveupdate, calibratedphase, AWSversion, mission, test)
                 liveupdate = False
-                submit_batchprocess(c, liveupdate, calibratedphase, AWSversion, m, test)
+                submit_batchprocess(c, liveupdate, calibratedphase, AWSversion, mission, test)
         else:
             calibratedphase = True #for batchprocess to run only calibratedphase or the others
             liveupdate = True #for batchprocess liveupdate/webscrape files
-            submit_batchprocess(center, liveupdate, calibratedphase, AWSversion, m, test)
+            submit_batchprocess(center, liveupdate, calibratedphase, AWSversion, mission, test)
             liveupdate = False
-            submit_batchprocess(center, liveupdate, calibratedphase, AWSversion, m, test)
-    if STEP ==3:
+            submit_batchprocess(center, liveupdate, calibratedphase, AWSversion, mission, test)
+    elif STEP == 3:
         #run everything else
         if center == "all":
             for c in ["eumetsat", "ucar", "romsaf", "jpl"]:        
                 calibratedphase = False
                 liveupdate = True
-                submit_batchprocess(c, liveupdate, calibratedphase, AWSversion, m, test)
+                submit_batchprocess(c, liveupdate, calibratedphase, AWSversion, mission, test)
                 liveupdate = False
-                submit_batchprocess(c, liveupdate, calibratedphase, AWSversion, m, test)
+                submit_batchprocess(c, liveupdate, calibratedphase, AWSversion, mission, test)
         else:
             calibratedphase = False
             liveupdate = True
-            submit_batchprocess(center, liveupdate, calibratedphase, AWSversion, m, test)
+            submit_batchprocess(center, liveupdate, calibratedphase, AWSversion, mission, test)
             liveupdate = False
-            submit_batchprocess(center, liveupdate, calibratedphase, AWSversion, m, test)
-    if STEP ==4:
+            submit_batchprocess(center, liveupdate, calibratedphase, AWSversion, mission, test)
+    elif STEP == 4:
         #export dynamo and aws sync all
         #the initial export job submits separate batch jobs
         #for each missions to speed up the json subsetting of dynamo table data
         #also submits sync for each contributed mission_year
-        submit_export(AWSversion)
+        submit_export(AWSversion, mission=mission)
 
-    if STEP == 5:
+    elif STEP == 5:
         #rerun all json files based on the list of log files
         rerun_log_file("Utilities/log.lst", AWSversion)
 
-    if STEP == 6:
+    elif STEP == 6:
         sdate = datetime.datetime(2012,1,1)
         edate = datetime.datetime(2022,12,31)
         d = sdate
@@ -308,7 +320,7 @@ if __name__ == "__main__":
             'ram': 1900,
             'version': AWSversion,
             'center': '',
-            "mission": m,
+            "mission": mission,
             'process_date': '',
             'command': ''
         }
@@ -320,3 +332,33 @@ if __name__ == "__main__":
 
             dependsID = track.main(job_tracking)
             d += datetime.timedelta(days=1)
+
+    elif STEP == 7: 
+        m = re.search( r'^(\d{4}-\d{2}-\d{2}):(\d{4}-\d{2}-\d{2})$', daterange )
+        sdate = datetime.datetime.strptime( m.group(1), "%Y-%m-%d" )
+        edate = datetime.datetime.strptime( m.group(2), "%Y-%m-%d" )
+
+        ndays_per_job = 365 
+        d0 = sdate + datetime.timedelta(days=0)
+
+        while d0 <= edate: 
+            d1 = d0 + datetime.timedelta(days=ndays_per_job-1)
+            if d1 > edate: 
+                d1 = edate + datetime.timedelta(days=0)
+            job_tracking = {
+                    'job-date': f"check_dynamo_links-{todayDate}", 
+                    'jobname': "clinks_{:}_{:}-{:}".format( mission, d0.strftime("%Y%m%d"), d1.strftime("%Y%m%d") ), 
+                    'test': test, 
+                    'ram': 1900, 
+                    'version': AWSversion, 
+                    'center': "", 
+                    'mission': mission, 
+                    'process_date': '', 
+                    'command': [ "check_dynamo_links", mission, "{:}:{:}".format( d0.strftime("%Y-%m-%d"), d1.strftime("%Y-%m-%d") ), "--version", AWSversion ]
+                }
+
+            print( "Submitting " + job_tracking['jobname'] + ": " + " ".join( job_tracking['command'] ) ) 
+            dependsID = track.main(job_tracking)
+
+            d0 = d1 + datetime.timedelta(days=1)
+

@@ -108,8 +108,8 @@ def main(version,mission):
     # with list of years for the missions submit batch sync all ro files to open data
     TEST = os.getenv( "TEST" )
     if TEST is None:
-        print("submitting sync")
-        sync_folder(aws_version, mission, list(set(year_list)))
+        print(f"ready to sync {mission}, wait for DataSync cron")
+        #sync_folder(aws_version, mission, list(set(year_list)))
     elif TEST is not None:
         print("not syncing, this is a test.")
 

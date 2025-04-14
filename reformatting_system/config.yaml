@@ -1,7 +1,6 @@
 name: rorefcat
 channels: 
   - nodefaults
-  - anaconda
   - conda-forge
 dependencies: 
   - python==3.9.18 

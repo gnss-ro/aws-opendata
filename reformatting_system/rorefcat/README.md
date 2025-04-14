@@ -1,5 +1,9 @@
 # Radio Occultation Reformatting and Cataloging (RORefCat) System
 
+Author: Stephen Leroy (sleroy@aer.com)
+
+Date: October 3, 2024
+
 
 This software package possesses tools that ingest GNSS (Global Navigation Satellite 
 Systems) radio occultation (RO) data produced by a wide range of RO missions and 
@@ -20,8 +24,6 @@ metadata and documenting the paths to retrievals for individual occultations,
 **Utilities** provides fundamental utilities for RO reformatting as well as 
 the command line executables, and **Webscrape** provides webscrapting 
 utiltiies. 
-Definitions of S3 bucket names and DynamoDB table names are specified 
-in Versions/version\*.py modules. 
 
 **Caveat:**  By default, this code will run in operational mode. If you 
 wish to run in a test environment, set the environment variable _TEST_ to 
@@ -125,7 +127,3 @@ be clobbered.
 
 The in-line help message is complete ("batchprocess -h"). 
 
-
-Author: Stephen Leroy (sleroy-at-aer.com)
-
-Date: October 3, 2024

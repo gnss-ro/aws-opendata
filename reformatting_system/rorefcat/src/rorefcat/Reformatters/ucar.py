@@ -38,15 +38,6 @@ liveupdateBucket = "ucar-earth-ro-archive-liveupdate"
 
 centerwmo = { 'originating_center_id': 60 }
 
-#  UCAR defaults. Define what signals UCAR denotes as CA, L1 and L2 in its 
-#  conPhs/atmPhs files. All of these values must correspond directly to the 
-#  standardNames defined in the function "signals" defined in the Missions 
-#  modules. 
-
-CA_standardNames = [ "C/A", "E1Ca" ]
-L1_standardNames = [ "L1" ]
-L2_standardNames = [ "L2", "E5b(Q)", "B2a(Pilot)" ]
-
 #  Set other parameters. 
 
 gps0 = Time( gps=0 )
@@ -541,7 +532,7 @@ def level1b2aws( atmPhs_file, level1b_file, mission, transmitter, receiver,
 
             #  SNR and excess phase.
 
-            if signal['standardName'] in CA_standardNames: 
+            if signal['standardName'] in [ "C/A", "E1Ca" ]:
                 x = d.variables['caL1Snr']
                 good = screen( x )
                 if len(good) > 0 and "snr" in outvarsnames:
@@ -555,7 +546,7 @@ def level1b2aws( atmPhs_file, level1b_file, mission, transmitter, receiver,
                     else: 
                         outvars['excessPhase'][isignal,good] = d.variables['exL1'][good].data
 
-            elif signal['standardName'] in L1_standardNames: 
+            elif signal['standardName'] == "L1":
                 x = d.variables['pL1Snr']
                 good = screen( x )
                 if len(good) > 0 and "snr" in outvarsnames:
@@ -564,7 +555,7 @@ def level1b2aws( atmPhs_file, level1b_file, mission, transmitter, receiver,
                     else: 
                         outvars['snr'][isignal,good] = x[good].data * 0.1
 
-            elif signal['standardName'] in L2_standardNames: 
+            elif signal['standardName'] in [ "L2", "E5b(Q)" ]:
                 x = d.variables['pL2Snr']
                 good = screen( x )
                 if len(good) > 0 and "snr" in outvarsnames:
@@ -774,7 +765,7 @@ def level1b2aws( atmPhs_file, level1b_file, mission, transmitter, receiver,
 
             #  Write SNR and excess phase.
 
-            if signal['standardName'] in CA_standardNames: 
+            if signal['standardName'] in [ "C/A", "E1Ca", "B1(Pilot)" ]:
 
                 x = d.variables['caL1Snr']
                 good = screen( x )
@@ -792,7 +783,7 @@ def level1b2aws( atmPhs_file, level1b_file, mission, transmitter, receiver,
                     else: 
                         outvars['excessPhase'][isignal,good] = x[good].data
 
-            elif signal['standardName'] in L1_standardNames: 
+            elif signal['standardName'] in [ "L1" ]: 
 
                 x = d.variables['exL1']
                 good = screen( x )
@@ -802,7 +793,7 @@ def level1b2aws( atmPhs_file, level1b_file, mission, transmitter, receiver,
                     else: 
                         outvars['excessPhase'][isignal,good] = x[good].data
 
-            elif signal['standardName'] in L2_standardNames: 
+            elif signal['standardName'] in [ "L2", "E5b(Q)", "B2a(Pilot)" ]:
 
                 x = d.variables['pL2Snr']
                 good = screen( x )
@@ -1131,14 +1122,14 @@ def level2a2aws( atmPrf_file, level2a_file, mission, transmitter, receiver,
     #  Carrier frequency: L1
 
     for signal in signalList:
-        if signal['standardName'] in CA_standardNames + L1_standardNames: 
+        if signal['standardName'] in [ 'C/A', 'L1', 'E1Ca' ]:
             outvars['carrierFrequency'][0] = carrierfrequency( transmitter, date, signal['rinex3name'] )
             break
 
     #  Carrier frequency: L2
 
     for signal in signalList:
-        if signal['standardName'] in L2_standardNames and "carrierFrequency" in outvarsnames:
+        if signal['standardName'] in [ 'L2', 'E5b(Q)' ] and "carrierFrequency" in outvarsnames:
             outvars['carrierFrequency'][1] = carrierfrequency( transmitter, date, signal['rinex3name'] )
             break
 
