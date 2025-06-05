@@ -185,6 +185,10 @@ class EUMETSATDataStore():
         #  Initialize token, inventory. 
 
         self.get_token()
+
+        for instrument in [ "amsua", "iasi" ]: 
+            os.makedirs( os.path.join( self.data_root, instrument ), exist_ok=True )
+
         self.inventory_metop_amsua()
 
     def get_token( self ): 

@@ -274,6 +274,9 @@ class NASAEarthdata():
 
         #  Initialize inventory. 
 
+        for instrument in [ "atms", "airs", "cris" ]: 
+            os.makedirs( os.path.join( self.data_root, instrument ), exist_ok=True )
+
         self.inventory = {}
         self.regenerate_inventory()
 
