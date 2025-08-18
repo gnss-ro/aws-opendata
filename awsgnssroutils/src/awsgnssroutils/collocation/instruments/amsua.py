@@ -14,6 +14,7 @@ from netCDF4 import Dataset
 import numpy as np
 from datetime import datetime
 import xarray 
+import re
 
 from ..core.nadir_satellite import NadirSatelliteInstrument, ScanMetadata
 from ..core.timestandards import Time
@@ -145,14 +146,34 @@ class AMSUA(NadirSatelliteInstrument):
         latitudes = np.deg2rad( d.variables['lat'][:] )
         longitudes = np.deg2rad( d.variables['lon'][:] )
 
-        #  Get start and stop time of scans in file. 
+        #  Get start time of scans in file. 
 
-        dt = datetime.strptime( d.getncattr("start_sensing_time"), "%Y%m%dT%H%M%S.%fZ" )
+        tstr = d.getncattr("start_sensing_time") 
+        m1 = re.search( r'^\d{8}T\d{6}Z$', tstr )
+        m2 = re.search( r'^\d{8}T\d{6}\.\d+Z$', tstr )
+        if m1: 
+            dt = datetime.strptime( tstr, "%Y%m%dT%H%M%SZ" )
+        elif m2: 
+            dt = datetime.strptime( tstr, "%Y%m%dT%H%M%S.%fZ" )
+        else: 
+            raise metop_amsua_error( 'UninterpretableTime', f'Cannot interpret start_sensing_time "{tstr}"' )
+
         cal = datetime( dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second )
         args = { eumetsat_time_convention: cal }
         start_sensing_time = Time( **{ eumetsat_time_convention: cal } ) + dt.microsecond * 1.0e-6
 
-        dt = datetime.strptime( d.getncattr("stop_sensing_time"), "%Y%m%dT%H%M%S.%fZ" )
+        #  Get stop time of scans in file. 
+
+        tstr = d.getncattr("stop_sensing_time") 
+        m1 = re.search( r'^\d{8}T\d{6}Z$', tstr )
+        m2 = re.search( r'^\d{8}T\d{6}\.\d+Z$', tstr )
+        if m1: 
+            dt = datetime.strptime( tstr, "%Y%m%dT%H%M%SZ" )
+        elif m2: 
+            dt = datetime.strptime( tstr, "%Y%m%dT%H%M%S.%fZ" )
+        else: 
+            raise metop_amsua_error( 'UninterpretableTime', f'Cannot interpret stop_sensing_time "{tstr}"' )
+
         cal = datetime( dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second )
         stop_sensing_time = Time( **{ eumetsat_time_convention: cal } ) + dt.microsecond * 1.0e-6
 
