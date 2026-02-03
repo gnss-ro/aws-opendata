@@ -57,7 +57,8 @@ def main(tarfile, AWSversion, romsaf):
 
     jobName = os.path.basename(json_objkey).replace(".","_")
     print("command",command)
-
+    ram = 1800
+    if "cosmic2" in jobName: ram = 4500
     #s3://ucar-earth-ro-archive-liveupdate/batchprocess-jobs/cosmic2_wetPf2_nrt_2022_058.tar.json
     try:
         if TEST is None:
@@ -69,7 +70,7 @@ def main(tarfile, AWSversion, romsaf):
                 'job-date': f"batchprocess-{todayDate}",
                 'jobname': f"{AWSversion.replace('.', '_')}_{jobName}_{params['center']}",
                 'test': "false",
-                'ram': 1800,
+                'ram': ram,
                 'version': AWSversion,
                 'center': params['center'],
                 "mission": os.path.basename(command[1]).split('_')[0],
@@ -87,7 +88,7 @@ def main(tarfile, AWSversion, romsaf):
                 'job-date': f"batchprocess-{todayDate}",
                 'jobname': f"{AWSversion.replace('.', '_')}_{jobName}_{params['center']}_test",
                 'test': "true",
-                'ram': 1800,
+                'ram': ram,
                 'version': AWSversion,
                 'center': params['center'],
                 "mission": os.path.basename(command[1]).split('_')[0],
@@ -148,7 +149,8 @@ def download_and_untar(input_files, params):
                     with open(path_to_file, 'wb') as f:
                         f.write(r.content)
                 else:
-                    print(r.status_code)
+                    print("download fail",r.status_code)
+                    sys.exit(4)
                     
         if params['center'] == "romsaf":
             os.makedirs('/tmp_romsaf/', 0o777, exist_ok = True)
@@ -171,7 +173,7 @@ def download_and_untar(input_files, params):
         
         if params['center'] == "romsaf":    
             #copy tarball to s3
-            upload_to_s3(path_to_file, params['bucket_name'], os.path.join("tarballs", fileUrl))
+            #upload_to_s3(path_to_file, params['bucket_name'], os.path.join("tarballs", fileUrl))
             
             #romsaf has an extra folder level of /YYYY-MM-DD/
             local_dir = os.path.join(local_dir,local_file_list[0])

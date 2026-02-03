@@ -17,6 +17,7 @@ AWS version identifier.
 
 import re
 import os
+import sys
 import importlib
 from inspect import getmembers, isfunction
 
@@ -41,9 +42,12 @@ LOGGER = logging.getLogger( __name__ )
 ################################################################################
 
 versions = []
-pp = os.getenv( "PYTHONPATH" )
-package_root = os.path.dirname( __file__ )
+package_root = os.path.dirname( os.path.abspath( __file__ ) )
 files = [ f for f in os.listdir(package_root) if f[-3:]==".py" and f not in [ "__init__.py" ] ]
+
+# print( f'Versions: __file__ = {__file__}, package_root = {package_root}' )
+# print( 'Versions: files = ' + ", ".join( files ) )
+# sys.stdout.flush()
 
 for file in files: 
     modname = file[:-3]

@@ -34,9 +34,15 @@ type used in the database.
 import os
 import json
 import numpy as np
+import importlib 
 from datetime import datetime
 from ..Missions import get_receiver_satellites
 from ..Utilities.TimeStandards import Time
+
+#  Import DOI table. 
+
+with importlib.resources.open_text( "rorefcat.Versions", "doi_table.json" ) as d:
+    doi_table = json.load( d )
 
 #  Logging.
 
@@ -149,9 +155,14 @@ def defpath( file_type, processing_center, mission, transmitter, receiver,
 
     path_naming = file_indexing 
 
-    path = os.path.join( "contributed", "v"+AWSversion, processing_center, 
-            mission, path_naming[file_type], "{:4d}".format( time.year ), 
-            "{:02d}".format( time.month ), "{:02d}".format( time.day ) )
+    # path = os.path.join( "contributed", "v"+AWSversion, processing_center, 
+            # mission, path_naming[file_type], "{:4d}".format( time.year ), 
+            # "{:02d}".format( time.month ), "{:02d}".format( time.day ) )
+
+    path = os.path.join( "contributed", "v"+AWSversion, 
+            "gnssro_{:}_{:}_l{:}".format( mission, processing_center, file_type[5:] ), 
+            "{:4d}".format( time.year ), "{:02d}".format( time.month ), 
+            "{:02d}".format( time.day ) )
 
 #  Define the file name.
 
@@ -201,19 +212,32 @@ def format_level1b( output,
 
     level = "1b"
 
+    #  Get shortname and DOI for product reference. 
+
+    shortname = ShortName( level, mission, processing_center )
+    recs = [ rec for rec in doi_table if rec['ShortName'] == shortname ]
+    if len( recs ) == 1: 
+        refdoi = recs[0]['DOI Name']
+    elif len( recs ) > 1: 
+        LOGGER.warning( f'More than one DOI associated with ShortName "{shortname}"' )
+        refdoi = ""
+    else: 
+        LOGGER.warning( f'No DOI associated with ShortName "{shortname}"' )
+        refdoi = ""
+
     #  Global attributes.
 
     output.setncatts( {
             'title': 'This file contains calibrated excess phase and amplitude ' + \
                     'data vs. time for one radio occultation sounding.',
-            'ShortName': ShortName( level, mission, processing_center ), 
+            'ShortName': shortname, 
             'LongName': "GNSS Radio Occultation L1B Calibrated Phase for " + \
                     "{:} with {:} retrieval algorithm {:}".format( mission.upper(), processing_center.upper(), 
                     processing_center_version ),
             'VersionID': "2.0",
             'Format': "NetCDF4",
-            'IdentifierProductDOIAuthority': "https://dx.doi.org/???",
-            'IdentifierProductDOI': "10.5067/????",
+            'IdentifierProductDOIAuthority': "http://dx.doi.org/",
+            'IdentifierProductDOI': refdoi, 
             'ProductionDateTime': datetime.utcnow().isoformat(timespec="seconds")+"Z",
             'ProcessingLevel': level.upper(), 
             'Conventions': "CF-1.10",
@@ -539,6 +563,19 @@ def format_level2a( output,
 
     level = "2a"
 
+    #  Get shortname and DOI for product reference. 
+
+    shortname = ShortName( level, mission, processing_center )
+    recs = [ rec for rec in doi_table if rec['ShortName'] == shortname ]
+    if len( recs ) == 1: 
+        refdoi = recs[0]['DOI Name']
+    elif len( recs ) > 1: 
+        LOGGER.warning( f'More than one DOI associated with ShortName "{shortname}"' )
+        refdoi = ""
+    else: 
+        LOGGER.warning( f'No DOI associated with ShortName "{shortname}"' )
+        refdoi = ""
+
     #  Global attributes.
 
     output.setncatts( {
@@ -550,12 +587,12 @@ def format_level2a( output,
                     'performed; and the "post-Abel" group contains all quantities ' + \
                     'relevant to radio occultation processing after the Abel integral ' + \
                     'inversion.',
-            'ShortName': ShortName( level, mission, processing_center ), 
+            'ShortName': shortname, 
             'LongName': "GNSS Radio Occultation L2A Bending Angle/Refractivity/Dry Retrieval",
             'VersionID': "2.0",
             'Format': "NetCDF4",
-            'IdentifierProductDOIAuthority': "https://dx.doi.org/???",
-            'IdentifierProductDOI': "10.5067/????",
+            'IdentifierProductDOIAuthority': "http://dx.doi.org/",
+            'IdentifierProductDOI': refdoi, 
             'ProductionDateTime': datetime.utcnow().isoformat(timespec="seconds")+"Z",
             'ProcessingLevel': level.upper(), 
             'Conventions': "CF-1.10",
@@ -918,17 +955,18 @@ def format_level2a( output,
         '_FillValue': _FillValue_float } )
     outvars.update( { 'quality': var } )
 
-    varname = "superrefraction_altitude"
+    varname = "superrefraction_impact_height"
     var = postAbel.createVariable( varname, np.dtype('f8') )
     var.setncatts( {
-        'long_name': "altitude of super-refraction layer", 
-        'comment': "The altitude above the mean sea-level geoid of " + \
-            "the highest super-refracting layer. If super-refraction is " + \
-            "not analyzed, leave as fill values; if no super-refraction " + \
-            "is found, set to -1000.0.",
+        'long_name': "impact height of super-refraction layer", 
+        'comment': "The impact height---or the impact parameter that defines " + \
+                "the location of the duct less the effective radius of curvature " + \
+                "(radius_of_curvature)---of the highest super-refracting layer. If " + \
+                "super-refraction is not analyzed, leave as fill values; if " + \
+                "super-refraction is analyzed but not found, set to -1000.0", 
         'units': "meter", 
         '_FillValue': _FillValue_double } )
-    outvars.update( { 'superRefractionAltitude': var } )
+    outvars.update( { 'superRefractionImpactHeight': var } )
 
     #  Done.
 
@@ -963,18 +1001,31 @@ def format_level2b( output,
 
     level = "2b"
 
+    #  Get shortname and DOI for product reference. 
+
+    shortname = ShortName( level, mission, processing_center )
+    recs = [ rec for rec in doi_table if rec['ShortName'] == shortname ]
+    if len( recs ) == 1: 
+        refdoi = recs[0]['DOI Name']
+    elif len( recs ) > 1: 
+        LOGGER.warning( f'More than one DOI associated with ShortName "{shortname}"' )
+        refdoi = ""
+    else: 
+        LOGGER.warning( f'No DOI associated with ShortName "{shortname}"' )
+        refdoi = ""
+
     #  Global attributes.
 
     output.setncatts( {
             'title': 'This file contains retrievals of temperature, pressure, ' + \
                     'and humidity as functions of geopotential for one radio ' + \
                     'occultation sounding.',
-            'ShortName': ShortName( level, mission, processing_center ), 
+            'ShortName': shortname, 
             'LongName': "GNSS Radio Occultation L2B Atmospheric Retrieval",
             'VersionID': "2.0",
             'Format': "NetCDF4",
-            'IdentifierProductDOIAuthority': "https://dx.doi.org/???",
-            'IdentifierProductDOI': "10.5067/????",
+            'IdentifierProductDOIAuthority': "http://dx.doi.org/",
+            'IdentifierProductDOI': refdoi, 
             'ProductionDateTime': datetime.utcnow().isoformat(timespec="seconds")+"Z",
             'ProcessingLevel': level.upper(), 
             'Conventions': "CF-1.10",
@@ -1169,18 +1220,6 @@ def format_level2b( output,
         'valid_range': np.array( [ -0.1, 100.1 ], dtype=np.single ), 
         '_FillValue': _FillValue_float } )
     outvars.update( { 'quality': var } )
-
-    varname = "superrefraction_altitude"
-    var = output.createVariable( varname, np.dtype('f8') )
-    var.setncatts( {
-        'long_name': "altitude of super-refraction layer", 
-        'comment': "The altitude above the mean sea-level geoid of " + \
-            "the highest super-refracting layer. If super-refraction is " + \
-            "not analyzed, leave as fill values; if no super-refraction " + \
-            "is found, set to -1000.0.",
-        'units': "meter", 
-        '_FillValue': _FillValue_double } )
-    outvars.update( { 'superRefractionAltitude': var } )
 
     varname = "setting"
     var = output.createVariable( varname, np.dtype('b') )

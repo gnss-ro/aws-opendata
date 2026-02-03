@@ -265,8 +265,14 @@ def level1b2aws( jpl_level1b_file, level1b_file, mission, transmitter, receiver,
     #  Time attributes. 
 
     if { "RangeBeginningDate", "RangeBeginningTime", "RangeEndingDate", "RangeEndingTime" }.issubset( e.ncattrs() ): 
-        date0 = starttime.calendar( "utc" ).isoformat()
-        date1 = endtime.calendar( "utc" ).isoformat()
+
+        if float( extra['occ_duration'] ) <= 0.0: 
+            date0 = cal.isoformat()
+            date1 = date0
+        else: 
+            date0 = Time( gps=extra['gps_seconds'] ).calendar( "utc" ).isoformat()
+            date1 = Time( gps=extra['gps_seconds']+extra['occ_duration'] ).calendar( "utc" ).isoformat()
+
         e.setncatts( {
             'RangeBeginningDate': date0[:10], 
             'RangeBeginningTime': date0[11:19], 
@@ -450,8 +456,14 @@ def level2a2aws( jpl_level2a_file, level2a_file, mission, transmitter, receiver,
 
     if { "gps_seconds", "occ_duration" }.issubset( extra.keys() ) and \
             { "RangeBeginningDate", "RangeBeginningTime", "RangeEndingDate", "RangeEndingTime" }.issubset( e.ncattrs() ): 
-        date0 = Time( gps=extra['gps_seconds'] ).calendar( "utc" ).isoformat()
-        date1 = Time( gps=extra['gps_seconds']+extra['occ_duration'] ).calendar( "utc" ).isoformat()
+
+        if float( extra['occ_duration'] ) <= 0.0: 
+            date0 = cal.isoformat()
+            date1 = date0
+        else: 
+            date0 = Time( gps=extra['gps_seconds'] ).calendar( "utc" ).isoformat()
+            date1 = Time( gps=extra['gps_seconds']+extra['occ_duration'] ).calendar( "utc" ).isoformat()
+
         e.setncatts( {
             'RangeBeginningDate': date0[:10], 
             'RangeBeginningTime': date0[11:19], 
@@ -646,8 +658,14 @@ def level2b2aws( jpl_level2b_file, level2b_file, mission, transmitter, receiver,
 
     if { "gps_seconds", "occ_duration" }.issubset( extra.keys() ) and \
             { "RangeBeginningDate", "RangeBeginningTime", "RangeEndingDate", "RangeEndingTime" }.issubset( e.ncattrs() ): 
-        date0 = Time( gps=extra['gps_seconds'] ).calendar( "utc" ).isoformat()
-        date1 = Time( gps=extra['gps_seconds']+extra['occ_duration'] ).calendar( "utc" ).isoformat()
+
+        if float( extra['occ_duration'] ) <= 0.0: 
+            date0 = cal.isoformat()
+            date1 = date0
+        else: 
+            date0 = Time( gps=extra['gps_seconds'] ).calendar( "utc" ).isoformat()
+            date1 = Time( gps=extra['gps_seconds']+extra['occ_duration'] ).calendar( "utc" ).isoformat()
+
         e.setncatts( {
             'RangeBeginningDate': date0[:10], 
             'RangeBeginningTime': date0[11:19], 

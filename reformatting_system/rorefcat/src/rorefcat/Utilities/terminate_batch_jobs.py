@@ -9,7 +9,7 @@ def main():
     client = session.client('batch')
     for status in ['RUNNABLE','RUNNING']:#, 'SUBMITTED', 'PENDING', 'RUNNABLE', 'STARTING', 'RUNNING', 'RUNNABLE' ]: #'RUNNABLE'
         response = client.list_jobs(
-            jobQueue= 'ro-processing-SPOT', #'ro-processing-EC2' 'ro-processing-SPOT'
+            jobQueue= 'ro-processing-EC2', #'ro-processing-EC2' 'ro-processing-SPOT'
             jobStatus= status,
             maxResults=1500,
         )

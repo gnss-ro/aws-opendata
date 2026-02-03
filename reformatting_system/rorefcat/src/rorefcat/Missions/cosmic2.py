@@ -62,6 +62,14 @@ def signals( transmitter, receiver, time ):
                 { 'standardName': "L2", 'rinex3name': "L2C", 'loop': "open" } 
               ]
 
+    #  Galileo. 
+
+    elif constellation == "E": 
+        ret = [ 
+                { 'standardName': "C/A", 'rinex3name': "L1C", 'loop': "open" },
+                { 'standardName': "E5a(Q)", 'rinex3name': "L5Q", 'loop': "open" } 
+              ]
+
     else: 
         raise missionsError( "UndefinedSignals", f'No signals defined for constellation ID "{constellation}" for mission "{mission}".' )
 
@@ -73,7 +81,7 @@ satellites = []
 for i in range(6): 
     rec = { 'signals': signals }
     rec.update( { 'aws': { 'mission': mission, 'receiver': f"cosmic2e{i+1:1d}" } } )        #  AWS name
-    rec.update( { 'jpl': { 'mission': mission, 'receiver': f"cosmic2e{i+1:1d}" } } )        #  JPL name
+    rec.update( { 'jpl': { 'mission': mission, 'receiver': f"c2f{i+1:1d}" } } )        #  JPL name
     rec.update( { 'ucar': { 'mission': "cosmic2", 'receiver': f"C2E{i+1:1d}" } } )          #  UCAR name
     rec.update( { 'wmo': { 'satellite_id': 750+i, 'instrument_id': 104 } } )                #  WMO ID
     satellites.append( rec )

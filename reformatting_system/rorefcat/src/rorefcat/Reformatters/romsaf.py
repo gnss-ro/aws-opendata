@@ -306,7 +306,7 @@ def level2a2aws(inputfile, outputfile, mission, transmitter, receiver,
 
     #  Read in the reference time of the occultation.
 
-    refTime = Time( utc=Calendar(year=2000,month=1,day=1) ) + d.variables['time'][:].data[0]
+    refTime = Time( utc=Calendar(year=2000,month=1,day=1) ) + d.variables['time'][:][0]
     cal = refTime.calendar( "utc" )
 
     #  Get reference longitude, latitude, local_time, gps_seconds, setting.
@@ -317,8 +317,8 @@ def level2a2aws(inputfile, outputfile, mission, transmitter, receiver,
     local_time = np.arctan2( -np.sin(x), -np.cos(x) ) * 12/np.pi + 12   # back to hours
 
     ret['metadata'].update( {
-            'longitude': d.variables['lon'][0].data,
-            'latitude': d.variables['lat'][0].data,
+            'longitude': d.variables['lon'][0],
+            'latitude': d.variables['lat'][0],
             'local_time': local_time
             } )
 
@@ -407,8 +407,14 @@ def level2a2aws(inputfile, outputfile, mission, transmitter, receiver,
 
     if { "gps_seconds", "occ_duration" }.issubset( extra.keys() ) and \
             { "RangeBeginningDate", "RangeBeginningTime", "RangeEndingDate", "RangeEndingTime" }.issubset( e.ncattrs() ): 
-        date0 = Time( gps=extra['gps_seconds'] ).calendar( "utc" ).isoformat()
-        date1 = Time( gps=extra['gps_seconds']+extra['occ_duration'] ).calendar( "utc" ).isoformat()
+
+        if float( extra['occ_duration'] ) <= 0.0: 
+            date0 = cal.isoformat()
+            date1 = date0
+        else: 
+            date0 = Time( gps=extra['gps_seconds'] ).calendar( "utc" ).isoformat()
+            date1 = Time( gps=extra['gps_seconds']+extra['occ_duration'] ).calendar( "utc" ).isoformat()
+
         e.setncatts( {
             'RangeBeginningDate': date0[:10], 
             'RangeBeginningTime': date0[11:19], 
@@ -464,19 +470,19 @@ def level2a2aws(inputfile, outputfile, mission, transmitter, receiver,
     if "refTime" in outvarsnames:
         outvars['refTime'].assignValue( refTime - gps0 )
     if "refLongitude" in outvarsnames:
-        outvars['refLongitude'].assignValue( d.variables['lon'][0].data )
+        outvars['refLongitude'].assignValue( d.variables['lon'][0] )
     if "refLatitude" in outvarsnames:
-        outvars['refLatitude'].assignValue( d.variables['lat'][0].data )
+        outvars['refLatitude'].assignValue( d.variables['lat'][0] )
     if "equatorialRadius" in outvarsnames:
         outvars['equatorialRadius'].assignValue( semi_major_axis )
     if "polarRadius" in outvarsnames:
         outvars['polarRadius'].assignValue( semi_minor_axis )
     if "undulation" in outvarsnames:
-        outvars['undulation'].assignValue( d.variables['undulation'][0].data )
+        outvars['undulation'].assignValue( d.variables['undulation'][0] )
     if "centerOfCurvature" in outvarsnames:
-        outvars['centerOfCurvature'][:] = d.variables['r_coc'][:].data.squeeze()
+        outvars['centerOfCurvature'][:] = d.variables['r_coc'][:].squeeze()
     if "radiusOfCurvature" in outvarsnames:
-        outvars['radiusOfCurvature'].assignValue( d.variables['roc'][0].data )
+        outvars['radiusOfCurvature'].assignValue( d.variables['roc'][0] )
 
     #  Occultation geometry. First try to obtain information on occultation
     #  geometry from the input data file itself. If the information is not
@@ -519,43 +525,43 @@ def level2a2aws(inputfile, outputfile, mission, transmitter, receiver,
 
     if flip_RO:
         if "rawBendingAngle" in outvarsnames:
-            outvars['rawBendingAngle'][impact_iout,0] = np.flip( d.variables['bangle_L1'][:].data.squeeze()[impact_good] )
-            outvars['rawBendingAngle'][impact_iout,1] = np.flip( d.variables['bangle_L2'][:].data.squeeze()[impact_good] )
+            outvars['rawBendingAngle'][impact_iout,0] = np.flip( d.variables['bangle_L1'][:].squeeze()[impact_good] )
+            outvars['rawBendingAngle'][impact_iout,1] = np.flip( d.variables['bangle_L2'][:].squeeze()[impact_good] )
         if "impactParameter" in outvarsnames:
-            outvars['impactParameter'][impact_iout] = np.flip( d.variables['impact_opt'][:].data.squeeze()[impact_good] )
+            outvars['impactParameter'][impact_iout] = np.flip( d.variables['impact_opt'][:].squeeze()[impact_good] )
         if "bendingAngle" in outvarsnames:
-            outvars['bendingAngle'][impact_iout] = np.flip( d.variables['bangle'][:].data.squeeze()[impact_good] )
+            outvars['bendingAngle'][impact_iout] = np.flip( d.variables['bangle'][:].squeeze()[impact_good] )
         if "optimizedBendingAngle" in outvarsnames:
-            outvars['optimizedBendingAngle'][impact_iout] = np.flip( d.variables['bangle_opt'][:].data.squeeze()[impact_good] )
+            outvars['optimizedBendingAngle'][impact_iout] = np.flip( d.variables['bangle_opt'][:].squeeze()[impact_good] )
         if "bendingAngleUncertainty" in outvarsnames:
-            outvars['bendingAngleUncertainty'][impact_iout] = np.flip( d.variables['bangle_sigma'][:].data.squeeze()[impact_good] )
+            outvars['bendingAngleUncertainty'][impact_iout] = np.flip( d.variables['bangle_sigma'][:].squeeze()[impact_good] )
 
     else:
         if "rawBendingAngle" in outvarsnames:
-            outvars['rawBendingAngle'][impact_iout,0] = d.variables['bangle_L1'][:].data.squeeze()[impact_good]
-            outvars['rawBendingAngle'][impact_iout,1] = d.variables['bangle_L2'][:].data.squeeze()[impact_good]
+            outvars['rawBendingAngle'][impact_iout,0] = d.variables['bangle_L1'][:].squeeze()[impact_good]
+            outvars['rawBendingAngle'][impact_iout,1] = d.variables['bangle_L2'][:].squeeze()[impact_good]
         if "impactParameter" in outvarsnames:
-            outvars['impactParameter'][impact_iout] = d.variables['impact_opt'][:].data.squeeze()[impact_good]
+            outvars['impactParameter'][impact_iout] = d.variables['impact_opt'][:].squeeze()[impact_good]
         if "optimizedBendingAngle" in outvarsnames:
-            outvars['optimizedBendingAngle'][impact_iout] = d.variables['bangle_opt'][:].data.squeeze()[impact_good]
+            outvars['optimizedBendingAngle'][impact_iout] = d.variables['bangle_opt'][:].squeeze()[impact_good]
         if "bendingAngleUncertainty" in outvarsnames:
-            outvars['bendingAngleUncertainty'][impact_iout] = d.variables['bangle_sigma'][:].data.squeeze()[impact_good]
+            outvars['bendingAngleUncertainty'][impact_iout] = d.variables['bangle_sigma'][:].squeeze()[impact_good]
 
     #  Atmospheric profile variables.
 
     if flip_met:
         if "altitude" in outvarsnames:
-            outvars['altitude'][level_iout] = np.flip( d.variables['alt_refrac'][:].data.squeeze()[level_good] )
+            outvars['altitude'][level_iout] = np.flip( d.variables['alt_refrac'][:].squeeze()[level_good] )
         if "longitude" in outvarsnames:
-            outvars['longitude'][level_iout] = np.flip( d.variables['lon_tp'][:].data.squeeze()[level_good] )
+            outvars['longitude'][level_iout] = np.flip( d.variables['lon_tp'][:].squeeze()[level_good] )
         if "latitude" in outvarsnames:
-            outvars['latitude'][level_iout] = np.flip( d.variables['lat_tp'][:].data.squeeze()[level_good] )
+            outvars['latitude'][level_iout] = np.flip( d.variables['lat_tp'][:].squeeze()[level_good] )
         if "orientation" in outvarsnames:
-            outvars['orientation'][level_iout] = np.flip( d.variables['azimuth_tp'][:].data.squeeze()[level_good] )
+            outvars['orientation'][level_iout] = np.flip( d.variables['azimuth_tp'][:].squeeze()[level_good] )
         if "geopotential" in outvarsnames:
-            outvars['geopotential'][level_iout] = np.flip( d.variables['geop_refrac'][:].data.squeeze()[level_good] * gravity )
+            outvars['geopotential'][level_iout] = np.flip( d.variables['geop_refrac'][:].squeeze()[level_good] * gravity )
         if "refractivity" in outvarsnames:
-            outvars['refractivity'][level_iout] = np.flip( d.variables['refrac'][:].data.squeeze()[level_good] )
+            outvars['refractivity'][level_iout] = np.flip( d.variables['refrac'][:].squeeze()[level_good] )
         if "dryPressure" in outvarsnames:
             outvars['dryPressure'][impact_iout] = np.flip( dryPressure[impact_good] )
         if "quality" in outvarsnames:
@@ -563,17 +569,17 @@ def level2a2aws(inputfile, outputfile, mission, transmitter, receiver,
 
     else:
         if "altitude" in outvarsnames:
-            outvars['altitude'][level_iout] = d.variables['alt_refrac'][:].data.squeeze()[level_good]
+            outvars['altitude'][level_iout] = d.variables['alt_refrac'][:].squeeze()[level_good]
         if "longitude" in outvarsnames:
-            outvars['longitude'][level_iout] = d.variables['lon_tp'][:].data.squeeze()[level_good]
+            outvars['longitude'][level_iout] = d.variables['lon_tp'][:].squeeze()[level_good]
         if "latitude" in outvarsnames:
-            outvars['latitude'][level_iout] = d.variables['lat_tp'][:].data.squeeze()[level_good]
+            outvars['latitude'][level_iout] = d.variables['lat_tp'][:].squeeze()[level_good]
         if "orientation" in outvarsnames:
-            outvars['orientation'][level_iout] = d.variables['azimuth_tp'][:].data.squeeze()[level_good]
+            outvars['orientation'][level_iout] = d.variables['azimuth_tp'][:].squeeze()[level_good]
         if "geopotential" in outvarsnames:
-            outvars['geopotential'][level_iout] = d.variables['geop_refrac'][:].data.squeeze()[level_good] * gravity
+            outvars['geopotential'][level_iout] = d.variables['geop_refrac'][:].squeeze()[level_good] * gravity
         if "refractivity" in outvarsnames:
-            outvars['refractivity'][level_iout] = d.variables['refrac'][:].data.squeeze()[level_good]
+            outvars['refractivity'][level_iout] = d.variables['refrac'][:].squeeze()[level_good]
         if "dryPressure" in outvarsnames:
             outvars['dryPressure'][impact_iout] = dryPressure[impact_good]
         if "quality" in outvarsnames:
@@ -762,8 +768,14 @@ def level2b2aws( inputfile, outputfile, mission, transmitter, receiver,
 
     if { "gps_seconds", "occ_duration" }.issubset( extra.keys() ) and \
             { "RangeBeginningDate", "RangeBeginningTime", "RangeEndingDate", "RangeEndingTime" }.issubset( e.ncattrs() ): 
-        date0 = Time( gps=extra['gps_seconds'] ).calendar( "utc" ).isoformat()
-        date1 = Time( gps=extra['gps_seconds']+extra['occ_duration'] ).calendar( "utc" ).isoformat()
+
+        if float( extra['occ_duration'] ) <= 0.0: 
+            date0 = cal.isoformat()
+            date1 = date0
+        else: 
+            date0 = Time( gps=extra['gps_seconds'] ).calendar( "utc" ).isoformat()
+            date1 = Time( gps=extra['gps_seconds']+extra['occ_duration'] ).calendar( "utc" ).isoformat()
+
         e.setncatts( {
             'RangeBeginningDate': date0[:10], 
             'RangeBeginningTime': date0[11:19], 

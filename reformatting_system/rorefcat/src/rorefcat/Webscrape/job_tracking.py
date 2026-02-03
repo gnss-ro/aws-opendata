@@ -5,9 +5,9 @@ import boto3
 
 #create s3 boto3 object and session
 try:
-    session = boto3.Session( profile_name="nasa",region_name= "us-east-1")
+    session = boto3.Session( profile_name="nasa", region_name="us-east-1" )
 except:
-    session = boto3.Session( region_name= "us-east-1")
+    session = boto3.Session( region_name="us-east-1" )
 
 dynamodb = session.resource('dynamodb')
 batch = session.client( service_name="batch")
@@ -16,9 +16,9 @@ tracking_table = dynamodb.Table("job-tracking")
 
 def create(job_tracking):
     #Put Item:
-    tracking_table.put_item(
-        Item = job_tracking
-    )
+    return
+    #racking_table.put_item(
+    #   Item = job_tracking)
 
 def submit_batch_test(job_tracking):
     if "romsafD" in job_tracking['jobname'] or "clean" in job_tracking['jobname'] or "sync" in job_tracking['jobname']:

@@ -133,7 +133,7 @@ def batchprocess( jsonfile, version, session=None, workingdir=None, clobber=Fals
         if ret_varnames['input_file_type'] in valid_file_types[processing_center]:
             file_type = ret_varnames['input_file_type']
 
-        if ret_varnames['input_file_type'] in [ "atmPhs", "conPhs", "calibratedPhase", "1B" ]:
+        elif ret_varnames['input_file_type'] in [ "atmPhs", "conPhs", "calibratedPhase", "1B" ]:
             file_type = "level1b"
 
         elif ret_varnames['input_file_type'] in [ "atmPrf", "atm", "refractivityRetrieval" ]:

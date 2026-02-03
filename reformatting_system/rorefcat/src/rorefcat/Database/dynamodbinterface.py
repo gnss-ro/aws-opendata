@@ -282,10 +282,11 @@ def _defsortkey( transmitter, receiver, time ):
 
 class RODataBase():
 
-    def __init__( self, session, table_name, timewindow=8, bucketname=None ):
+    def __init__( self, session, version, timewindow=8, bucketname=None ):
         """Create an instance that accesses a DynamoDB database of radio
-        occultation soundings. The arguments are for a boto3 session and
-        the name of the DynamoDB table (table_name).
+        occultation soundings. The mandatory arguments are for (1) an 
+        instance of boto3.Session that includes appropriate authentication, 
+        and (2) an instance of rorefcat.Versions.versions. 
 
         The timewindow prescribes the time window that uniquely defines an
         occultation, in minutes. Different processing centers define the
@@ -293,11 +294,9 @@ class RODataBase():
         allowable difference in the time of the same occultation as defined
         by different RO processing centers.
 
-        If bucketname is provided, the pointers to data files are first 
-        checked to see if the file they point to exist in the S3 bucket 
-        named *bucketname*. Only if they exist is the pointer provided in 
-        the occultation entry information. If bucketname is not provided, 
-        then no such check is performed."""
+        If bucketname is provided, the references to data files are first 
+        searched in the named S3 bucket *bucketname*.  If bucketname is not 
+        provided, then no such check is performed."""
 
         dynamoDB = session.resource( 'dynamodb' )
         dynamoDBtable = dynamoDB.Table(table_name)
@@ -310,7 +309,8 @@ class RODataBase():
             LOGGER.exception( json.dumps( excpt.args ) )
 
         self._session = session
-        self._database = dynamoDBtable
+        self._version = version
+        self._database = version.dynamoDBtable
         self._timewindow = timewindow
 
         if bucketname is None: 
@@ -1049,7 +1049,7 @@ class ProcessReformat():
             kwargs = {} 
         else: 
             kwargs = { 'bucketname': output_s3['bucket'] }
-        database = RODataBase( self.session, self.table_name, **kwargs )
+        database = RODataBase( self.session, self.version, **kwargs )
 
         #  Parse the input file name and create an entry for this occultation in the
         #  database (if one doesn't already exist).
