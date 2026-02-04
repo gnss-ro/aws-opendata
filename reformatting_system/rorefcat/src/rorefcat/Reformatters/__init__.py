@@ -53,7 +53,7 @@ LOGGER = logging.getLogger( __name__ )
 
 reformatters = {}
 varnames = {}
-package_root = os.path.dirname( __file__ )
+package_root = os.path.dirname( os.path.abspath( __file__ ) )
 files = [ f for f in os.listdir(package_root) if f[-3:] == ".py" and f not in [ "__init__.py", "template.py" ] ]
 
 for file in files: 

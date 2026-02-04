@@ -254,13 +254,15 @@ def format_level1b( output,
     varname = 'startTime'
     var = output.createVariable( varname, 'd' )
     var.setncatts( { 'units': 'GPS seconds', \
-            'description': 'Reference start time of the occultation at the receiver' } )
+            'description': 'Reference start time of the occultation at the receiver', 
+            '_FillValue': _FillValue_double } )
     outvars.update( { varname: var } )
 
     varname = 'endTime'
     var = output.createVariable( varname, 'd' )
     var.setncatts( { 'units': 'GPS seconds', \
-            'description': 'Time of last data point at the receiver' } )
+            'description': 'Time of last data point at the receiver', 
+            '_FillValue': _FillValue_double } )
     outvars.update( { varname: var } )
 
     varname = 'navBitsPresent'
@@ -273,7 +275,8 @@ def format_level1b( output,
             'then the navigation message bits have not been removed. ' + \
             'If the signal is a data-less "pilot" tone, meaning there is ' + \
             'no navigation message on the signal, the variable is ' + \
-            'meaningless but is set to True nonetheless.' } )
+            'meaningless but is set to True nonetheless.', 
+              '_FillValue': _FillValue_byte } )
     outvars.update( { varname: var } )
 
     varname = 'snrCode'
@@ -291,52 +294,60 @@ def format_level1b( output,
     varname = 'carrierFrequency'
     var = output.createVariable( 'carrierFrequency', 'd', ('signal',) )
     var.setncatts( { 'units': 'Hz', 'description': \
-                'Carrier frequency of the tracked GNSS signal' } )
+                'Carrier frequency of the tracked GNSS signal', 
+                '_FillValue': _FillValue_double } )
     outvars.update( { varname: var } )
 
     varname = 'time'
     var = output.createVariable( varname, 'd', ('time',) )
-    var.setncatts( { 'units': 'seconds', 'description': \
-                'Observation times, the independent coordinate, with respect to startTime' } )
+    var.setncatts( { 'units': 'seconds', 
+                    'description': 'Observation times, the independent coordinate, with respect to startTime', 
+                    '_FillValue': _FillValue_double } )
     outvars.update( { varname: var } )
 
     varname = 'snr'
     var = output.createVariable( varname, 'd', ('time','signal') )
-    var.setncatts( { 'units': 'V/V (1 Hz)', 'description': \
-                'Signal-to-noise ratio' } )
+    var.setncatts( { 'units': 'V/V (1 Hz)', 
+                'description': 'Signal-to-noise ratio', 
+                '_FillValue': _FillValue_double } )
     outvars.update( { varname: var } )
 
     varname = 'excessPhase'
     var = output.createVariable( varname, 'd', ('time','signal') )
-    var.setncatts( { 'units': 'm', 'description': 'Excess ' + \
-                'phase, or phase in excess of the vacuum optical path' } )
+    var.setncatts( { 'units': 'm', 
+                'description': 'Excess phase, or phase in excess of the vacuum optical path', 
+                '_FillValue': _FillValue_double } )
     outvars.update( { varname: var } )
 
     varname = 'rangeModel'
     var = output.createVariable( varname, 'd', ('time','signal') )
-    var.setncatts( { 'units': 'm', 'description': 'The model ' + \
-                'for pseudo-range used in open-loop tracking less transmitter and ' + \
-                'receiver clock biases' } )
+    var.setncatts( { 'units': 'm', 
+                'description': 'The model for pseudo-range used in open-loop tracking ' + \
+                        'less transmitter and receiver clock biases', 
+                '_FillValue': _FillValue_double } )
     outvars.update( { varname: var } )
 
     varname = 'phaseModel'
     var = output.createVariable( varname, 'd', ('time','signal') )
-    var.setncatts( { 'units': 'm', 'description': 'The model ' + \
-                'for phase used in open-loop tracking' } )
+    var.setncatts( { 'units': 'm', 
+                'description': 'The model for phase used in open-loop tracking', 
+                '_FillValue': _FillValue_double } )
     outvars.update( { varname: var } )
 
     varname = 'positionLEO'
     var = output.createVariable( varname, 'd', ('time', 'xyz'))
-    var.setncatts( { 'units': 'm', 'description': 'Receiver ' + \
-                '(low-Earth orbiter -- LEO) satellite position in Cartesian Earth-centered ' + \
-                'fixed (ECF) coordinates' } )
+    var.setncatts( { 'units': 'm', 
+                'description': 'Receiver (low-Earth orbiter -- LEO) satellite position ' + \
+                        'in Cartesian Earth-centered fixed (ECF) coordinates', 
+                '_FillValue': _FillValue_double } )
     outvars.update( { varname: var } )
 
     varname = 'positionGNSS'
     var = output.createVariable( varname, 'd', ('time', 'xyz'))
-    var.setncatts( { 'units': 'm', 'description': \
-                'GNSS transmitter position in Cartesian Earth-centered fixed ' + \
-                '(ECF) coordinates at the time of transmission of the signal' } )
+    var.setncatts( { 'units': 'm', 
+                'description': 'GNSS transmitter position in Cartesian Earth-centered fixed ' + \
+                        '(ECF) coordinates at the time of transmission of the signal', 
+                '_FillValue': _FillValue_double } )
     outvars.update( { varname: var } )
 
     #  Done.
@@ -416,21 +427,24 @@ def format_level2a( output,
     var = output.createVariable( varname, 'd' )
     var.setncatts( { \
         'units': "GPS seconds", \
-        'description': "The reference time of the occultation" } )
+        'description': "The reference time of the occultation", 
+        '_FillValue': _FillValue_double } )
     outvars.update( { varname: var } )
 
     varname = "refLongitude"
     var = output.createVariable( varname, 'f' )
     var.setncatts( { \
         'units': "degrees east", \
-        'description': "The reference longitude of the occultation" } )
+        'description': "The reference longitude of the occultation", 
+        '_FillValue': _FillValue_float } )
     outvars.update( { varname: var } )
 
     varname = "refLatitude"
     var = output.createVariable( varname, 'f' )
     var.setncatts( { \
         'units': "degrees north", \
-        'description': "The reference latitude of the occultation" } )
+        'description': "The reference latitude of the occultation", 
+        '_FillValue': _FillValue_float } )
     outvars.update( { varname: var } )
 
     varname = "equatorialRadius"
@@ -438,7 +452,8 @@ def format_level2a( output,
     var.setncatts( { \
         'units': "m", \
         'description': "The equatorial radius that describes the ellipsoid " + \
-            "that approximates the Earth's mean sea-level" } )
+                "that approximates the Earth's mean sea-level", 
+        '_FillValue': _FillValue_double } )
     outvars.update( { varname: var } )
 
     varname = "polarRadius"
@@ -446,7 +461,8 @@ def format_level2a( output,
     var.setncatts( { \
         'units': "m", \
         'description': "The polar radius that describes the ellipsoid " + \
-            "that approximates the Earth's mean sea-level" } )
+                "that approximates the Earth's mean sea-level",
+        '_FillValue': _FillValue_double } )
     outvars.update( { varname: var } )
 
     varname = "undulation"
@@ -454,9 +470,10 @@ def format_level2a( output,
     var.setncatts( { \
         'units': "m", \
         'description': "The geoid undulation at the location of the RO " + \
-            "sounding; add this quantity to the mean sea-level ellipsoid " + \
-            "described by equatorialRadius and polarRadius to determine the " + \
-            "position of the mean sea-level geoid" } )
+                "sounding; add this quantity to the mean sea-level ellipsoid " + \
+                "described by equatorialRadius and polarRadius to determine the " + \
+                "position of the mean sea-level geoid", 
+        '_FillValue': _FillValue_double } )
     outvars.update( { varname: var } )
 
     varname = "centerOfCurvature"
@@ -464,14 +481,16 @@ def format_level2a( output,
     var.setncatts( { \
         'units': "m", \
         'description': "The reference center of curvature for the occultation",
-        'reference_frame': "ECEF" } )
+        'reference_frame': "ECEF", 
+        '_FillValue': _FillValue_double } )
     outvars.update( { varname: var } )
 
     varname = "radiusOfCurvature"
     var = output.createVariable( varname, 'd' )
     var.setncatts( { \
         'units': "m", \
-        'description': "The effective radius of curvature of the occultation" } )
+        'description': "The effective radius of curvature of the occultation", 
+        '_FillValue': _FillValue_double } )
     outvars.update( { varname: var } )
 
     varname = "impactParameter"
@@ -479,14 +498,16 @@ def format_level2a( output,
     var.setncatts( { \
         'units': "m", \
         'description': "The impact parameter is the independent coordinate of " + \
-            "retrievals of bending angle" } )
+                "retrievals of bending angle", 
+        '_FillValue': _FillValue_double } )
     outvars.update( { varname: var } )
 
     varname = "carrierFrequency"
     var = output.createVariable( varname, 'd', dimensions=("signal",) )
     var.setncatts( { \
         'units': "Hz", \
-        'description': "Carrier frequency of the tracked GNSS signal" } )
+        'description': "Carrier frequency of the tracked GNSS signal", 
+        '_FillValue': _FillValue_double } )
     outvars.update( { varname: var } )
 
     varname = "rawBendingAngle"
@@ -494,8 +515,9 @@ def format_level2a( output,
     var.setncatts( { \
         'units': "radians", \
         'description': "The bending angle for each signal, unoptimzied, " + \
-            "not fused with a model, not corrected for the ionospheric " + \
-            "influence, positive for downward bending" } )
+                "not fused with a model, not corrected for the ionospheric " + \
+                "influence, positive for downward bending", 
+        '_FillValue': _FillValue_double } )
     outvars.update( { varname: var } )
 
     varname = "bendingAngle"
@@ -503,7 +525,8 @@ def format_level2a( output,
     var.setncatts( { \
         'units': "radians", \
         'description': "The unoptimized bending angle calibrated to " + \
-            "eliminate ionospheric influence, positive for downward bending" } )
+                "eliminate ionospheric influence, positive for downward bending", 
+        '_FillValue': _FillValue_double } )
     outvars.update( { varname: var } )
 
     varname = "optimizedBendingAngle"
@@ -511,29 +534,33 @@ def format_level2a( output,
     var.setncatts( { \
         'units': "radians", \
         'description': "The bending angle calibrated to eliminate " + \
-            "ionospheric influence and fused with a model by a " + \
-            "statistical method, positive for downward bending" } )
+                "ionospheric influence and fused with a model by a " + \
+                "statistical method, positive for downward bending", 
+        '_FillValue': _FillValue_double } )
     outvars.update( { varname: var } )
 
     varname = "altitude"
     var = output.createVariable( varname, 'f', dimensions=("level",) )
     var.setncatts( { \
         'units': "m", \
-        'description': "Altitude above the mean sea-level geoid" } )
+        'description': "Altitude above the mean sea-level geoid", 
+        '_FillValue': _FillValue_float } )
     outvars.update( { varname: var } )
 
     varname = "longitude"
     var = output.createVariable( varname, 'f', dimensions=("level",) )
     var.setncatts( { \
         'units': "degrees east", \
-        'description': "Longitude of the occultation tangent point" } )
+        'description': "Longitude of the occultation tangent point", 
+        '_FillValue': _FillValue_float } )
     outvars.update( { varname: var } )
 
     varname = "latitude"
     var = output.createVariable( varname, 'f', dimensions=("level",) )
     var.setncatts( { \
         'units': "degrees north", \
-        'description': "Latitude of the occultation tangent point" } )
+        'description': "Latitude of the occultation tangent point", 
+        '_FillValue': _FillValue_float } )
     outvars.update( { varname: var } )
 
     varname = "orientation"
@@ -541,8 +568,9 @@ def format_level2a( output,
     var.setncatts( { \
         'units': "degrees", \
         'description': "The direction of the occultation ray, " + \
-            "transmitter to receiver, at the occultation tangent " + \
-            "point, measured eastward from north" } )
+                "transmitter to receiver, at the occultation tangent " + \
+                "point, measured eastward from north", 
+        '_FillValue': _FillValue_float } )
     outvars.update( { varname: var } )
 
     varname = "geopotential"
@@ -550,16 +578,18 @@ def format_level2a( output,
     var.setncatts( { \
         'units': "J/kg", \
         'description': "Geopotential energy per unit mass at the " + \
-            "occultation tangent point; divide by the WMO standard " + \
-            "constant for gravity (J/kg/m) to obtain geopotential " + \
-            "height (gpm)" } )
+                "occultation tangent point; divide by the WMO standard " + \
+                "constant for gravity (J/kg/m) to obtain geopotential " + \
+                "height (gpm)", 
+        '_FillValue': _FillValue_double } )
     outvars.update( { varname: var } )
 
     varname = "refractivity"
     var = output.createVariable( varname, 'd', dimensions=("level",) )
     var.setncatts( { \
         'units': "N-units", \
-        'description': "Microwave refractivity at the occultation tangent point" } )
+        'description': "Microwave refractivity at the occultation tangent point", 
+        '_FillValue': _FillValue_double } )
     outvars.update( { varname: var } )
 
     varname = "dryPressure"
@@ -567,27 +597,31 @@ def format_level2a( output,
     var.setncatts( { \
         'units': "Pa", \
         'description': "Dry pressure at the occultation tangent point; " + \
-            "it is the pressure retrieved when ignoring the contribution " + \
-            "of water vapor to microwave refractivity, the equation of " + \
-            "state, and the hydrostatic equation; see " + \
-            "doi:10.5194/amt-7-2883-2014" } )
+                "it is the pressure retrieved when ignoring the contribution " + \
+                "of water vapor to microwave refractivity, the equation of " + \
+                "state, and the hydrostatic equation; see " + \
+                "doi:10.5194/amt-7-2883-2014", 
+        '_FillValue': _FillValue_double } )
     outvars.update( { varname: var } )
 
     varname = "quality"
     var = output.createVariable( varname, 'f', dimensions=("level",) )
     var.setncatts( { \
         'units': "none", \
-        'description': "Quality of retrieval" } )
+        'description': "Quality of retrieval", 
+        '_FillValue': _FillValue_float } )
     outvars.update( { varname: var } )
 
-    varname = "superRefractionAltitude"
+    varname = "superRefractionImpactHeight"
     var = output.createVariable( varname, 'd' )
     var.setncatts( { \
         'units': "m", \
-        'description': "The altitude above the mean sea-level geoid of " + \
-            "the highest super-refracting layer. If super-refraction is " + \
-            "not analyzed, leave as fill values; if no super-refraction " + \
-            "is found, set to -1000.0." } )
+        'description': "The impact height---or the impact parameter that defines " + \
+                "the location of the duct less the effective radius of curvature " + \
+                "(radiusOfCurvature)---of the highest super-refracting layer. If " + \
+                "super-refraction is not analyzed, leave as fill values; if " + \
+                "super-refraction is analyzed but not found, set to -1000.0", 
+        '_FillValue': _FillValue_double } )
     outvars.update( { varname: var } )
 
     varname = "setting"
@@ -677,7 +711,8 @@ def format_level2b( output,
     var = output.createVariable( varname, 'd' )
     var.setncatts( {
         'units': "GPS seconds",
-        'description': "The reference time of the occultation"
+        'description': "The reference time of the occultation", 
+        '_FillValue': _FillValue_double 
         } )
     outvars.update( { varname: var } )
 
@@ -685,7 +720,8 @@ def format_level2b( output,
     var = output.createVariable( varname, 'f' )
     var.setncatts( {
         'units': "degrees east",
-        'description': "The reference longitude of the occultation"
+        'description': "The reference longitude of the occultation", 
+        '_FillValue': _FillValue_float 
         } )
     outvars.update( { varname: var } )
 
@@ -693,7 +729,8 @@ def format_level2b( output,
     var = output.createVariable( varname, 'f' )
     var.setncatts( {
         'units': "degrees north",
-        'description': "The reference latitude of the occultation"
+        'description': "The reference latitude of the occultation", 
+        '_FillValue': _FillValue_float 
         } )
     outvars.update( { varname: var } )
 
@@ -701,7 +738,8 @@ def format_level2b( output,
     var = output.createVariable( varname, 'f', dimensions=("level",) )
     var.setncatts( {
         'units': "m",
-        'description': "Altitude above the mean sea-level geoid"
+        'description': "Altitude above the mean sea-level geoid", 
+        '_FillValue': _FillValue_float 
         } )
     outvars.update( { varname: var } )
 
@@ -711,7 +749,8 @@ def format_level2b( output,
         'units': "J/kg",
         'description': "Geopotential energy per unit mass at the occultation tangent point; "
                 "divide by a standard constant for gravity to obtain geopotential height "
-                "(gpm), typically the WMO standard (9.80665 J/kg/m)"
+                "(gpm), typically the WMO standard (9.80665 J/kg/m)", 
+        '_FillValue': _FillValue_float 
         } )
     outvars.update( { varname: var } )
 
@@ -719,7 +758,8 @@ def format_level2b( output,
     var = output.createVariable( varname, 'f', dimensions=("level",) )
     var.setncatts( {
         'units': "N-units",
-        'description': "Analyzed microwave refractivity at the occultation tangent point"
+        'description': "Analyzed microwave refractivity at the occultation tangent point", 
+        '_FillValue': _FillValue_float 
         } )
     outvars.update( { varname: var } )
 
@@ -727,15 +767,16 @@ def format_level2b( output,
     var = output.createVariable( varname, 'f', dimensions=("level",) )
     var.setncatts( {
         'units': "Pa",
-        'description': "Atmospheric pressure retrieved by statistical methods using a prior"
-        } )
+        'description': "Atmospheric pressure retrieved by statistical methods using a prior", 
+        '_FillValue': _FillValue_float } )
     outvars.update( { varname: var } )
 
     varname = "temperature"
     var = output.createVariable( varname, 'f', dimensions=("level",) )
     var.setncatts( {
         'units': "K",
-        'description': "Atmospheric temperature retrieved by statistical methods using a prior"
+        'description': "Atmospheric temperature retrieved by statistical methods using a prior", 
+        '_FillValue': _FillValue_float 
         } )
     outvars.update( { varname: var } )
 
@@ -743,7 +784,8 @@ def format_level2b( output,
     var = output.createVariable( varname, 'f', dimensions=("level",) )
     var.setncatts( {
         'units': "Pa",
-        'description': "Partial pressure of water vapor retrieved by statistical methods using a prior"
+        'description': "Partial pressure of water vapor retrieved by statistical methods using a prior", 
+        '_FillValue': _FillValue_float 
         } )
     outvars.update( { varname: var } )
 
@@ -751,7 +793,8 @@ def format_level2b( output,
     var = output.createVariable( varname, 'f', dimensions=("level",) )
     var.setncatts( { \
         'units': "none", \
-        'description': "Quality of retrieval" } )
+        'description': "Quality of retrieval", 
+        '_FillValue': _FillValue_float } )
     outvars.update( { varname: var } )
 
     varname = "superRefractionAltitude"
@@ -759,9 +802,10 @@ def format_level2b( output,
     var.setncatts( {
         'units': "m",
         'description': "The altitude above the mean sea-level geoid of " + \
-            "the highest super-refracting layer. If super-refraction is " + \
-            "not analyzed, leave as fill values; if no super-refraction " + \
-            "is found, set to -1000.0." } )
+                "the highest super-refracting layer. If super-refraction is " + \
+                "not analyzed, leave as fill values; if no super-refraction " + \
+                "is found, set to -1000.0.", 
+        '_FillValue': _FillValue_float } )
     outvars.update( { varname: var } )
 
     varname = "setting"
@@ -769,10 +813,10 @@ def format_level2b( output,
     var.setncatts( { \
         'units': "none", \
         'description': "A flag that states whether this is a rising or a " + \
-            "setting occultation. If the value is 1, it is a setting " + \
-            "occultation. If the value is 0, it is a rising occultation. " + \
-            "If left unfilled, then no determination of occultation geometry " + \
-            "is possible.",
+                "setting occultation. If the value is 1, it is a setting " + \
+                "occultation. If the value is 0, it is a rising occultation. " + \
+                "If left unfilled, then no determination of occultation geometry " + \
+                "is possible.",
         '_FillValue': _FillValue_byte } )
     outvars.update( { varname: var } )
 

@@ -2,10 +2,9 @@ name: "dev-awsgnssroutils"
 channels: 
   - local
   - nodefaults
-  - anaconda
   - conda-forge
 dependencies: 
-  - python==3.9
+  - python>=3.9
   - jupyter
   - pip
   - pip: 

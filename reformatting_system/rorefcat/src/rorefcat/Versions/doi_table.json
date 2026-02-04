@@ -1,0 +1,416 @@
+[
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/DYDPG4CQN6CF",
+    "Product Title": "GNSS radio occultation L1B excess phase and amplitude for CHAMP as contributed by EUMETSAT, V2.0",
+    "ShortName": "gnssro_champ_eumetsat_l1b"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/SOKHJ33MXJKA",
+    "Product Title": "GNSS radio occultation L1B excess phase and amplitude for CHAMP as contributed by UCAR, V2.0",
+    "ShortName": "gnssro_champ_jpl_l1b"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/VBYL02KGCXZZ",
+    "Product Title": "GNSS radio occultation L1A bending angle, refractivity, and dry pressure for CHAMP as contributed by JPL, V2.0",
+    "ShortName": "gnssro_champ_jpl_l2a"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/53L2BU2PNPGF",
+    "Product Title": "GNSS radio occultation L2B temperature, pressure, and water vapor retrieval for CHAMP as contributed by JPL, V2.0",
+    "ShortName": "gnssro_champ_jpl_l2b"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/ZWTQJU6RY2J0",
+    "Product Title": "GNSS radio occultation L2B bending angle, refractivity, and dry pressure for CHAMP as contributed by ROMSAF, V2.0",
+    "ShortName": "gnssro_champ_romsaf_l2a"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/O8TUJBJWZXV6",
+    "Product Title": "GNSS radio occultation L2B temperature, pressure, and water vapor retrieval for CHAMP as contributed by ROMSAF, V2.0",
+    "ShortName": "gnssro_champ_romsaf_l2b"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/9XYCTXU7OZM6",
+    "Product Title": "GNSS radio occultation L1B excess phase and amplitude for CHAMP as contributed by UCAR, V2.0",
+    "ShortName": "gnssro_champ_ucar_l1b"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/R2O1U71LNJTV",
+    "Product Title": "GNSS radio occultation L2A bending angle, refractivity, and dry pressure for CHAMP as contributed by UCAR, V2.0",
+    "ShortName": "gnssro_champ_ucar_l2a"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/HW8BAMCOKKMD",
+    "Product Title": "GNSS radio occultation L2B temperature, pressure, and water vapor retrieval for CHAMP as contributed by UCAR, V2.0",
+    "ShortName": "gnssro_champ_ucar_l2b"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/080OA43XZPQA",
+    "Product Title": "GNSS radio occultation L1B excess phase and amplitude for CNOFS as contributed by UCAR, V2.0",
+    "ShortName": "gnssro_cnofs_ucar_l1b"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/BDV1WK8FRT7H",
+    "Product Title": "GNSS radio occultation L2A bending angle, refractivity, and dry pressure for CNOFS as contributed by UCAR, V2.0",
+    "ShortName": "gnssro_cnofs_ucar_l2a"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/VVTX4OICMQ3C",
+    "Product Title": "GNSS radio occultation L2B temperature, pressure, and water vapor retrieval for CNOFS as contributed by UCAR, V2.0",
+    "ShortName": "gnssro_cnofs_ucar_l2b"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/EBI4BV3OASVI",
+    "Product Title": "GNSS radio occultation L1B excess phase and amplitude for COSMIC1 as contributed by EUMETSAT, version 2.0",
+    "ShortName": "gnssro_cosmic1_eumetsat_l1b"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/YJKUZ8E89RPA",
+    "Product Title": "GNSS radio occultation L1B excess phase and amplitude for COSMIC1 as contributed by JPL, version 2.0",
+    "ShortName": "gnssro_cosmic1_jpl_l1b"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/OGO7H9KP0HJD",
+    "Product Title": "GNSS radio occultation L2A bending angle, refractivity, and dry pressure for COSMIC1 as contributed by JPL, version 2.0",
+    "ShortName": "gnssro_cosmic1_jpl_l2a"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/SSN95SRAC6SP",
+    "Product Title": "GNSS radio occultation L2B temperature, pressure, and water vapor retrieval for COSMIC1 as contributed by JPL, version 2.0",
+    "ShortName": "gnssro_cosmic1_jpl_l2b"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/1L46XVI96XJM",
+    "Product Title": "GNSS radio occultation L2A bending angle, refractivity, and dry pressure for COSMIC1 as contributed by ROMSAF, version 2.0",
+    "ShortName": "gnssro_cosmic1_romsaf_l2a"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/1YLZ27BHSDTH",
+    "Product Title": "GNSS radio occultation L2B temperature, pressure, and water vapor retrieval for COSMIC1 as contributed by ROMSAF, version 2.0",
+    "ShortName": "gnssro_cosmic1_romsaf_l2b"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/0DUNAYQOBFSF",
+    "Product Title": "GNSS radio occultation L1B excess phase and amplitude for COSMIC1 as contributed by UCAR, version 2.0",
+    "ShortName": "gnssro_cosmic1_ucar_l1b"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/ZFX3HOUROTXZ",
+    "Product Title": "GNSS radio occultation L2A bending angle, refractivity, and dry pressure for COSMIC1 as contributed by UCAR, version 2.0",
+    "ShortName": "gnssro_cosmic1_ucar_l2a"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/YWOU7P8XZKZ2",
+    "Product Title": "GNSS radio occultation L2B temperature, pressure, and water vapor retrieval for COSMIC1 as contributed by UCAR, version 2.0",
+    "ShortName": "gnssro_cosmic1_ucar_l2b"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/28NE3QNGXDL5",
+    "Product Title": "GNSS radio occultation L1B excess phase and amplitude for COSMIC2 as contributed by UCAR, version 2.0",
+    "ShortName": "gnssro_cosmic2_ucar_l1b"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/XWYNF9VAP6TE",
+    "Product Title": "GNSS radio occultation L2A bending angle, refractivity, and dry pressure for COSMIC2 as contributed by UCAR, version 2.0",
+    "ShortName": "gnssro_cosmic2_ucar_l2a"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/OYRLHTEA04AE",
+    "Product Title": "GNSS radio occultation L2B temperature, pressure, and water vapor retrieval for COSMIC2 as contributed by UCAR, version 2.0",
+    "ShortName": "gnssro_cosmic2_ucar_l2b"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/7VNMO86UPDXU",
+    "Product Title": "GNSS radio occultation L1B excess phase and amplitude for GEOOPT as contributed by UCAR, V2.0",
+    "ShortName": "gnssro_geoopt_ucar_l1b"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/2OFQ7S0AO5YE",
+    "Product Title": "GNSS radio occultation L2A bending angle, refractivity, and dry pressure for GEOOPT as contributed by UCAR, V2.0",
+    "ShortName": "gnssro_geoopt_ucar_l2a"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/D8C6Z3TWH03K",
+    "Product Title": "GNSS radio occultation L2B temperature, pressure, and water vapor retrieval for GEOOPT as contributed by UCAR, V2.0",
+    "ShortName": "gnssro_geoopt_ucar_l2b"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/LRJAWY9KAYP3",
+    "Product Title": "GNSS radio occultation L1B excess phase and amplitude for GPSMET as contributed by UCAR, version 2.0",
+    "ShortName": "gnssro_gpsmet_ucar_l1b"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/8GXRM6SAERP5",
+    "Product Title": "GNSS radio occultation L2A bending angle, refractivity, and dry pressure for GPSMET as contributed by UCAR, version 2.0",
+    "ShortName": "gnssro_gpsmet_ucar_l2a"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/C9JWU2PDWNZI",
+    "Product Title": "GNSS radio occultation L2B temperature, pressure, and water vapor retrieval for GPSMET as contributed by UCAR, version 2.0",
+    "ShortName": "gnssro_gpsmet_ucar_l2b"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/FV9FOXS4CCW2",
+    "Product Title": "GNSS radio occultation L1B excess phase and amplitude for GRACE as contributed by EUMETSAT, V2.0",
+    "ShortName": "gnssro_grace_eumetsat_l1b"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/SUQKFFL7RLSW",
+    "Product Title": "GNSS radio occultation L1B excess phase and amplitude for GRACE as contributed by JPL, V2.0",
+    "ShortName": "gnssro_grace_jpl_l1b"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/WG8S9VJDKHYI",
+    "Product Title": "GNSS radio occultation L2A bending angle, refractivity, and dry pressure for GRACE as contributed by JPL, V2.0",
+    "ShortName": "gnssro_grace_jpl_l2a"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/A18TSMTME46P",
+    "Product Title": "GNSS radio occultation L2B temperature, pressure, and water vapor retrieval for GRACE as contributed by JPL, V2.0",
+    "ShortName": "gnssro_grace_jpl_l2b"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/O8K58JU4A0SW",
+    "Product Title": "GNSS radio occultation L2A bending angle, refractivity, and dry pressure for GRACE as contributed by ROMSAF, V2.0",
+    "ShortName": "gnssro_grace_romsaf_l2a"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/H7G5AZ1TCMJX",
+    "Product Title": "GNSS radio occultation L2B temperature, pressure, and water vapor retrieval for GRACE as contributed by ROMSAF, V2.0",
+    "ShortName": "gnssro_grace_romsaf_l2b"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/0JXZCGCF27CS",
+    "Product Title": "GNSS radio occultation L1B excess phase and amplitude for GRACE as contributed by UCAR, V2.0",
+    "ShortName": "gnssro_grace_ucar_l1b"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/0NF7MPB4C4NN",
+    "Product Title": "GNSS radio occultation L2A bending angle, refractivity, and dry pressure for GRACE as contributed by UCAR, V2.0",
+    "ShortName": "gnssro_grace_ucar_l2a"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/EM0GHK8QDIC6",
+    "Product Title": "GNSS radio occultation L2B temperature, pressure, and water vapor retrieval for GRACE as contributed by UCAR, V2.0",
+    "ShortName": "gnssro_grace_ucar_l2b"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/86BGICMKRYOH",
+    "Product Title": "GNSS radio occultation L1B excess phase and amplitude for KOMPSAT5 as contributed by UCAR, version 2.0",
+    "ShortName": "gnssro_kompsat5_ucar_l1b"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/3VZFV3F3GMBW",
+    "Product Title": "GNSS radio occultation L2A bending angle, refractivity, and dry pressure for KOMPSAT5 as contributed by UCAR, version 2.0",
+    "ShortName": "gnssro_kompsat5_ucar_l2a"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/YNH8HTEVU3HC",
+    "Product Title": "GNSS radio occultation L2B temperature, pressure, and water vapor retrieval for KOMPSAT5 as contributed by UCAR, version 2.0",
+    "ShortName": "gnssro_kompsat5_ucar_l2b"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/5CKDOVTUI1X1",
+    "Product Title": "GNSS radio occultation L1B excess phase and amplitude for METOP as contributed by EUMETSAT, version 2.0",
+    "ShortName": "gnssro_metop_eumetsat_l1b"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/ID3L8PX5R3VB",
+    "Product Title": "GNSS radio occultation L2A bending angle, refractivity, and dry pressure for METOP as contributed by ROMSAF, version 2.0",
+    "ShortName": "gnssro_metop_romsaf_l2a"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/OBPV72KXTFPA",
+    "Product Title": "GNSS radio occultation L2B temperature, pressure, and water vapor retrieval for METOP as contributed by ROMSAF, version 2.0",
+    "ShortName": "gnssro_metop_romsaf_l2b"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/PZRTB2MGQUXA",
+    "Product Title": "GNSS radio occultation L1B excess phase and amplitude for METOP as contributed by UCAR, version 2.0",
+    "ShortName": "gnssro_metop_ucar_l1b"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/9KTT6XELXQ5F",
+    "Product Title": "GNSS radio occultation L2A bending angle, refractivity, and dry pressure for METOP as contributed by UCAR, version 2.0",
+    "ShortName": "gnssro_metop_ucar_l2a"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/YTK03003RKUL",
+    "Product Title": "GNSS radio occultation L2B temperature, pressure, and water vapor retrieval for METOP as contributed by UCAR, version 2.0",
+    "ShortName": "gnssro_metop_ucar_l2b"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/W7KLLKX3TMRB",
+    "Product Title": "GNSS radio occultation L1B excess phase and amplitude for PAZ as contributed by JPL, version 2.0",
+    "ShortName": "gnssro_paz_jpl_l1b"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/OJN09YEV5UHK",
+    "Product Title": "GNSS radio occultation L2A bending angle, refractivity, and dry pressure for PAZ as contributed by JPL, version 2.0",
+    "ShortName": "gnssro_paz_jpl_l2a"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/W9PA8VH6PBWM",
+    "Product Title": "GNSS radio occultation L2B temperature, pressure, and water vapor retrieval for PAZ as contributed by JPL, version 2.0",
+    "ShortName": "gnssro_paz_jpl_l2b"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/RDZ3US8S6W7A",
+    "Product Title": "GNSS radio occultation L1B excess phase and amplitude for PAZ as contributed by UCAR, version 2.0",
+    "ShortName": "gnssro_paz_ucar_l1b"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/FYJ5KE48LP40",
+    "Product Title": "GNSS radio occultation L2A bending angle, refractivity, and dry pressure for PAZ as contributed by UCAR, version 2.0",
+    "ShortName": "gnssro_paz_ucar_l2a"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/61NDY03QF7UN",
+    "Product Title": "GNSS radio occultation L2B temperature, pressure, and water vapor retrieval for PAZ as contributed by UCAR, version 2.0",
+    "ShortName": "gnssro_paz_ucar_l2b"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/NLH7C8C2XP7L",
+    "Product Title": "GNSS radio occultation L1B excess phase and amplitude for SACC as contributed by UCAR, V2.0",
+    "ShortName": "gnssro_sacc_ucar_l1b"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/HLADDMDI0TN4",
+    "Product Title": "GNSS radio occultation L2A bending angle, refractivity, and dry pressure for SACC as contributed by UCAR, V2.0",
+    "ShortName": "gnssro_sacc_ucar_l2a"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/02KLRBI15GR9",
+    "Product Title": "GNSS radio occultation L2B temperature, pressure, and water vapor retrieval for SACC as contributed by UCAR, V2.0",
+    "ShortName": "gnssro_sacc_ucar_l2b"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/Q50WJNQLTLE7",
+    "Product Title": "GNSS radio occultation L1B excess phase and amplitude for SPIRE as contributed by UCAR, version 2.0",
+    "ShortName": "gnssro_spire_ucar_l1b"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/LF0GW1HBAKLU",
+    "Product Title": "GNSS radio occultation L2A bending angle, refractivity, and dry pressure for SPIRE as contributed by UCAR, version 2.0",
+    "ShortName": "gnssro_spire_ucar_l2a"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/3CBU53OBM7NU",
+    "Product Title": "GNSS radio occultation L2B temperature, pressure, and water vapor retrieval for SPIRE as contributed by UCAR, version 2.0",
+    "ShortName": "gnssro_spire_ucar_l2b"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/67UNNZEU51IV",
+    "Product Title": "GNSS radio occultation L1B excess phase and amplitude for TDX as contributed by UCAR, version 2.0",
+    "ShortName": "gnssro_tdx_ucar_l1b"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/IUHBUDW8XFLY",
+    "Product Title": "GNSS radio occultation L2A bending angle, refractivity, and dry pressure for TDX as contributed by UCAR, version 2.0",
+    "ShortName": "gnssro_tdx_ucar_l2a"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/4WT8P9U32VBZ",
+    "Product Title": "GNSS radio occultation L2B temperature, pressure, and water vapor retrieval for TDX as contributed by UCAR, version 2.0",
+    "ShortName": "gnssro_tdx_ucar_l2b"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/H911O2TRHIRS",
+    "Product Title": "GNSS radio occultation L1B excess phase and amplitude for TSX as contributed by JPL, version 2.0",
+    "ShortName": "gnssro_tsx_jpl_l1b"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/OHKODQY7W2DA",
+    "Product Title": "GNSS radio occultation L2A bending angle, refractivity, and dry pressure for TSX as contributed by JPL, version 2.0",
+    "ShortName": "gnssro_tsx_jpl_l2a"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/ORM4BCEYH9G2",
+    "Product Title": "GNSS radio occultation L2B temperature, pressure, and water vapor retrieval for TSX as contributed by JPL, version 2.0",
+    "ShortName": "gnssro_tsx_jpl_l2b"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/2XHJF9Q6GMU4",
+    "Product Title": "GNSS radio occultation L1B excess phase and amplitude for TSX as contributed by UCAR, version 2.0",
+    "ShortName": "gnssro_tsx_ucar_l1b"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/HH1L362VJ5BQ",
+    "Product Title": "GNSS radio occultation L2A bending angle, refractivity, and dry pressure for TSX as contributed by UCAR, version 2.0",
+    "ShortName": "gnssro_tsx_ucar_l2a"
+  },
+  {
+    "\ufeffDOI Resouce Type": "Dataset",
+    "DOI Name": "10.5067/0AZTO28DL182",
+    "Product Title": "GNSS radio occultation L2B temperature, pressure, and water vapor retrieval for TSX as contributed by UCAR, version 2.0",
+    "ShortName": "gnssro_tsx_ucar_l2b"
+  }
+]

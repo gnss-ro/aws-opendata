@@ -32,6 +32,7 @@ receiver satellites.
 import os
 import numpy as np
 from astropy.coordinates import SkyCoord
+import astropy.units as aunits 
 from .TimeStandards import Calendar, Time
 
 #  Exception handling. 
@@ -85,27 +86,24 @@ def s3fsauth():
 ################################################################################
 
 class LagrangePolynomialInterpolate():
-    """
-This class creates a Lagrange polynomial interpolator of data of arbitrary 
-dimension. Once initiated, it returns a function that returns arrays of 
-values at the values of independent coordinates passed into the function. 
-For example: 
+    """This class creates a Lagrange polynomial interpolator of data of arbitrary 
+    dimension. Once initiated, it returns a function that returns arrays of 
+    values at the values of independent coordinates passed into the function. 
+    For example: 
 
->>> f = LagrangePolynomialInterpolate( inputTimes, inputValues )
->>> outputValues = f( outputTimes )
+    >>> f = LagrangePolynomialInterpolate( inputTimes, inputValues )
+    >>> outputValues = f( outputTimes )
 
-If inputTimes has shape (n,), then inputValues must have shape (k,n)
-or (n,). If outputTimes has shape (m,), then outputValues has shape (k,m) 
-in the former case or (m,) in the latter case. 
-"""
+    If inputTimes has shape (n,), then inputValues must have shape (k,n)
+    or (n,). If outputTimes has shape (m,), then outputValues has shape (k,m) 
+    in the former case or (m,) in the latter case."""
 
     def __init__( self, independentCoordinate, dependentValues ):
-        """
-Create an object that can be used to interpolate dependentValues at arbitrary 
-values of the independentCoordinate. The independentCoordinate should be an 
-array of values of the independent coordinate, typically time, of dimension 
-n. The dependentValues are the values to be interpolated, and it can be a 
-one-dimensional array of shape (n,) or a two-dimensional array of shape (k,n)."""
+        """Create an object that can be used to interpolate dependentValues at arbitrary 
+        values of the independentCoordinate. The independentCoordinate should be an 
+        array of values of the independent coordinate, typically time, of dimension 
+        n. The dependentValues are the values to be interpolated, and it can be a 
+        one-dimensional array of shape (n,) or a two-dimensional array of shape (k,n)."""
 
 #  Check arguments.
 
@@ -142,10 +140,9 @@ one-dimensional array of shape (n,) or a two-dimensional array of shape (k,n).""
 
 
     def __call__( self, x, n=8, derivative=False ): 
-        """
-Return values interpolated using Lagrange polynomials to independent coordinate values in array x. 
-The polynomial will be of degree n. Optionally, the derivative can be computed instead by setting
-derivative=True."""
+        """Return values interpolated using Lagrange polynomials to independent coordinate 
+        values in array x. The polynomial will be of degree n. Optionally, the derivative 
+        can be computed instead by setting derivative=True."""
 
 #  Check that the requested satID exists.
 
@@ -309,7 +306,7 @@ def screen( netcdfvar ):
 
 def cartesian( coord ):
     """This function converts an astropy SkyCoord object to a numpy ndarray
-for a Cartesian representation of the unit vector direction."""
+    for a Cartesian representation of the unit vector direction."""
 
     c = coord.cartesian
     return np.array( [ c.x, c.y, c.z ] )
@@ -320,14 +317,13 @@ def normalize( vector ):
     out = vector / np.linalg.norm( vector )
     return out
 
-def transformcoordinates( inputPositions, times, epoch, direction='eci2ecf', ecisystem="teme" ):
+def transformcoordinates( inputPositions, times, epoch, direction='eci2ecf', ecisystem="tete" ):
     """This function transforms an ndarray of inputPositions with shape = (ntimes,3)
-at times (in seconds) with respect to epoch from ECI to ECF coordinates or vice
-versa. The output will be another ndarray with shape = (ntimes,3). The epoch must be
-an instance of class Time. The direction must be either eci2ecf or ecf2eci. The 
-ecisystem is a specification of the particular ECI coordinate system to reference. 
-The default is teme (true equator mean equinox). 
-"""
+    at times (in seconds) with respect to epoch from ECI to ECF coordinates or vice
+    versa. The output will be another ndarray with shape = (ntimes,3). The epoch must be
+    an instance of class Time. The direction must be either eci2ecf or ecf2eci. The 
+    ecisystem is a specification of the particular ECI coordinate system to reference. 
+    The default is tete (true equator true equinox)."""
 
     atimes = np.array( times )
     ntimes = atimes.size
@@ -348,7 +344,7 @@ The default is teme (true equator mean equinox).
     if direction not in { "eci2ecf", "ecf2eci" }:
         raise transformcoordinatesError( "InvalidArgument", "Unrecognized value for direction" )
 
-    if ecisystem not in [ "teme", "icrs" ]: 
+    if ecisystem not in [ "teme", "icrs", "tete" ]: 
         raise transformcoordinatesError( "InvalidArgument", "Unrecognized value for ECI coordinate system" )
 
     positions = inputPositions.reshape( ( ntimes, 3 ) )
@@ -382,7 +378,12 @@ The default is teme (true equator mean equinox).
     de1 = normalize( ECI_of_ECFx_at_e1 - ECI_of_ECFx_at_e0 )
     de2 = normalize( ECI_of_ECFx_at_e2 - ECI_of_ECFx_at_e1 )
     pole = normalize( np.cross( de1, de2 ) )
-    ECIpole = SkyCoord( *pole, frame=ecisystem, obstime=obstime0 )
+
+    if ecisystem in [ "tete" ]: 
+        ra, dec = np.arctan2( pole[1], pole[0] ), np.arcsin( pole[2] )
+        ECIpole = SkyCoord( ra*aunits.rad, dec*aunits.rad, frame=ecisystem, obstime=obstime0 )
+    else: 
+        ECIpole = SkyCoord( *pole, frame=ecisystem, obstime=obstime0 )
 
 #  Pole direction in ECF direction-coordintes.
 

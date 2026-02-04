@@ -81,9 +81,9 @@ def main():
         also can use mulitple calls to aws sync this way
         '''
         if args.auth:
-            command = f"aws s3 sync s3://gnss-ro-data-staging/{args.prefix}/ s3://gnss-ro-data/{args.prefix}/ --acl bucket-owner-full-control --delete --profile {AWSversion}"
+            command = f"aws s3 sync s3://gnss-ro-data-staging/{args.prefix}/ s3://gnss-ro-data/{args.prefix}/ --acl bucket-owner-full-control --profile {AWSversion}"
         else:
-            command = f"aws s3 sync s3://gnss-ro-data-staging/{args.prefix}/ s3://gnss-ro-data/{args.prefix}/ --acl bucket-owner-full-control --delete"
+            command = f"aws s3 sync s3://gnss-ro-data-staging/{args.prefix}/ s3://gnss-ro-data/{args.prefix}/ --acl bucket-owner-full-control"
 
         if TEST is None:
             print(command)

@@ -181,7 +181,13 @@ def definejobs( daterange, missions, processing_centers, file_types, version,
                             subdir_list = s3.ls( processingVersion )
                             head, tail = os.path.split( subdir_list[0] )
                             if "level" not in tail:
-                                subdirs = s3.ls( os.path.join( processingVersion, tail, level, f"{year:4d}", f"{doy:03d}" ) )
+                                try:
+                                    subdirs = s3.ls( os.path.join( processingVersion, tail, level, f"{year:4d}", f"{doy:03d}" ) )
+                                except:
+                                    LOGGER.info( "*** s3://" + \
+                                        os.path.join( processingVersion, tail, level, f"{year:4d}", f"{doy:03d}" ) + \
+                                        " does not exist." )
+                                    continue                                    
                             else:
                                 try:
                                     subdirs = s3.ls( os.path.join( processingVersion, level, f"{year:4d}", f"{doy:03d}" ) )
@@ -843,7 +849,7 @@ def find_mission_year_range(version,mission,processing_center,liveupdate):
                     elif mission == "spire" and liveupdate:
                         subdirs = s3fs_client.ls( os.path.join( processingVersion, "nrt", level) )
                     elif mission == "planetiq" and liveupdate:
-                        subdirs = s3fs_client.ls( os.path.join( processingVersion, "nrt", level) )
+                        subdirs = s3fs_client.ls( os.path.join( processingVersion, "postProc", level) )
                     else:
                         subdirs = s3fs_client.ls( os.path.join( processingVersion, level) )
 

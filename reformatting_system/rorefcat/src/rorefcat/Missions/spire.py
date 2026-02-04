@@ -60,7 +60,7 @@ def signals( transmitter, receiver, time ):
 
     elif constellation == "E": 
         ret = [ { 'standardName': "E1Ca", 'rinex3name': "L1C", 'loop': "open" }, 
-               { 'standardName': "E5B(Q)", 'rinex3name': "L7Q", 'loop': "open" } ]
+               { 'standardName': "E5b(Q)", 'rinex3name': "L7Q", 'loop': "open" } ]
 
     #  QZSS. 
 

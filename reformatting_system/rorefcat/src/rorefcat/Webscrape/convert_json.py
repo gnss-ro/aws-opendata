@@ -71,7 +71,7 @@ def sync_folder(version, mission, year_list):
                 prefix = f"contributed/v{version}/{center}/{mission}/{type}/{year}"
                 jobName = f"sync-{center}-{mission}-{type}-{year}-{version.replace('.','_')}"
                 command = ["liveupdate_wrapper", "sync", version, "--prefix",prefix]
-
+                
                 response = batch.submit_job(
                     jobName = jobName,
                     jobQueue = "ro-processing-SPOT",
@@ -86,6 +86,8 @@ def sync_folder(version, mission, year_list):
                         "attempts": 2
                     }
                 )
+
+                print(response, prefix)
 
 #  Main program.
 
@@ -107,11 +109,12 @@ def main(version,mission):
 
     # with list of years for the missions submit batch sync all ro files to open data
     TEST = os.getenv( "TEST" )
-    if TEST is None:
-        print(f"ready to sync {mission}, wait for DataSync cron")
-        #sync_folder(aws_version, mission, list(set(year_list)))
+    """if TEST is None:
+        print(f"ready to sync {mission}")
+        sync_folder(aws_version, mission, list(set(year_list)))
+        
     elif TEST is not None:
-        print("not syncing, this is a test.")
+        print("not syncing, this is a test.")"""
 
 if __name__ == "__main__":
     

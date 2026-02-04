@@ -38,6 +38,15 @@ liveupdateBucket = "ucar-earth-ro-archive-liveupdate"
 
 centerwmo = { 'originating_center_id': 60 }
 
+#  UCAR defaults. Define what signals UCAR denotes as CA, L1 and L2 in its 
+#  conPhs/atmPhs files. All of these values must correspond directly to the 
+#  standardNames defined in the function "signals" defined in the Missions 
+#  modules. 
+
+CA_standardNames = [ "C/A", "E1Ca", "B1(Pilot)" ]
+L1_standardNames = [ "L1" ]
+L2_standardNames = [ "L2", "E5a(Q)", "E5b(Q)", "B2a(Pilot)" ]
+
 #  Set other parameters. 
 
 gps0 = Time( gps=0 )
@@ -63,7 +72,7 @@ optimization_references = \
     [ "doi:10.1029/2000RS002370" ]
 
 retrieval_references = \
-    [ "doi:10.2151/jmsj.2004.507" ]
+    [ "doi:10.2151/jmsj.2004.507", "doi:10.1175/JTECH-D-22-0100.1" ]
 
 data_use_license = "https://www.ucar.edu/terms-of-use/data"
 
@@ -532,7 +541,7 @@ def level1b2aws( atmPhs_file, level1b_file, mission, transmitter, receiver,
 
             #  SNR and excess phase.
 
-            if signal['standardName'] in [ "C/A", "E1Ca" ]:
+            if signal['standardName'] in CA_standardNames: 
                 x = d.variables['caL1Snr']
                 good = screen( x )
                 if len(good) > 0 and "snr" in outvarsnames:
@@ -546,7 +555,7 @@ def level1b2aws( atmPhs_file, level1b_file, mission, transmitter, receiver,
                     else: 
                         outvars['excessPhase'][isignal,good] = d.variables['exL1'][good].data
 
-            elif signal['standardName'] == "L1":
+            elif signal['standardName'] in L1_standardNames: 
                 x = d.variables['pL1Snr']
                 good = screen( x )
                 if len(good) > 0 and "snr" in outvarsnames:
@@ -555,7 +564,7 @@ def level1b2aws( atmPhs_file, level1b_file, mission, transmitter, receiver,
                     else: 
                         outvars['snr'][isignal,good] = x[good].data * 0.1
 
-            elif signal['standardName'] in [ "L2", "E5b(Q)" ]:
+            elif signal['standardName'] in L2_standardNames: 
                 x = d.variables['pL2Snr']
                 good = screen( x )
                 if len(good) > 0 and "snr" in outvarsnames:
@@ -765,7 +774,7 @@ def level1b2aws( atmPhs_file, level1b_file, mission, transmitter, receiver,
 
             #  Write SNR and excess phase.
 
-            if signal['standardName'] in [ "C/A", "E1Ca", "B1(Pilot)" ]:
+            if signal['standardName'] in CA_standardNames: 
 
                 x = d.variables['caL1Snr']
                 good = screen( x )
@@ -783,7 +792,7 @@ def level1b2aws( atmPhs_file, level1b_file, mission, transmitter, receiver,
                     else: 
                         outvars['excessPhase'][isignal,good] = x[good].data
 
-            elif signal['standardName'] in [ "L1" ]: 
+            elif signal['standardName'] in L1_standardNames: 
 
                 x = d.variables['exL1']
                 good = screen( x )
@@ -793,7 +802,7 @@ def level1b2aws( atmPhs_file, level1b_file, mission, transmitter, receiver,
                     else: 
                         outvars['excessPhase'][isignal,good] = x[good].data
 
-            elif signal['standardName'] in [ "L2", "E5b(Q)", "B2a(Pilot)" ]:
+            elif signal['standardName'] in L2_standardNames: 
 
                 x = d.variables['pL2Snr']
                 good = screen( x )
@@ -1029,8 +1038,14 @@ def level2a2aws( atmPrf_file, level2a_file, mission, transmitter, receiver,
 
     if { "gps_seconds", "occ_duration" }.issubset( extra.keys() ) and \
             { "RangeBeginningDate", "RangeBeginningTime", "RangeEndingDate", "RangeEndingTime" }.issubset( e.ncattrs() ): 
-        date0 = Time( gps=extra['gps_seconds'] ).calendar( "utc" ).isoformat()
-        date1 = Time( gps=extra['gps_seconds']+extra['occ_duration'] ).calendar( "utc" ).isoformat()
+
+        if float( extra['occ_duration'] ) <= 0.0: 
+            date0 = cal.isoformat()
+            date1 = date0
+        else: 
+            date0 = Time( gps=extra['gps_seconds'] ).calendar( "utc" ).isoformat()
+            date1 = Time( gps=extra['gps_seconds']+extra['occ_duration'] ).calendar( "utc" ).isoformat()
+
         e.setncatts( {
             'RangeBeginningDate': date0[:10], 
             'RangeBeginningTime': date0[11:19], 
@@ -1122,14 +1137,14 @@ def level2a2aws( atmPrf_file, level2a_file, mission, transmitter, receiver,
     #  Carrier frequency: L1
 
     for signal in signalList:
-        if signal['standardName'] in [ 'C/A', 'L1', 'E1Ca' ]:
+        if signal['standardName'] in CA_standardNames + L1_standardNames: 
             outvars['carrierFrequency'][0] = carrierfrequency( transmitter, date, signal['rinex3name'] )
             break
 
     #  Carrier frequency: L2
 
     for signal in signalList:
-        if signal['standardName'] in [ 'L2', 'E5b(Q)' ] and "carrierFrequency" in outvarsnames:
+        if signal['standardName'] in L2_standardNames and "carrierFrequency" in outvarsnames:
             outvars['carrierFrequency'][1] = carrierfrequency( transmitter, date, signal['rinex3name'] )
             break
 
@@ -1334,6 +1349,18 @@ def level2a2aws( atmPrf_file, level2a_file, mission, transmitter, receiver,
                 outvars['dryPressure'][good] = x[good].data * 100.0
     else:
         LOGGER.warning( f"Variable {var} not in file {atmPrf_file}." )
+
+    #  Super-refraction? 
+
+    if "iduct" in ncattrs and "hduct" in ncattrs and "superRefractionImpactHeight" in outvarsnames:  
+        iduct = d.getncattr( "iduct" )
+        hduct = d.getncattr( "hduct" )
+        if hduct.size > 1: 
+            hduct = hduct.max()
+        if iduct == -999: 
+            outvars['superRefractionImpactHeight'][:] = -1000.0
+        else: 
+            outvars['superRefractionImpactHeight'][:] = hduct * 1000.0     # km to m
 
     #  Setting or rising occultation? First search for this information in the
     #  input file. Then take the value in the database if it is provided. If
@@ -1601,8 +1628,14 @@ def level2b2aws( wetPrf_file, level2b_file, mission, transmitter, receiver,
 
     if { "gps_seconds", "occ_duration" }.issubset( extra.keys() ) and \
             { "RangeBeginningDate", "RangeBeginningTime", "RangeEndingDate", "RangeEndingTime" }.issubset( e.ncattrs() ): 
-        date0 = Time( gps=extra['gps_seconds'] ).calendar( "utc" ).isoformat()
-        date1 = Time( gps=extra['gps_seconds']+extra['occ_duration'] ).calendar( "utc" ).isoformat()
+
+        if float( extra['occ_duration'] ) <= 0.0: 
+            date0 = cal.isoformat()
+            date1 = date0
+        else: 
+            date0 = Time( gps=extra['gps_seconds'] ).calendar( "utc" ).isoformat()
+            date1 = Time( gps=extra['gps_seconds']+extra['occ_duration'] ).calendar( "utc" ).isoformat()
+
         e.setncatts( {
             'RangeBeginningDate': date0[:10], 
             'RangeBeginningTime': date0[11:19], 

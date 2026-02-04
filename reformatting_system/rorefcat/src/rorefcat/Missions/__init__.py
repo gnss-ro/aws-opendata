@@ -41,7 +41,7 @@ LOGGER = logging.getLogger( __name__ )
 
 modules = {}
 receiver_satellites = []
-package_root = os.path.dirname( __file__ )
+package_root = os.path.dirname( os.path.abspath( __file__ ) )
 files = [ f for f in os.listdir(package_root) if f[-3:]==".py" and f not in [ "template.py", "__init__.py" ] ]
 
 for file in files: 
