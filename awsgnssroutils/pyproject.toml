@@ -14,7 +14,7 @@ description = "Utilities for access and manipulation of GNSS radio occultation i
 readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [ "hatchling", "awscli", "boto3", "tqdm", 
-	"numpy", "pyhdf", "xarray", "astropy>=5.3", "pyerfa", "sgp4", 
+	"numpy", "pyhdf", "xarray", "astropy>=5.3", "pyerfa", "netCDF4", "sgp4", 
 	"eumdac", "earthaccess", "aiobotocore[awscli,boto3]" ]
 classifiers = [
 	"Programming Language :: Python :: 3",
