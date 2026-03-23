@@ -114,9 +114,10 @@ ENV PATH="${MINICONDA}/bin:$PATH"
 ######################################################
 
 RUN conda config --set solver classic
+RUN conda config --set plugins.auto_accept_tos yes
 RUN conda install -c conda-forge netcdf4
-RUN conda install matplotlib -y
-RUN conda install scipy -y
+RUN conda install -c conda-forge matplotlib -y
+RUN conda install -c conda-forge scipy -y
 
 
 
