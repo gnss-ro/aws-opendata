@@ -48,7 +48,7 @@ For the Python tests to work, the following packages are also required: netcdf4,
 	1. netCDF-C 4.9.2 (https://downloads.unidata.ucar.edu/netcdf/)
 	2. netCDF-Fortran 4.6.1 (https://github.com/Unidata/netcdf-fortran/releases/tag/v4.6.1)
 	3. HDF5 1.14.3 (https://portal.hdfgroup.org/downloads/index.html)
-3. Download the Linux installers for Miniconda 3.10 from https://docs.anaconda.com/free/miniconda/miniconda-other-installer-links/. The Dockerfile will search for either the 64-bit of the aarch 64-bit versions, depending on your internal archictecture (**not** on the architecture of the Docker base image). If you are unsure of your system architecture, download both.
+3. Download the Linux installers for Miniconda 3.10 from https://repo.anaconda.com/miniconda/. The Dockerfile will search for either the 64-bit of the aarch 64-bit versions, depending on your internal archictecture (**not** on the architecture of the Docker base image). If you are unsure of your system architecture, download both.
 4. Build the Docker image with
  `docker build -t ropp11-patch .`
  This step may take about 20 minutes the first time, as building some of the dependencies (especially HDF5) is time-consuming.
